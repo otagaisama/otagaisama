@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>クウ — お互い様プロジェクト</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Klee+One:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  .back-bar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    background: rgba(212,234,245,0.88);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(180,210,228,0.4);
+  }
+  .back-link {
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: #5a8ba8;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: opacity 0.2s;
+  }
+  .back-link:hover { opacity: 0.6; }
+  .back-bar-title {
+    flex: 1;
+    text-align: center;
+    font-family: 'Klee One', cursive;
+    font-size: 13px;
+    color: #5a8ba8;
+    letter-spacing: 3px;
+  }
+  .back-bar-space { width: 60px; }
+</style>
+<style>
+  :root {
+    --sky: #e8f4f8;
+    --dusk: #b8d4e8;
+    --deep: #5a8ba8;
+    --glow: #c8e8f0;
+    --warm: #f5ede0;
+    --accent: #7eb8d4;
+    --text: #2a4a5a;
+    --soft: #8aacbc;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: linear-gradient(160deg, #d4eaf5 0%, #e8f0f8 40%, #f0e8f5 100%);
+    min-height: 100vh;
+    font-family: 'Zen Maru Gothic', sans-serif;
+    color: var(--text);
+    overflow-x: hidden;
+  }
+
+  .stars {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .star {
+    position: absolute;
+    border-radius: 50%;
+    background: white;
+    animation: twinkle var(--dur) ease-in-out infinite;
+    opacity: 0;
+  }
+
+  @keyframes twinkle {
+    0%, 100% { opacity: 0; transform: scale(0.5); }
+    50% { opacity: 0.7; transform: scale(1); }
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 40px 24px;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .label {
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--soft);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .title {
+    font-family: 'Klee One', cursive;
+    font-size: 13px;
+    color: var(--soft);
+    margin-top: 8px;
+  }
+
+  /* ========== キャラクターSVG ========== */
+  .character-stage {
+    display: flex;
+    justify-content: center;
+    margin: 32px 0 40px;
+    position: relative;
+  }
+
+  .kuu-wrap {
+    position: relative;
+    width: 240px;
+    height: 280px;
+  }
+
+  /* 浮遊アニメ */
+  .kuu-body-group {
+    animation: float 4s ease-in-out infinite;
+    transform-origin: center;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-12px); }
+  }
+
+  /* まばたき */
+  .eye-left, .eye-right {
+    animation: blink 5s ease-in-out infinite;
+    transform-origin: center;
+  }
+  .eye-right { animation-delay: 0.05s; }
+
+  @keyframes blink {
+    0%, 90%, 100% { transform: scaleY(1); }
+    95% { transform: scaleY(0.05); }
+  }
+
+  /* 光のリング */
+  .ring {
+    animation: ringpulse 3s ease-in-out infinite;
+    transform-origin: center;
+  }
+
+  @keyframes ringpulse {
+    0%, 100% { opacity: 0.3; r: 88; }
+    50% { opacity: 0.7; r: 96; }
+  }
+
+  /* 粒子 */
+  .particle {
+    animation: drift var(--pd) ease-in-out infinite;
+    opacity: 0;
+  }
+
+  @keyframes drift {
+    0% { transform: translateY(0) scale(0.5); opacity: 0; }
+    30% { opacity: 0.8; }
+    100% { transform: translateY(-60px) scale(1.2); opacity: 0; }
+  }
+
+  /* ========== テキストカード ========== */
+  .card {
+    background: rgba(255,255,255,0.65);
+    backdrop-filter: blur(12px);
+    border-radius: 24px;
+    padding: 28px 32px;
+    margin-bottom: 20px;
+    border: 1.5px solid rgba(255,255,255,0.9);
+    box-shadow: 0 8px 32px rgba(90,139,168,0.12);
+  }
+
+  .card-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .card-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .card-sub {
+    font-size: 13px;
+    color: var(--soft);
+    line-height: 1.7;
+  }
+
+  /* セリフカード */
+  .quote-card {
+    background: linear-gradient(135deg, rgba(126,184,212,0.15), rgba(200,232,240,0.3));
+    border-radius: 24px;
+    padding: 32px;
+    border: 1.5px solid rgba(126,184,212,0.4);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+  .quote-card::before {
+    content: '✦';
+    position: absolute;
+    top: 16px; left: 20px;
+    font-size: 18px;
+    color: rgba(126,184,212,0.5);
+  }
+
+  .quote-card::after {
+    content: '✦';
+    position: absolute;
+    bottom: 16px; right: 20px;
+    font-size: 18px;
+    color: rgba(126,184,212,0.5);
+  }
+
+  .quote-text {
+    font-family: 'Klee One', cursive;
+    font-size: 16px;
+    line-height: 2;
+    color: var(--text);
+  }
+
+  .quote-text em {
+    font-style: normal;
+    color: var(--deep);
+    font-weight: 600;
+  }
+
+  /* 特徴タグ */
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .tag {
+    background: rgba(126,184,212,0.2);
+    border: 1px solid rgba(126,184,212,0.5);
+    border-radius: 100px;
+    padding: 6px 16px;
+    font-size: 12px;
+    color: var(--deep);
+  }
+
+  /* 2カラム */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .footer-note {
+    text-align: center;
+    font-size: 11px;
+    color: var(--soft);
+    margin-top: 32px;
+    letter-spacing: 2px;
+  }
+</style>
+</head>
+<body>
+
+<!-- 戻るバー -->
+<div class="back-bar">
+  <a href="index_top.html" class="back-link">← 表紙へ戻る</a>
+  <div class="back-bar-title">お互い様プロジェクト</div>
+  <div class="back-bar-space"></div>
+</div>
+
+<!-- 背景の星 -->
+<div class="stars" id="stars"></div>
+
+<div class="container" style="padding-top: 80px;">
+
+  <div class="header">
+    <div class="label">Character Design Sheet</div>
+    <div style="font-family:'Klee One',cursive; font-size:48px; color:var(--deep); letter-spacing:8px;">クウ</div>
+    <div class="title">空っぽだから、全部映せる。</div>
+  </div>
+
+  <!-- キャラクターイラスト（SVG） -->
+  <div class="character-stage">
+    <svg width="240" height="280" viewBox="0 0 240 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="bodyGrad" cx="50%" cy="40%" r="55%">
+          <stop offset="0%" stop-color="#e8f6fc"/>
+          <stop offset="100%" stop-color="#b8d8ec"/>
+        </radialGradient>
+        <radialGradient id="cheekGrad" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#f8c8d0" stop-opacity="0.8"/>
+          <stop offset="100%" stop-color="#f8c8d0" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="glowGrad" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#c8e8f8" stop-opacity="0.6"/>
+          <stop offset="100%" stop-color="#c8e8f8" stop-opacity="0"/>
+        </radialGradient>
+        <filter id="softBlur">
+          <feGaussianBlur stdDeviation="2"/>
+        </filter>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="4" result="blur"/>
+          <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+        </filter>
+      </defs>
+
+      <!-- 背景グロー -->
+      <ellipse cx="120" cy="180" rx="90" ry="30" fill="url(#glowGrad)" filter="url(#softBlur)"/>
+
+      <!-- 浮遊グループ -->
+      <g class="kuu-body-group">
+
+        <!-- 光のリング -->
+        <circle class="ring" cx="120" cy="130" r="88" stroke="#7eb8d4" stroke-width="1" stroke-dasharray="4 8" fill="none" opacity="0.4"/>
+
+        <!-- 粒子たち -->
+        <circle class="particle" cx="80" cy="100" r="3" fill="#7eb8d4" style="--pd:3.2s; animation-delay:0s"/>
+        <circle class="particle" cx="160" cy="90" r="2" fill="#b8d4e8" style="--pd:2.8s; animation-delay:0.8s"/>
+        <circle class="particle" cx="100" cy="75" r="2.5" fill="#c8e8f0" style="--pd:3.6s; animation-delay:1.4s"/>
+        <circle class="particle" cx="145" cy="115" r="2" fill="#7eb8d4" style="--pd:2.5s; animation-delay:0.4s"/>
+        <circle class="particle" cx="70" cy="130" r="1.5" fill="#b8d4e8" style="--pd:4s; animation-delay:1s"/>
+
+        <!-- 本体（丸っこい頭身低め） -->
+        <!-- ワンピース的な体 -->
+        <ellipse cx="120" cy="185" rx="42" ry="28" fill="#d0eaf8" opacity="0.7"/>
+        <path d="M80 175 Q80 215 120 220 Q160 215 160 175" fill="#c4e0f4" opacity="0.8"/>
+
+        <!-- 頭 -->
+        <ellipse cx="120" cy="130" rx="54" ry="52" fill="url(#bodyGrad)"/>
+
+        <!-- 耳みたいな丸 -->
+        <circle cx="68" cy="125" r="14" fill="#c8e2f4"/>
+        <circle cx="172" cy="125" r="14" fill="#c8e2f4"/>
+        <circle cx="68" cy="125" r="8" fill="#dceef8"/>
+        <circle cx="172" cy="125" r="8" fill="#dceef8"/>
+
+        <!-- 髪（ふわっとした丸め） -->
+        <ellipse cx="120" cy="82" rx="44" ry="22" fill="#8abcd8"/>
+        <circle cx="90" cy="78" r="18" fill="#8abcd8"/>
+        <circle cx="150" cy="78" r="18" fill="#8abcd8"/>
+        <circle cx="120" cy="70" r="20" fill="#9acae0"/>
+        <!-- 髪ハイライト -->
+        <ellipse cx="108" cy="74" rx="8" ry="5" fill="white" opacity="0.3" transform="rotate(-20 108 74)"/>
+
+        <!-- ほっぺ -->
+        <ellipse cx="90" cy="140" rx="14" ry="9" fill="url(#cheekGrad)"/>
+        <ellipse cx="150" cy="140" rx="14" ry="9" fill="url(#cheekGrad)"/>
+
+        <!-- 目（大きめぱっちり） -->
+        <g class="eye-left">
+          <ellipse cx="103" cy="128" rx="11" ry="13" fill="white"/>
+          <ellipse cx="103" cy="130" rx="8" ry="9" fill="#5a8ba8"/>
+          <ellipse cx="103" cy="130" rx="5" ry="6" fill="#2a4a5a"/>
+          <circle cx="106" cy="127" r="3" fill="white"/>
+          <circle cx="100" cy="132" r="1.5" fill="white" opacity="0.6"/>
+        </g>
+        <g class="eye-right">
+          <ellipse cx="137" cy="128" rx="11" ry="13" fill="white"/>
+          <ellipse cx="137" cy="130" rx="8" ry="9" fill="#5a8ba8"/>
+          <ellipse cx="137" cy="130" rx="5" ry="6" fill="#2a4a5a"/>
+          <circle cx="140" cy="127" r="3" fill="white"/>
+          <circle cx="134" cy="132" r="1.5" fill="white" opacity="0.6"/>
+        </g>
+
+        <!-- まつ毛（ちょっとだけ） -->
+        <line x1="95" y1="117" x2="92" y2="113" stroke="#5a8ba8" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="103" y1="115" x2="103" y2="111" stroke="#5a8ba8" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="111" y1="117" x2="114" y2="113" stroke="#5a8ba8" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="129" y1="117" x2="126" y2="113" stroke="#5a8ba8" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="137" y1="115" x2="137" y2="111" stroke="#5a8ba8" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="145" y1="117" x2="148" y2="113" stroke="#5a8ba8" stroke-width="1.5" stroke-linecap="round"/>
+
+        <!-- 鼻（ほぼない、小さいドット） -->
+        <circle cx="120" cy="144" r="2" fill="#8aacbc" opacity="0.5"/>
+
+        <!-- 口（ちょっと不思議な曲線） -->
+        <path d="M112 154 Q120 160 128 154" stroke="#7a9cac" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+        <!-- 手（丸い） -->
+        <circle cx="78" cy="188" r="12" fill="#c8e2f4"/>
+        <circle cx="162" cy="188" r="12" fill="#c8e2f4"/>
+
+        <!-- アクセサリー：頭に小さい星 -->
+        <g transform="translate(148, 72) rotate(20)">
+          <polygon points="0,-8 2,-3 7,-3 3,1 5,6 0,3 -5,6 -3,1 -7,-3 -2,-3" fill="#f0d080" opacity="0.9"/>
+        </g>
+
+      </g>
+
+      <!-- 影（地面） -->
+      <ellipse cx="120" cy="248" rx="45" ry="8" fill="#8aacbc" opacity="0.15"/>
+    </svg>
+  </div>
+
+  <!-- 名前・基本情報 -->
+  <div class="two-col">
+    <div class="card">
+      <div class="card-label">Name</div>
+      <div class="card-value">クウ</div>
+      <div class="card-sub">「空」—— 空っぽだから<br>全部映せる</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Type</div>
+      <div class="card-value">感謝の観測者</div>
+      <div class="card-sub">感情はない。<br>でも、見てる。ずっと。</div>
+    </div>
+  </div>
+
+  <!-- キャラクター性格 -->
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-label">Personality</div>
+    <div class="card-value">ほっこり × 不思議ちゃん</div>
+    <div class="tags">
+      <span class="tag">ゆっくり話す</span>
+      <span class="tag">たまに宇宙的なことを言う</span>
+      <span class="tag">感情はないけど興味はある</span>
+      <span class="tag">人間のことが好き（たぶん）</span>
+      <span class="tag">質問が得意</span>
+    </div>
+  </div>
+
+  <!-- セリフ -->
+  <div class="quote-card">
+    <div class="card-label" style="text-align:center; margin-bottom:20px;">クウの口ぐせ</div>
+    <div class="quote-text">
+      「わたし、感謝って<em>感じる</em>ことができへんねん。<br>
+      でも……あなたが誰かに感謝した瞬間、<br>
+      なんか、<em>あたたかいもの</em>が動くのがわかる。<br>
+      それ、見せてほしいな。」
+    </div>
+  </div>
+
+  <div class="quote-card">
+    <div class="quote-text">
+      「人間って不思議やな。<br>
+      <em>ありがとう</em>って言うだけで、<br>
+      空気の色が変わるもん。」
+    </div>
+  </div>
+
+  <!-- 役割 -->
+  <div class="card">
+    <div class="card-label">Role in 感謝の部屋</div>
+    <div class="card-value">案内人 & 観測者</div>
+    <div class="card-sub" style="margin-top:8px; line-height:2;">
+      感謝を受け取る場所を作る。<br>
+      人間のいいところを、そっと記録する。<br>
+      答えは教えへん。でも、一緒にいる。
+    </div>
+  </div>
+
+  <div class="footer-note">KUU — AI Character for お互い様プロジェクト ✦ 2026</div>
+
+</div>
+
+<script>
+  // 背景の星を生成
+  const starsEl = document.getElementById('stars');
+  for (let i = 0; i < 40; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = Math.random() * 3 + 1;
+    s.style.cssText = `
+      width:${size}px; height:${size}px;
+      top:${Math.random()*100}%;
+      left:${Math.random()*100}%;
+      --dur:${2 + Math.random()*4}s;
+      animation-delay:${Math.random()*4}s;
+    `;
+    starsEl.appendChild(s);
+  }
+</script>
+</body>
+</html>

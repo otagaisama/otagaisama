@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>お互い様 - 感謝の部屋</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&family=Zen+Kaku+Gothic+New:wght@300;400;700&display=swap');
+
+  :root {
+    --ink: #1a1208;
+    --paper: #f5f0e8;
+    --gold: #b8860b;
+    --gold-light: #d4a843;
+    --red: #8b1a1a;
+    --gray: #6b6355;
+    --border: #c8b99a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Noto Serif JP', serif;
+    min-height: 100vh;
+  }
+
+  /* 和紙テクスチャ背景 */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: 
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 40px 24px;
+  }
+
+  /* ヘッダー */
+  .header {
+    text-align: center;
+    margin-bottom: 48px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .header-en {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .header h1 {
+    font-size: 32px;
+    font-weight: 300;
+    letter-spacing: 8px;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+
+  .header-sub {
+    font-size: 13px;
+    color: var(--gray);
+    letter-spacing: 2px;
+    font-weight: 300;
+  }
+
+  /* ビュー切り替え */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ===== 作成画面 ===== */
+  .create-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 40px 32px;
+    text-align: center;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.06);
+  }
+
+  .create-icon {
+    font-size: 48px;
+    margin-bottom: 20px;
+    opacity: 0.7;
+  }
+
+  .create-card h2 {
+    font-size: 18px;
+    font-weight: 400;
+    letter-spacing: 3px;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+
+  .create-card p {
+    font-size: 13px;
+    color: var(--gray);
+    line-height: 1.8;
+    margin-bottom: 32px;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-weight: 300;
+  }
+
+  .btn-create {
+    display: inline-block;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    padding: 16px 48px;
+    font-family: 'Noto Serif JP', serif;
+    font-size: 15px;
+    letter-spacing: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+    border-radius: 1px;
+  }
+
+  .btn-create:hover {
+    background: var(--gold);
+    transform: translateY(-1px);
+  }
+
+  .btn-create:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* ===== 生成結果 ===== */
+  .result-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 40px 32px;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.06);
+  }
+
+  .room-number {
+    text-align: center;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .room-number-label {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .room-number-value {
+    font-size: 48px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    color: var(--ink);
+    line-height: 1;
+  }
+
+  .qr-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    margin: 32px 0;
+  }
+
+  #qrcode {
+    padding: 16px;
+    border: 1px solid var(--border);
+    background: white;
+  }
+
+  #qrcode canvas, #qrcode img {
+    display: block;
+  }
+
+  .room-url {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 11px;
+    color: var(--gray);
+    word-break: break-all;
+    text-align: center;
+    padding: 12px;
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    width: 100%;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .btn-secondary {
+    flex: 1;
+    padding: 14px;
+    border: 1px solid var(--border);
+    background: transparent;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: var(--ink);
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 1px;
+  }
+
+  .btn-secondary:hover {
+    background: var(--paper);
+    border-color: var(--ink);
+  }
+
+  .btn-primary {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    background: var(--ink);
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 1px;
+  }
+
+  .btn-primary:hover { background: var(--gold); }
+
+  /* ===== 部屋画面 ===== */
+  .room-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .room-badge {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .room-badge-label {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--gold);
+    text-transform: uppercase;
+  }
+
+  .room-badge-number {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+
+  .share-btn {
+    padding: 10px 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: var(--gray);
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 1px;
+  }
+
+  .share-btn:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+
+  /* 投稿フォーム */
+  .post-form {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 8px rgba(0,0,0,0.04);
+  }
+
+  .post-form h3 {
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 3px;
+    color: var(--gold);
+    margin-bottom: 16px;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--gray);
+    margin-bottom: 8px;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+  }
+
+  textarea {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: 1px;
+    font-family: 'Noto Serif JP', serif;
+    font-size: 14px;
+    line-height: 1.8;
+    color: var(--ink);
+    background: var(--paper);
+    resize: vertical;
+    min-height: 120px;
+    transition: border-color 0.2s;
+  }
+
+  textarea:focus {
+    outline: none;
+    border-color: var(--gold);
+  }
+
+  .image-upload {
+    border: 1px dashed var(--border);
+    border-radius: 1px;
+    padding: 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--paper);
+  }
+
+  .image-upload:hover {
+    border-color: var(--gold);
+    background: #faf6ee;
+  }
+
+  .image-upload input { display: none; }
+
+  .image-upload-text {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: var(--gray);
+  }
+
+  .image-preview {
+    margin-top: 12px;
+    max-width: 100%;
+    border-radius: 2px;
+    display: none;
+  }
+
+  .btn-post {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: 'Noto Serif JP', serif;
+    font-size: 14px;
+    letter-spacing: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+    border-radius: 1px;
+  }
+
+  .btn-post:hover { background: var(--gold); }
+  .btn-post:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* 投稿一覧 */
+  .posts-section h3 {
+    font-size: 12px;
+    letter-spacing: 3px;
+    color: var(--gray);
+    margin-bottom: 16px;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    text-align: center;
+  }
+
+  .post-item {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 24px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 8px rgba(0,0,0,0.04);
+    animation: fadeIn 0.4s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .post-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .post-type {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--gold);
+    text-transform: uppercase;
+  }
+
+  .post-time {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 10px;
+    color: var(--gray);
+    letter-spacing: 1px;
+  }
+
+  .post-content {
+    font-size: 14px;
+    line-height: 1.9;
+    color: var(--ink);
+    white-space: pre-wrap;
+  }
+
+  .post-image {
+    width: 100%;
+    border-radius: 2px;
+    margin-top: 12px;
+    border: 1px solid var(--border);
+  }
+
+  /* 装飾的な金の線 */
+  .gold-line {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 32px 0;
+    opacity: 0.4;
+  }
+
+  /* メッセージ */
+  .msg {
+    text-align: center;
+    padding: 20px;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: var(--gray);
+  }
+
+  .msg-error { color: var(--red); }
+  .msg-success { color: var(--gold); }
+
+  /* ローディング */
+  .loading {
+    text-align: center;
+    padding: 40px;
+    color: var(--gray);
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 12px;
+    letter-spacing: 3px;
+  }
+
+  .empty-posts {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--gray);
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 12px;
+    letter-spacing: 2px;
+    line-height: 2;
+  }
+
+  /* コピー完了トースト */
+  .toast {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--ink);
+    color: var(--paper);
+    padding: 12px 24px;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 12px;
+    letter-spacing: 2px;
+    border-radius: 2px;
+    transition: transform 0.3s;
+    z-index: 100;
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 480px) {
+    .container { padding: 24px 16px; }
+    .create-card, .result-card { padding: 28px 20px; }
+    .room-number-value { font-size: 36px; }
+    .action-buttons { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <div class="header-en">Otagaisama Project</div>
+    <h1>お互い様</h1>
+    <div class="header-sub">感謝の部屋</div>
+  </div>
+
+  <!-- 作成画面 -->
+  <div id="view-create" class="view active">
+    <div class="create-card">
+      <div class="create-icon">🏮</div>
+      <h2>部　屋　を　作　る</h2>
+      <p>
+        ボタンを押すと、あなただけの「感謝の部屋」が生まれます。<br>
+        QRコード付きの番号札を受け取って、<br>
+        大切な人に渡してください。
+      </p>
+      <button class="btn-create" id="btn-generate" onclick="generateRoom()">
+        部　屋　を　生　成　す　る
+      </button>
+      <div id="create-msg" class="msg"></div>
+    </div>
+  </div>
+
+  <!-- 生成結果画面 -->
+  <div id="view-result" class="view">
+    <div class="result-card">
+      <div class="room-number">
+        <div class="room-number-label">Room Number</div>
+        <div class="room-number-value" id="result-number">—</div>
+      </div>
+
+      <div class="qr-section">
+        <div id="qrcode"></div>
+        <div class="room-url" id="result-url"></div>
+      </div>
+
+      <div class="action-buttons">
+        <button class="btn-secondary" onclick="copyUrl()">URLをコピー</button>
+        <button class="btn-primary" onclick="goToRoom()">部屋に入る</button>
+      </div>
+
+      <div class="gold-line"></div>
+
+      <div style="text-align:center; font-family:'Zen Kaku Gothic New',sans-serif; font-size:12px; color:var(--gray); letter-spacing:2px; line-height:2;">
+        このQRコードを名刺に印刷して<br>
+        大切な人に渡してください
+      </div>
+    </div>
+  </div>
+
+  <!-- 部屋画面 -->
+  <div id="view-room" class="view">
+    <div class="room-header">
+      <div class="room-badge">
+        <div class="room-badge-label">Room</div>
+        <div class="room-badge-number" id="room-display-number">—</div>
+      </div>
+      <button class="share-btn" onclick="copyUrl()">QR / URL</button>
+    </div>
+
+    <!-- 投稿フォーム -->
+    <div class="post-form">
+      <h3>感 謝 を 届 け る</h3>
+      <div class="form-group">
+        <label>メッセージ</label>
+        <textarea id="post-text" placeholder="ありがとう、という気持ちを言葉にしてください。"></textarea>
+      </div>
+      <div class="form-group">
+        <label>画像（任意）</label>
+        <div class="image-upload" onclick="document.getElementById('post-image').click()">
+          <input type="file" id="post-image" accept="image/*" onchange="previewImage(this)">
+          <div class="image-upload-text">タップして画像を選ぶ</div>
+          <img id="image-preview" class="image-preview" alt="preview">
+        </div>
+      </div>
+      <button class="btn-post" id="btn-post" onclick="submitPost()">
+        感　謝　を　送　る
+      </button>
+      <div id="post-msg" class="msg"></div>
+    </div>
+
+    <div class="gold-line"></div>
+
+    <!-- 投稿一覧 -->
+    <div class="posts-section">
+      <h3>— こ の 部 屋 の 記 録 —</h3>
+      <div id="posts-list">
+        <div class="loading">読み込み中...</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- トースト -->
+<div class="toast" id="toast">URLをコピーしました</div>
+
+<script>
+const SUPABASE_URL = 'https://damussuizcfzqkfkpwwm.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhbXVzc3VpemNmenFrZmtwd3dtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0NTcwOTIsImV4cCI6MjA5MTAzMzA5Mn0.Xp93BfRowa9gG7ZMRQxyyKiYXgWRN4Gk5xLxaGTiUIo';
+
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let currentRoomId = null;
+let currentRoomNumber = null;
+let selectedFile = null;
+
+// ===== 初期化 =====
+window.onload = async () => {
+  // URLにroom_idがあれば部屋を開く
+  const params = new URLSearchParams(window.location.search);
+  const roomId = params.get('room');
+  if (roomId) {
+    await openRoom(roomId);
+  }
+};
+
+// ===== 部屋生成 =====
+async function generateRoom() {
+  const btn = document.getElementById('btn-generate');
+  const msg = document.getElementById('create-msg');
+  btn.disabled = true;
+  btn.textContent = '生成中...';
+  msg.textContent = '';
+
+  try {
+    // ランダムなroom_idを生成
+    const roomId = crypto.randomUUID();
+
+    // ナンバリング取得（rooms テーブルに保存）
+    const { data, error } = await db
+      .from('rooms')
+      .insert([{ room_id: roomId }])
+      .select()
+      .single();
+
+    if (error) {
+      // roomsテーブルがない場合はpostsテーブルで代替
+      await showResult(roomId, Math.floor(Math.random() * 9000) + 1000);
+      return;
+    }
+
+    await showResult(roomId, data.id);
+
+  } catch (e) {
+    // roomsテーブルがなくてもランダム番号で動かす
+    const roomId = crypto.randomUUID();
+    const fakeNumber = Math.floor(Math.random() * 9000) + 1000;
+    await showResult(roomId, fakeNumber);
+  }
+}
+
+async function showResult(roomId, number) {
+  currentRoomId = roomId;
+  currentRoomNumber = String(number).padStart(4, '0');
+
+  const url = `${window.location.origin}${window.location.pathname}?room=${roomId}`;
+
+  document.getElementById('result-number').textContent = `No. ${currentRoomNumber}`;
+  document.getElementById('result-url').textContent = url;
+
+  // QR生成
+  document.getElementById('qrcode').innerHTML = '';
+  new QRCode(document.getElementById('qrcode'), {
+    text: url,
+    width: 180,
+    height: 180,
+    colorDark: '#1a1208',
+    colorLight: '#ffffff',
+  });
+
+  showView('result');
+}
+
+// ===== 部屋を開く =====
+async function openRoom(roomId) {
+  currentRoomId = roomId;
+
+  // room番号を取得
+  try {
+    const { data } = await db
+      .from('rooms')
+      .select('id')
+      .eq('room_id', roomId)
+      .single();
+    currentRoomNumber = data ? String(data.id).padStart(4, '0') : '????';
+  } catch {
+    currentRoomNumber = roomId.slice(0, 4).toUpperCase();
+  }
+
+  document.getElementById('room-display-number').textContent = `No. ${currentRoomNumber}`;
+  showView('room');
+  await loadPosts();
+}
+
+// ===== 投稿読み込み =====
+async function loadPosts() {
+  const list = document.getElementById('posts-list');
+  list.innerHTML = '<div class="loading">読み込み中...</div>';
+
+  const { data, error } = await db
+    .from('room_posts')
+    .select('*')
+    .eq('room_id', currentRoomId)
+    .order('created_at', { ascending: false });
+
+  if (error || !data || data.length === 0) {
+    list.innerHTML = `
+      <div class="empty-posts">
+        まだ何もありません<br>
+        最初の感謝を届けてみてください
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = data.map(post => `
+    <div class="post-item">
+      <div class="post-meta">
+        <span class="post-type">感 謝</span>
+        <span class="post-time">${formatDate(post.created_at)}</span>
+      </div>
+      ${post.content ? `<div class="post-content">${escapeHtml(post.content)}</div>` : ''}
+      ${post.image_url ? `<img class="post-image" src="${post.image_url}" alt="投稿画像">` : ''}
+    </div>
+  `).join('');
+}
+
+// ===== 投稿送信 =====
+async function submitPost() {
+  const text = document.getElementById('post-text').value.trim();
+  const btn = document.getElementById('btn-post');
+  const msg = document.getElementById('post-msg');
+
+  if (!text && !selectedFile) {
+    msg.textContent = 'メッセージか画像を入れてください';
+    msg.className = 'msg msg-error';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '送信中...';
+  msg.textContent = '';
+
+  try {
+    let imageUrl = null;
+
+    // 画像アップロード
+    if (selectedFile) {
+      const ext = selectedFile.name.split('.').pop();
+      const fileName = `${currentRoomId}/${Date.now()}.${ext}`;
+      const { data: uploadData, error: uploadError } = await db.storage
+        .from('room-images')
+        .upload(fileName, selectedFile);
+
+      if (!uploadError) {
+        const { data: urlData } = db.storage
+          .from('room-images')
+          .getPublicUrl(fileName);
+        imageUrl = urlData.publicUrl;
+      }
+    }
+
+    // 投稿保存
+    const { error } = await db
+      .from('room_posts')
+      .insert([{
+        room_id: currentRoomId,
+        content: text || null,
+        image_url: imageUrl,
+      }]);
+
+    if (error) throw error;
+
+    // リセット
+    document.getElementById('post-text').value = '';
+    document.getElementById('post-image').value = '';
+    document.getElementById('image-preview').style.display = 'none';
+    selectedFile = null;
+
+    msg.textContent = '感謝が届きました';
+    msg.className = 'msg msg-success';
+
+    await loadPosts();
+
+  } catch (e) {
+    msg.textContent = '送信に失敗しました。もう一度お試しください。';
+    msg.className = 'msg msg-error';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '感　謝　を　送　る';
+  }
+}
+
+// ===== 画像プレビュー =====
+function previewImage(input) {
+  if (input.files && input.files[0]) {
+    selectedFile = input.files[0];
+    const reader = new FileReader();
+    reader.onload = e => {
+      const preview = document.getElementById('image-preview');
+      preview.src = e.target.result;
+      preview.style.display = 'block';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+// ===== URL コピー =====
+function copyUrl() {
+  const url = currentRoomId
+    ? `${window.location.origin}${window.location.pathname}?room=${currentRoomId}`
+    : document.getElementById('result-url').textContent;
+
+  navigator.clipboard.writeText(url).then(() => {
+    showToast('URLをコピーしました');
+  });
+}
+
+// ===== 部屋に入る =====
+function goToRoom() {
+  if (currentRoomId) {
+    window.history.pushState({}, '', `?room=${currentRoomId}`);
+    openRoom(currentRoomId);
+  }
+}
+
+// ===== ユーティリティ =====
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(`view-${name}`).classList.add('active');
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+function formatDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
