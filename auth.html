@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ログイン · 登録 — お互い様プロジェクト</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@200;300;400;700&family=Zen+Kaku+Gothic+New:wght@300;400&family=Shippori+Mincho:wght@400;500;700&family=Klee+One:wght@400;600&display=swap');
+
+  :root {
+    --ink: #1a1208;
+    --paper: #f5f0e8;
+    --gold: #b8860b;
+    --gray: #6b6355;
+    --border: #c8b99a;
+    --cream: #faf6ee;
+    --red: #8b1a1a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Noto Serif JP', serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow-x: hidden;
+  }
+
+  /* 和紙テクスチャ */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* 上の金線 */
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 1px; height: 60px;
+    background: linear-gradient(to bottom, transparent, var(--gold));
+    animation: lineDown 1.5s ease forwards;
+    z-index: 1;
+  }
+  @keyframes lineDown { from{height:0;opacity:0} to{height:60px;opacity:1} }
+
+  /* ===== メインラッパ ===== */
+  .auth-wrap {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 440px;
+    padding: 40px 24px 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ロゴエリア */
+  .logo-area {
+    text-align: center;
+    margin-bottom: 36px;
+    opacity: 0;
+    animation: fadeUp 1s ease 0.3s forwards;
+  }
+
+  .logo-en {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 10px;
+    letter-spacing: 6px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .logo-title {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 26px;
+    font-weight: 400;
+    letter-spacing: 10px;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+
+  .logo-sub {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--gray);
+  }
+
+  .logo-divider {
+    width: 40px; height: 1px;
+    background: var(--border);
+    margin: 16px auto 0;
+  }
+
+  /* ===== タブ ===== */
+  .tab-bar {
+    display: flex;
+    width: 100%;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 32px;
+    opacity: 0;
+    animation: fadeUp 1s ease 0.6s forwards;
+  }
+
+  .tab-btn {
+    flex: 1;
+    padding: 14px 0;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    font-family: 'Shippori Mincho', serif;
+    font-size: 13px;
+    letter-spacing: 4px;
+    color: var(--gray);
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-bottom: -1px;
+  }
+
+  .tab-btn.active {
+    color: var(--ink);
+    border-bottom-color: var(--gold);
+  }
+
+  .tab-btn:hover:not(.active) { color: var(--ink); }
+
+  /* ===== フォームカード ===== */
+  .form-card {
+    width: 100%;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 36px 32px;
+    box-shadow: 0 2px 24px rgba(0,0,0,0.06);
+    opacity: 0;
+    animation: fadeUp 1s ease 0.9s forwards;
+  }
+
+  /* パネル切り替え */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* フォームグループ */
+  .form-group {
+    margin-bottom: 22px;
+  }
+
+  .form-label {
+    display: block;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .form-input {
+    width: 100%;
+    padding: 13px 16px;
+    border: 1px solid var(--border);
+    border-radius: 1px;
+    background: var(--paper);
+    font-family: 'Noto Serif JP', serif;
+    font-size: 14px;
+    color: var(--ink);
+    transition: border-color 0.25s, box-shadow 0.25s;
+    outline: none;
+    -webkit-appearance: none;
+  }
+
+  .form-input::placeholder {
+    color: #c0b8a8;
+    font-size: 13px;
+  }
+
+  .form-input:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(184,134,11,0.08);
+  }
+
+  /* パスワードラッパ */
+  .pw-wrap {
+    position: relative;
+  }
+
+  .pw-toggle {
+    position: absolute;
+    right: 14px; top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--gray);
+    font-size: 12px;
+    letter-spacing: 1px;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    transition: color 0.2s;
+    padding: 4px;
+  }
+  .pw-toggle:hover { color: var(--ink); }
+
+  /* ===== 送信ボタン ===== */
+  .btn-submit {
+    width: 100%;
+    padding: 16px;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    font-family: 'Shippori Mincho', serif;
+    font-size: 14px;
+    letter-spacing: 5px;
+    cursor: pointer;
+    transition: all 0.4s;
+    border-radius: 1px;
+    margin-top: 8px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-submit::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--gold);
+    transform: translateX(-100%);
+    transition: transform 0.4s ease;
+  }
+
+  .btn-submit:hover::before { transform: translateX(0); }
+  .btn-submit span { position: relative; z-index: 1; }
+
+  .btn-submit:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .btn-submit:disabled::before { display: none; }
+
+  /* ===== メッセージ ===== */
+  .msg-area {
+    margin-top: 16px;
+    min-height: 20px;
+    text-align: center;
+  }
+
+  .msg {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 12px;
+    letter-spacing: 1px;
+    line-height: 1.8;
+  }
+  .msg-error { color: var(--red); }
+  .msg-success { color: var(--gold); }
+
+  /* ===== セパレータ ===== */
+  .form-sep {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 24px 0;
+    opacity: 0.6;
+  }
+
+  /* ===== トップへ戻るリンク ===== */
+  .back-link-area {
+    margin-top: 28px;
+    text-align: center;
+    opacity: 0;
+    animation: fadeUp 1s ease 1.1s forwards;
+  }
+
+  .back-link {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--gray);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    transition: color 0.2s;
+  }
+
+  .back-link:hover { color: var(--ink); }
+
+  /* ===== ローディングスピナー ===== */
+  .spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid rgba(245,240,232,0.4);
+    border-top-color: var(--paper);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ===== フッター ===== */
+  .footer {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    text-align: center;
+    padding: 16px 24px;
+    z-index: 1;
+  }
+
+  .footer p {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 10px;
+    color: var(--border);
+    letter-spacing: 3px;
+  }
+
+  /* ===== 注記テキスト ===== */
+  .form-note {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 11px;
+    color: var(--gray);
+    letter-spacing: 1px;
+    line-height: 1.8;
+    text-align: center;
+    margin-top: 16px;
+  }
+
+  @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+  @media (max-width: 480px) {
+    .form-card { padding: 28px 20px; }
+    .auth-wrap { padding: 32px 16px 80px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="auth-wrap">
+
+  <!-- ロゴ -->
+  <div class="logo-area">
+    <div class="logo-en">Otagai-sama Project</div>
+    <div class="logo-title">お 互 い 様</div>
+    <div class="logo-sub">プ ロ ジ ェ ク ト</div>
+    <div class="logo-divider"></div>
+  </div>
+
+  <!-- タブ -->
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tab-login" onclick="switchTab('login')">
+      ロ グ イ ン
+    </button>
+    <button class="tab-btn" id="tab-register" onclick="switchTab('register')">
+      新 規 登 録
+    </button>
+  </div>
+
+  <!-- フォームカード -->
+  <div class="form-card">
+
+    <!-- ===== ログインパネル ===== -->
+    <div class="panel active" id="panel-login">
+      <div class="form-group">
+        <label class="form-label" for="login-email">メールアドレス</label>
+        <input
+          class="form-input"
+          type="email"
+          id="login-email"
+          placeholder="your@email.com"
+          autocomplete="email"
+        >
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="login-password">パスワード</label>
+        <div class="pw-wrap">
+          <input
+            class="form-input"
+            type="password"
+            id="login-password"
+            placeholder="パスワード"
+            autocomplete="current-password"
+            style="padding-right: 56px;"
+          >
+          <button class="pw-toggle" onclick="togglePw('login-password', this)" type="button">表示</button>
+        </div>
+      </div>
+
+      <button class="btn-submit" id="btn-login" onclick="doLogin()">
+        <span id="login-btn-text">ログ イン</span>
+      </button>
+
+      <div class="msg-area">
+        <div class="msg" id="login-msg"></div>
+      </div>
+    </div>
+
+    <!-- ===== 登録パネル ===== -->
+    <div class="panel" id="panel-register">
+      <div class="form-group">
+        <label class="form-label" for="reg-email">メールアドレス</label>
+        <input
+          class="form-input"
+          type="email"
+          id="reg-email"
+          placeholder="your@email.com"
+          autocomplete="email"
+        >
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="reg-password">パスワード</label>
+        <div class="pw-wrap">
+          <input
+            class="form-input"
+            type="password"
+            id="reg-password"
+            placeholder="6文字以上"
+            autocomplete="new-password"
+            style="padding-right: 56px;"
+          >
+          <button class="pw-toggle" onclick="togglePw('reg-password', this)" type="button">表示</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="reg-password2">パスワード（確認）</label>
+        <div class="pw-wrap">
+          <input
+            class="form-input"
+            type="password"
+            id="reg-password2"
+            placeholder="もう一度入力"
+            autocomplete="new-password"
+            style="padding-right: 56px;"
+          >
+          <button class="pw-toggle" onclick="togglePw('reg-password2', this)" type="button">表示</button>
+        </div>
+      </div>
+
+      <button class="btn-submit" id="btn-register" onclick="doRegister()">
+        <span id="reg-btn-text">登 録 す る</span>
+      </button>
+
+      <div class="msg-area">
+        <div class="msg" id="register-msg"></div>
+      </div>
+
+      <div class="form-note">
+        登録後、すぐにご利用いただけます。
+      </div>
+    </div>
+
+  </div>
+
+  <!-- トップへ -->
+  <div class="back-link-area">
+    <a href="index.html" class="back-link">← トップページへ戻る</a>
+  </div>
+
+</div>
+
+<footer class="footer">
+  <p>© お互い様プロジェクト — β version — all rights reserved</p>
+</footer>
+
+<script>
+  const SUPABASE_URL = 'https://damussuizcfzqkfkpwwm.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhbXVzc3VpemNmenFrZmtwd3dtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0NTcwOTIsImV4cCI6MjA5MTAzMzA5Mn0.Xp93BfRowa9gG7ZMRQxyyKiYXgWRN4Gk5xLxaGTiUIo';
+
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ===== タブ切り替え =====
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    document.getElementById('panel-' + tab).classList.add('active');
+    clearMsgs();
+  }
+
+  function clearMsgs() {
+    document.getElementById('login-msg').textContent = '';
+    document.getElementById('register-msg').textContent = '';
+  }
+
+  // ===== パスワード表示トグル =====
+  function togglePw(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (input.type === 'password') {
+      input.type = 'text';
+      btn.textContent = '隠す';
+    } else {
+      input.type = 'password';
+      btn.textContent = '表示';
+    }
+  }
+
+  // ===== ローディング状態 =====
+  function setLoading(btnId, textId, loading, label) {
+    const btn = document.getElementById(btnId);
+    const text = document.getElementById(textId);
+    btn.disabled = loading;
+    if (loading) {
+      text.innerHTML = '<span class="spinner"></span>処理中...';
+    } else {
+      text.textContent = label;
+    }
+  }
+
+  function showMsg(id, text, type) {
+    const el = document.getElementById(id);
+    el.textContent = text;
+    el.className = 'msg msg-' + type;
+  }
+
+  // ===== ログイン =====
+  async function doLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+
+    if (!email || !password) {
+      showMsg('login-msg', 'メールアドレスとパスワードを入力してください', 'error');
+      return;
+    }
+
+    setLoading('btn-login', 'login-btn-text', true);
+    showMsg('login-msg', '', '');
+
+    const { data, error } = await db.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      let msg = 'ログインに失敗しました';
+      if (error.message.includes('Invalid login')) msg = 'メールアドレスまたはパスワードが違います';
+      if (error.message.includes('Email not confirmed')) msg = 'メール確認が必要です';
+      showMsg('login-msg', msg, 'error');
+      setLoading('btn-login', 'login-btn-text', false, 'ログ イン');
+      return;
+    }
+
+    showMsg('login-msg', 'ログイン成功！ 移動します...', 'success');
+    setTimeout(() => { window.location.href = 'card.html'; }, 800);
+  }
+
+  // ===== 新規登録 =====
+  async function doRegister() {
+    const email = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value;
+    const password2 = document.getElementById('reg-password2').value;
+
+    if (!email || !password) {
+      showMsg('register-msg', 'メールアドレスとパスワードを入力してください', 'error');
+      return;
+    }
+
+    if (password.length < 6) {
+      showMsg('register-msg', 'パスワードは6文字以上で設定してください', 'error');
+      return;
+    }
+
+    if (password !== password2) {
+      showMsg('register-msg', 'パスワードが一致しません', 'error');
+      return;
+    }
+
+    setLoading('btn-register', 'reg-btn-text', true);
+    showMsg('register-msg', '', '');
+
+    const { data, error } = await db.auth.signUp({ email, password });
+
+    if (error) {
+      let msg = '登録に失敗しました';
+      if (error.message.includes('already registered')) msg = 'このメールアドレスはすでに登録されています';
+      if (error.message.includes('Password should')) msg = 'パスワードは6文字以上で設定してください';
+      showMsg('register-msg', msg, 'error');
+      setLoading('btn-register', 'reg-btn-text', false, '登 録 す る');
+      return;
+    }
+
+    // メール確認OFFの場合はそのままcard.htmlへ
+    if (data.session) {
+      showMsg('register-msg', '登録完了！ 移動します...', 'success');
+      setTimeout(() => { window.location.href = 'card.html'; }, 800);
+    } else {
+      // 万一確認メールが必要な場合
+      showMsg('register-msg', '確認メールを送信しました。メールをご確認ください。', 'success');
+      setLoading('btn-register', 'reg-btn-text', false, '登 録 す る');
+    }
+  }
+
+  // ===== 既ログイン確認（ページ開いたとき） =====
+  (async () => {
+    const { data: { session } } = await db.auth.getSession();
+    if (session) {
+      window.location.href = 'card.html';
+    }
+  })();
+
+  // ===== Enterキー対応 =====
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    const loginActive = document.getElementById('panel-login').classList.contains('active');
+    if (loginActive) doLogin();
+    else doRegister();
+  });
+</script>
+</body>
+</html>
