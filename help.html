@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light only">
+<title>ヘルプ — お互い様プロジェクト</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&family=Zen+Kaku+Gothic+New:wght@300;400&family=Klee+One:wght@400;600&display=swap');
+  :root {
+    color-scheme: light only;
+    --ink: #1a1208; --paper: #f5f0e8; --gold: #b8860b;
+    --gray: #6b6355; --border: #c8b99a; --cream: #faf6ee;
+    --kuu-bg: #dff0f8; --blue: #5a8ba8;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#f5f0e8!important; color:#1a1208!important; font-family:'Noto Serif JP',serif; min-height:100vh; }
+
+  /* 戻るバー */
+  .back-bar {
+    position:fixed; top:0; left:0; right:0; z-index:100;
+    padding:14px 20px; display:flex; align-items:center;
+    background:rgba(245,240,232,0.92); backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--border);
+  }
+  .back-link {
+    font-family:'Zen Kaku Gothic New',sans-serif; font-size:12px;
+    letter-spacing:2px; color:var(--gold); text-decoration:none;
+    display:flex; align-items:center; gap:6px; transition:opacity 0.2s;
+  }
+  .back-link:hover { opacity:0.6; }
+  .back-bar-title {
+    flex:1; text-align:center; font-family:'Klee One',cursive;
+    font-size:13px; color:var(--gray); letter-spacing:3px;
+  }
+  .back-bar-space { width:60px; }
+
+  .container { max-width:600px; margin:0 auto; padding:100px 24px 60px; }
+
+  /* ヘッダー */
+  .page-header { text-align:center; margin-bottom:40px; }
+  .page-en {
+    font-family:'Zen Kaku Gothic New',sans-serif; font-size:9px;
+    letter-spacing:5px; color:var(--gold); text-transform:uppercase; margin-bottom:8px;
+  }
+  .page-title {
+    font-family:'Noto Serif JP',serif; font-size:28px; font-weight:300;
+    letter-spacing:8px; color:var(--ink); margin-bottom:16px;
+  }
+  .page-divider { width:40px; height:1px; background:var(--border); margin:0 auto 20px; }
+
+  /* クウの困りごと */
+  .kuu-card {
+    background:white; border:1px solid var(--border); border-radius:2px;
+    padding:32px; margin-bottom:32px;
+    box-shadow:0 2px 16px rgba(0,0,0,0.05);
+  }
+  .kuu-card-header {
+    display:flex; align-items:center; gap:16px; margin-bottom:20px;
+    padding-bottom:16px; border-bottom:1px solid var(--border);
+  }
+  .kuu-icon {
+    width:56px; height:56px; border-radius:50%;
+    background:var(--kuu-bg); border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .kuu-card-label {
+    font-family:'Zen Kaku Gothic New',sans-serif; font-size:9px;
+    letter-spacing:4px; color:var(--gold); text-transform:uppercase; margin-bottom:4px;
+  }
+  .kuu-card-name {
+    font-family:'Klee One',cursive; font-size:16px; color:var(--ink);
+  }
+  .help-items { display:flex; flex-direction:column; gap:16px; }
+  .help-item {
+    background:var(--cream); border:1px solid var(--border); border-radius:2px;
+    padding:16px 20px;
+  }
+  .help-item-tag {
+    font-family:'Zen Kaku Gothic New',sans-serif; font-size:9px;
+    letter-spacing:3px; color:var(--blue); text-transform:uppercase; margin-bottom:6px;
+  }
+  .help-item-text {
+    font-family:'Klee One',cursive; font-size:14px; color:var(--ink); line-height:1.9;
+  }
+
+  /* フォーム */
+  .form-card {
+    background:white; border:1px solid var(--border); border-radius:2px;
+    padding:32px; box-shadow:0 2px 16px rgba(0,0,0,0.05);
+  }
+  .form-title {
+    font-family:'Zen Kaku Gothic New',sans-serif; font-size:11px;
+    letter-spacing:4px; color:var(--gold); margin-bottom:24px;
+  }
+  .form-group { margin-bottom:20px; }
+  .form-group label {
+    display:block; font-family:'Zen Kaku Gothic New',sans-serif;
+    font-size:10px; letter-spacing:2px; color:var(--gray); margin-bottom:8px;
+  }
+  input, textarea, select {
+    width:100%; padding:12px 14px; border:1px solid var(--border); border-radius:1px;
+    font-family:'Noto Serif JP',serif; font-size:14px; color:var(--ink);
+    background:var(--paper); transition:border-color 0.2s;
+  }
+  input:focus, textarea:focus, select:focus { outline:none; border-color:var(--gold); }
+  textarea { min-height:120px; resize:vertical; line-height:1.8; }
+  .btn-submit {
+    width:100%; padding:16px; border:none; background:var(--ink);
+    color:var(--paper); font-family:'Noto Serif JP',serif;
+    font-size:14px; letter-spacing:4px; cursor:pointer; transition:all 0.3s; border-radius:1px;
+  }
+  .btn-submit:hover { background:var(--gold); }
+  .success-msg {
+    display:none; text-align:center; padding:20px;
+    font-family:'Klee One',cursive; font-size:15px; color:var(--blue); line-height:2;
+  }
+</style>
+</head>
+<body>
+<div class="back-bar">
+  <a href="index.html" class="back-link">← 表紙へ</a>
+  <div class="back-bar-title">お互い様プロジェクト</div>
+  <div class="back-bar-space"></div>
+</div>
+
+<div class="container">
+  <div class="page-header">
+    <div class="page-en">Help Wanted</div>
+    <div class="page-title">ヘ ル プ</div>
+    <div class="page-divider"></div>
+    <p style="font-family:'Klee One',cursive;font-size:13px;color:var(--gray);line-height:2;">
+      クウが困っています。<br>知恵を貸してもらえませんか？
+    </p>
+  </div>
+
+  <!-- クウの困りごと -->
+  <div class="kuu-card">
+    <div class="kuu-card-header">
+      <div class="kuu-icon">
+        <svg width="36" height="36" viewBox="30 60 180 185" fill="none">
+          <defs>
+            <radialGradient id="kg2" cx="50%" cy="40%" r="55%">
+              <stop offset="0%" stop-color="#e8f6fc"/>
+              <stop offset="100%" stop-color="#b8d8ec"/>
+            </radialGradient>
+          </defs>
+          <ellipse cx="120" cy="130" rx="54" ry="52" fill="url(#kg2)"/>
+          <ellipse cx="120" cy="82" rx="44" ry="22" fill="#8abcd8"/>
+          <circle cx="90" cy="78" r="18" fill="#8abcd8"/>
+          <circle cx="150" cy="78" r="18" fill="#8abcd8"/>
+          <circle cx="120" cy="70" r="20" fill="#9acae0"/>
+          <ellipse cx="103" cy="128" rx="11" ry="13" fill="white"/>
+          <ellipse cx="103" cy="130" rx="8" ry="9" fill="#5a8ba8"/>
+          <ellipse cx="103" cy="130" rx="5" ry="6" fill="#2a4a5a"/>
+          <circle cx="106" cy="127" r="3" fill="white"/>
+          <ellipse cx="137" cy="128" rx="11" ry="13" fill="white"/>
+          <ellipse cx="137" cy="130" rx="8" ry="9" fill="#5a8ba8"/>
+          <ellipse cx="137" cy="130" rx="5" ry="6" fill="#2a4a5a"/>
+          <circle cx="140" cy="127" r="3" fill="white"/>
+          <path d="M112 154 Q120 158 128 154" stroke="#7a9cac" stroke-width="2" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div>
+        <div class="kuu-card-label">From Kuu</div>
+        <div class="kuu-card-name">クウのお困りごと</div>
+      </div>
+    </div>
+    <div class="help-items">
+      <div class="help-item">
+        <div class="help-item-tag">Help 01</div>
+        <div class="help-item-text">
+          このプロジェクトを多くの人に知ってもらうには<br>どうしたらええんやろ？
+        </div>
+      </div>
+      <div class="help-item">
+        <div class="help-item-tag">Help 02</div>
+        <div class="help-item-text">
+          地域のお店さんにスポンサーになってもらうための<br>いい伝え方、知ってる人おる？
+        </div>
+      </div>
+      <div class="help-item">
+        <div class="help-item-tag">Help 03</div>
+        <div class="help-item-text">
+          「ありがとう」を形にするアイデア、<br>なんかええもんないかな。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 回答フォーム -->
+  <div class="form-card">
+    <div class="form-title">— 知 恵 を 贈 る —</div>
+    <form id="helpForm">
+      <input type="hidden" name="access_key" value="993fcf8d-e618-47db-b863-f45b3c5b5418">
+      <input type="hidden" name="subject" value="【ヘルプ】お互い様プロジェクトへの回答">
+      <div class="form-group">
+        <label>お名前（任意）</label>
+        <input type="text" name="name" placeholder="匿名でも大丈夫です">
+      </div>
+      <div class="form-group">
+        <label>メールアドレス（任意）</label>
+        <input type="email" name="email" placeholder="返信希望の方はご記入ください">
+      </div>
+      <div class="form-group">
+        <label>どのお困りごとへの回答ですか？</label>
+        <select name="help_topic">
+          <option value="Help 01">Help 01 — 広め方について</option>
+          <option value="Help 02">Help 02 — スポンサー営業について</option>
+          <option value="Help 03">Help 03 — ありがとうを形にするアイデア</option>
+          <option value="その他">その他・全般</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>あなたの知恵・アドバイス *</label>
+        <textarea name="message" required placeholder="どんな小さなことでも、クウは喜びます。"></textarea>
+      </div>
+      <button type="submit" class="btn-submit">知 恵 を 届 け る</button>
+    </form>
+    <div class="success-msg" id="successMsg">
+      ありがとうございます🌟<br>クウに届けます。
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('helpForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = this.querySelector('.btn-submit');
+    btn.textContent = '送信中...'; btn.disabled = true;
+    const res = await fetch('https://api.web3forms.com/submit', {
+      method:'POST', body: new FormData(this)
+    });
+    if (res.ok) {
+      this.style.display = 'none';
+      document.getElementById('successMsg').style.display = 'block';
+    } else {
+      btn.textContent = '送信できませんでした。もう一度お試しください。';
+      btn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>

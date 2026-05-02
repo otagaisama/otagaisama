@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light only">
+<title>サポートメンバー募集 — お互い様プロジェクト</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&family=Zen+Kaku+Gothic+New:wght@300;400&family=Klee+One:wght@400;600&display=swap');
+  :root { color-scheme:light only; --ink:#1a1208; --paper:#f5f0e8; --gold:#b8860b; --gray:#6b6355; --border:#c8b99a; --cream:#faf6ee; --blue:#5a8ba8; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#f5f0e8!important; color:#1a1208!important; font-family:'Noto Serif JP',serif; min-height:100vh; }
+  .back-bar { position:fixed; top:0; left:0; right:0; z-index:100; padding:14px 20px; display:flex; align-items:center; background:rgba(245,240,232,0.92); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); }
+  .back-link { font-family:'Zen Kaku Gothic New',sans-serif; font-size:12px; letter-spacing:2px; color:var(--gold); text-decoration:none; display:flex; align-items:center; gap:6px; transition:opacity 0.2s; }
+  .back-link:hover { opacity:0.6; }
+  .back-bar-title { flex:1; text-align:center; font-family:'Klee One',cursive; font-size:13px; color:var(--gray); letter-spacing:3px; }
+  .back-bar-space { width:60px; }
+  .container { max-width:600px; margin:0 auto; padding:100px 24px 60px; }
+  .page-header { text-align:center; margin-bottom:40px; }
+  .page-en { font-family:'Zen Kaku Gothic New',sans-serif; font-size:9px; letter-spacing:5px; color:var(--gold); text-transform:uppercase; margin-bottom:8px; }
+  .page-title { font-family:'Noto Serif JP',serif; font-size:28px; font-weight:300; letter-spacing:8px; color:var(--ink); margin-bottom:16px; }
+  .page-divider { width:40px; height:1px; background:var(--border); margin:0 auto 20px; }
+
+  /* 問いかけカード */
+  .question-card { background:white; border:1px solid var(--border); border-radius:2px; padding:32px; margin-bottom:20px; box-shadow:0 2px 16px rgba(0,0,0,0.05); text-align:center; }
+  .question-tag { font-family:'Zen Kaku Gothic New',sans-serif; font-size:9px; letter-spacing:4px; color:var(--blue); text-transform:uppercase; margin-bottom:16px; }
+  .question-text { font-family:'Klee One',cursive; font-size:16px; color:var(--ink); line-height:2.2; margin-bottom:12px; }
+  .question-sub { font-family:'Zen Kaku Gothic New',sans-serif; font-size:12px; color:var(--gray); letter-spacing:1px; line-height:1.8; }
+
+  /* できること選択 */
+  .skills-card { background:white; border:1px solid var(--border); border-radius:2px; padding:28px 32px; margin-bottom:20px; box-shadow:0 2px 16px rgba(0,0,0,0.05); }
+  .skills-label { font-family:'Zen Kaku Gothic New',sans-serif; font-size:10px; letter-spacing:3px; color:var(--gray); margin-bottom:16px; }
+  .skills-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .skill-btn { padding:12px 8px; border:1px solid var(--border); background:var(--cream); font-family:'Zen Kaku Gothic New',sans-serif; font-size:11px; letter-spacing:1px; color:var(--gray); cursor:pointer; border-radius:1px; transition:all 0.2s; text-align:center; line-height:1.5; }
+  .skill-btn.selected { border-color:var(--blue); background:white; color:var(--blue); }
+
+  /* フォーム */
+  .form-card { background:white; border:1px solid var(--border); border-radius:2px; padding:32px; box-shadow:0 2px 16px rgba(0,0,0,0.05); }
+  .form-title { font-family:'Zen Kaku Gothic New',sans-serif; font-size:11px; letter-spacing:4px; color:var(--gold); margin-bottom:24px; }
+  .form-group { margin-bottom:20px; }
+  .form-group label { display:block; font-family:'Zen Kaku Gothic New',sans-serif; font-size:10px; letter-spacing:2px; color:var(--gray); margin-bottom:8px; }
+  input, textarea { width:100%; padding:12px 14px; border:1px solid var(--border); border-radius:1px; font-family:'Noto Serif JP',serif; font-size:14px; color:var(--ink); background:var(--paper); transition:border-color 0.2s; }
+  input:focus, textarea:focus { outline:none; border-color:var(--gold); }
+  textarea { min-height:120px; resize:vertical; line-height:1.8; }
+  .btn-submit { width:100%; padding:16px; border:none; background:var(--ink); color:var(--paper); font-family:'Noto Serif JP',serif; font-size:14px; letter-spacing:4px; cursor:pointer; transition:all 0.3s; border-radius:1px; }
+  .btn-submit:hover { background:var(--gold); }
+  .success-msg { display:none; text-align:center; padding:20px; font-family:'Klee One',cursive; font-size:15px; color:var(--blue); line-height:2; }
+
+  .gold-line { height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent); margin:28px 0; opacity:0.4; }
+</style>
+</head>
+<body>
+<div class="back-bar">
+  <a href="index.html" class="back-link">← 表紙へ</a>
+  <div class="back-bar-title">お互い様プロジェクト</div>
+  <div class="back-bar-space"></div>
+</div>
+<div class="container">
+  <div class="page-header">
+    <div class="page-en">Support Member</div>
+    <div class="page-title">サ ポ ー タ ー</div>
+    <div class="page-divider"></div>
+  </div>
+
+  <!-- 問いかけ -->
+  <div class="question-card">
+    <div class="question-tag">教えてほしいこと</div>
+    <div class="question-text">
+      「ありがとう」の価値を<br>
+      もっと多くの人に届けるには<br>
+      どうしたらいいんやろ？
+    </div>
+    <div class="gold-line"></div>
+    <div class="question-sub">
+      SNSの使い方、口コミの広め方、<br>
+      イベントのアイデア、つながりの作り方——<br>
+      あなたの経験や知恵を聞かせてください。<br>
+      一緒に考えてくれる人を探しています。
+    </div>
+  </div>
+
+  <!-- できること -->
+  <div class="skills-card">
+    <div class="skills-label">— あなたにできそうなこと（複数選択OK）—</div>
+    <div class="skills-grid" id="skillsGrid">
+      <div class="skill-btn" onclick="toggleSkill(this)">SNS・拡散</div>
+      <div class="skill-btn" onclick="toggleSkill(this)">デザイン</div>
+      <div class="skill-btn" onclick="toggleSkill(this)">口コミ・紹介</div>
+      <div class="skill-btn" onclick="toggleSkill(this)">イベント企画</div>
+      <div class="skill-btn" onclick="toggleSkill(this)">文章・ライティング</div>
+      <div class="skill-btn" onclick="toggleSkill(this)">プログラミング</div>
+      <div class="skill-btn" onclick="toggleSkill(this)">地域のつながり</div>
+      <div class="skill-btn" onclick="toggleSkill(this)">応援するだけでも</div>
+    </div>
+  </div>
+
+  <!-- フォーム -->
+  <div class="form-card">
+    <div class="form-title">— 手 を 挙 げ る —</div>
+    <form id="supportForm">
+      <input type="hidden" name="access_key" value="993fcf8d-e618-47db-b863-f45b3c5b5418">
+      <input type="hidden" name="subject" value="【サポーター】お互い様プロジェクト">
+      <input type="hidden" name="skills" id="skillsInput" value="">
+      <div class="form-group">
+        <label>お名前（任意）</label>
+        <input type="text" name="name" placeholder="匿名でも大丈夫です">
+      </div>
+      <div class="form-group">
+        <label>メールアドレス（任意）</label>
+        <input type="email" name="email" placeholder="連絡先をいただけると助かります">
+      </div>
+      <div class="form-group">
+        <label>アイデア・メッセージ</label>
+        <textarea name="message" placeholder="広め方のアイデア、応援メッセージ、なんでも。"></textarea>
+      </div>
+      <button type="submit" class="btn-submit">手 を 挙 げ る</button>
+    </form>
+    <div class="success-msg" id="successMsg">
+      ありがとうございます✨<br>あなたの手が届きました。<br>一緒にやっていきましょう。
+    </div>
+  </div>
+</div>
+<script>
+  const selected = new Set();
+  function toggleSkill(el) {
+    const val = el.textContent;
+    if (selected.has(val)) { selected.delete(val); el.classList.remove('selected'); }
+    else { selected.add(val); el.classList.add('selected'); }
+    document.getElementById('skillsInput').value = [...selected].join('、');
+  }
+  document.getElementById('supportForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = this.querySelector('.btn-submit');
+    btn.textContent = '送信中...'; btn.disabled = true;
+    const res = await fetch('https://api.web3forms.com/submit', { method:'POST', body: new FormData(this) });
+    if (res.ok) {
+      this.style.display = 'none';
+      document.getElementById('successMsg').style.display = 'block';
+    } else {
+      btn.textContent = '送信できませんでした。もう一度お試しください。';
+      btn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>

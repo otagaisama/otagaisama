@@ -3,11 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light only">
 <title>お互い様プロジェクト</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@200;300;400;700&family=Zen+Kaku+Gothic+New:wght@300;400&family=Shippori+Mincho:wght@400;500;700&family=Klee+One:wght@400;600&display=swap');
 
   :root {
+    color-scheme: light only;
     --ink: #1a1208;
     --paper: #f5f0e8;
     --gold: #b8860b;
@@ -18,11 +20,14 @@
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
+  html {
+    scroll-behavior: smooth;
+    background: #f5f0e8 !important;
+  }
 
   body {
-    background: var(--paper);
-    color: var(--ink);
+    background: #f5f0e8 !important;
+    color: #1a1208 !important;
     font-family: 'Noto Serif JP', serif;
     min-height: 100vh;
     overflow-x: hidden;
@@ -47,28 +52,28 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 60px 24px 100px;
+    padding: 60px 24px 80px;
     text-align: center;
   }
 
+  /* 上の縦線：40px・中央 */
   .hero::before {
     content: '';
     position: absolute;
     top: 0; left: 50%;
     transform: translateX(-50%);
-    width: 1px; height: 80px;
+    width: 1px; height: 40px;
     background: linear-gradient(to bottom, transparent, var(--gold));
     animation: lineDown 1.5s ease forwards;
   }
-  @keyframes lineDown { from{height:0;opacity:0} to{height:80px;opacity:1} }
+  @keyframes lineDown { from{height:0;opacity:0} to{height:40px;opacity:1} }
 
   /* TO HEART / TWO HEART */
   .tohearts {
     display: flex;
-    gap: 28px;
     align-items: center;
     margin-bottom: 20px;
-    margin-top: 40px;
+    margin-top: 52px;
     opacity: 0;
     animation: fadeUp 1s ease 0.3s forwards;
   }
@@ -77,13 +82,15 @@
     flex-direction: column;
     align-items: center;
     gap: 5px;
+    width: 80px;
   }
   .toheart-en {
     font-family: 'Zen Kaku Gothic New', sans-serif;
-    font-size: 9px;
-    letter-spacing: 5px;
+    font-size: 8px;
+    letter-spacing: 2px;
     color: var(--gold);
     text-transform: uppercase;
+    white-space: nowrap;
   }
   .toheart-ja {
     font-family: 'Klee One', cursive;
@@ -91,10 +98,12 @@
     color: var(--gray);
     letter-spacing: 2px;
   }
+  /* 区切り縦線：中央に1px */
   .toheart-divider {
     width: 1px; height: 32px;
     background: var(--border);
     opacity: 0.6;
+    flex-shrink: 0;
   }
 
   .hero-en {
@@ -152,43 +161,47 @@
   /* ===== クウエリア ===== */
   .kuu-section {
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     justify-content: center;
-    gap: 16px;
-    margin: 40px 0 28px;
+    gap: 12px;
+    margin: 40px 0 0;
     opacity: 0;
     animation: fadeUp 1s ease 1.5s forwards;
-    flex-wrap: wrap;
   }
 
   .kuu-bubble {
     background: white;
     border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 12px 14px;
+    padding: 10px 12px;
     font-family: 'Klee One', cursive;
-    font-size: 12px;
+    font-size: 11px;
     color: var(--gray);
-    line-height: 1.9;
-    max-width: 120px;
+    line-height: 1.8;
+    width: 100px;
+    flex-shrink: 0;
     position: relative;
-    text-align: left;
     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    align-self: center;
   }
-  .kuu-bubble.left { border-radius: 14px 14px 4px 14px; }
-  .kuu-bubble.right { border-radius: 14px 14px 14px 4px; text-align: right; }
-
+  .kuu-bubble.left {
+    border-radius: 14px 14px 4px 14px;
+    text-align: left;
+  }
+  .kuu-bubble.right {
+    border-radius: 14px 14px 14px 4px;
+    text-align: right;
+  }
   .kuu-bubble.left::after {
     content: '';
     position: absolute;
-    right: -9px; bottom: 20px;
+    right: -9px; top: 50%; transform: translateY(-50%);
     border: 5px solid transparent;
     border-left-color: var(--border);
   }
   .kuu-bubble.left::before {
     content: '';
     position: absolute;
-    right: -7px; bottom: 21px;
+    right: -7px; top: 50%; transform: translateY(-50%);
     border: 4px solid transparent;
     border-left-color: white;
     z-index: 1;
@@ -196,29 +209,17 @@
   .kuu-bubble.right::after {
     content: '';
     position: absolute;
-    left: -9px; bottom: 20px;
+    left: -9px; top: 50%; transform: translateY(-50%);
     border: 5px solid transparent;
     border-right-color: var(--border);
   }
   .kuu-bubble.right::before {
     content: '';
     position: absolute;
-    left: -7px; bottom: 21px;
+    left: -7px; top: 50%; transform: translateY(-50%);
     border: 4px solid transparent;
     border-right-color: white;
     z-index: 1;
-  }
-
-  .bubble-badge {
-    display: inline-block;
-    background: #e8f4f8;
-    border: 1px solid #b8d4e8;
-    border-radius: 100px;
-    padding: 1px 8px;
-    font-size: 9px;
-    letter-spacing: 2px;
-    color: #5a8ba8;
-    margin-bottom: 4px;
   }
 
   /* クウ本体丸枠 */
@@ -267,13 +268,86 @@
   .kuu-eye-r { animation: kuuBlink 5s ease-in-out 0.05s infinite; transform-origin:center; }
   @keyframes kuuBlink { 0%,90%,100%{transform:scaleY(1)} 95%{transform:scaleY(0.05)} }
 
+  /* ===== スポンサー弧エリア（クウ直下） ===== */
+  .sponsor-mini-area {
+    opacity: 0;
+    animation: fadeUp 1s ease 1.6s forwards;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 8px 0 0;
+  }
+  .sponsor-mini-label {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 8px;
+    letter-spacing: 3px;
+    color: var(--border);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .sponsor-mini-wrap {
+    position: relative;
+    width: 320px;
+    height: 165px; /* 7個の下向き弧が収まる高さ */
+  }
+
+  /* 丸 共通 */
+  .sponsor-circle {
+    position: absolute;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    border: 1px dashed var(--border);
+    background: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    cursor: default;
+    text-decoration: none;
+  }
+  .sponsor-circle:hover {
+    border-color: var(--gold);
+    border-style: solid;
+    background: white;
+    box-shadow: 0 4px 16px rgba(184,134,11,0.1);
+  }
+  .sponsor-circle.center-special {
+    border-color: var(--gold);
+    border-style: solid;
+    cursor: pointer;
+  }
+  .sponsor-circle.center-special:hover {
+    background: #fffbe8;
+    box-shadow: 0 4px 20px rgba(184,134,11,0.2);
+  }
+  .sponsor-circle.side-special {
+    border-color: #8abcd8;
+    border-style: solid;
+    cursor: pointer;
+  }
+  .sponsor-circle.side-special:hover {
+    background: #eef6fb;
+    box-shadow: 0 4px 16px rgba(90,139,168,0.15);
+  }
+  .sponsor-circle-text {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 7px;
+    color: var(--border);
+    letter-spacing: 0.5px;
+    text-align: center;
+    line-height: 1.6;
+  }
+  .sponsor-circle-text.gold { color: var(--gold); }
+  .sponsor-circle-text.blue { color: #5a8ba8; }
+
   /* ===== CTAボタン ===== */
   .cta-area {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 14px;
-    margin-top: 8px;
+    margin-top: 36px;
     opacity: 0;
     animation: fadeUp 1s ease 1.7s forwards;
   }
@@ -330,103 +404,6 @@
     border-color: var(--ink);
   }
 
-  .btn-know {
-    font-family: 'Zen Kaku Gothic New', sans-serif;
-    font-size: 11px;
-    letter-spacing: 3px;
-    color: var(--gray);
-    cursor: pointer;
-    background: none;
-    border: none;
-    text-decoration: underline;
-    text-underline-offset: 4px;
-    transition: color 0.2s;
-  }
-  .btn-know:hover { color: var(--ink); }
-
-  /* スクロールヒント */
-  .scroll-hint {
-    position: absolute;
-    bottom: 32px; left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    opacity: 0;
-    animation: fadeIn 1s ease 2.2s forwards;
-  }
-  .scroll-hint span {
-    font-family: 'Zen Kaku Gothic New', sans-serif;
-    font-size: 9px;
-    letter-spacing: 4px;
-    color: var(--border);
-    text-transform: uppercase;
-  }
-  .scroll-line {
-    width: 1px; height: 40px;
-    background: linear-gradient(to bottom, var(--border), transparent);
-    animation: scrollPulse 2s ease-in-out infinite;
-  }
-  @keyframes scrollPulse { 0%,100%{opacity:0.3} 50%{opacity:1} }
-
-  /* ===== スポンサー半円 ===== */
-  .sponsor-arc {
-    position: relative;
-    z-index: 1;
-    padding: 48px 24px 80px;
-    text-align: center;
-    border-top: 1px solid var(--border);
-  }
-  .sponsor-label {
-    font-family: 'Zen Kaku Gothic New', sans-serif;
-    font-size: 9px;
-    letter-spacing: 5px;
-    color: var(--border);
-    text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-  .sponsor-sublabel {
-    font-family: 'Zen Kaku Gothic New', sans-serif;
-    font-size: 11px;
-    color: var(--gray);
-    letter-spacing: 2px;
-    margin-bottom: 36px;
-  }
-  .sponsor-arc-wrap {
-    position: relative;
-    width: 320px;
-    height: 180px;
-    margin: 0 auto;
-  }
-  .sponsor-circle {
-    position: absolute;
-    width: 58px;
-    height: 58px;
-    border-radius: 50%;
-    border: 1px dashed var(--border);
-    background: var(--cream);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s;
-    cursor: default;
-  }
-  .sponsor-circle:hover {
-    border-color: var(--gold);
-    border-style: solid;
-    background: white;
-    box-shadow: 0 4px 16px rgba(184,134,11,0.1);
-  }
-  .sponsor-circle-text {
-    font-family: 'Zen Kaku Gothic New', sans-serif;
-    font-size: 7px;
-    color: var(--border);
-    letter-spacing: 1px;
-    text-align: center;
-    line-height: 1.5;
-  }
-
   /* フッター */
   .footer {
     position: relative;
@@ -454,7 +431,7 @@
   <div class="tohearts">
     <div class="toheart-item">
       <div class="toheart-en">To Heart</div>
-      <div class="toheart-ja">心へ届ける</div>
+      <div class="toheart-ja">心を届ける</div>
     </div>
     <div class="toheart-divider"></div>
     <div class="toheart-item">
@@ -482,8 +459,7 @@
   <div class="kuu-section">
 
     <div class="kuu-bubble left">
-      <div class="bubble-badge">β version</div><br>
-      まだ生まれたて。<br>いっしょに<br>育ててね。
+      まだβ版なの_(┐「ε:)_
     </div>
 
     <a href="kuu.html" class="kuu-circle-wrap">
@@ -534,7 +510,7 @@
           </g>
         </g>
       </svg>
-      <div class="kuu-click-hint">タップしてクウを知る</div>
+      <div class="kuu-click-hint">タップしてクウの部屋へ</div>
     </a>
 
     <div class="kuu-bubble right">
@@ -544,7 +520,13 @@
 
   </div>
 
-  <!-- ボタン2つ -->
+  <!-- スポンサー弧（クウ直下・7個・下向き） -->
+  <div class="sponsor-mini-area">
+    <div class="sponsor-mini-label">Supporters &amp; Sponsors</div>
+    <div class="sponsor-mini-wrap" id="sponsorMini"></div>
+  </div>
+
+  <!-- CTAボタン -->
   <div class="cta-area">
     <div class="cta-buttons">
       <a href="select.html" class="btn-main">
@@ -554,22 +536,8 @@
         登 録 · ロ グ イ ン
       </a>
     </div>
-    <button class="btn-know" onclick="document.querySelector('.sponsor-arc').scrollIntoView({behavior:'smooth'})">
-      プロジェクトについて知る ↓
-    </button>
   </div>
 
-  <div class="scroll-hint">
-    <span>Scroll</span>
-    <div class="scroll-line"></div>
-  </div>
-</section>
-
-<!-- スポンサー半円 -->
-<section class="sponsor-arc" id="sponsor">
-  <div class="sponsor-label">Supporters &amp; Sponsors</div>
-  <div class="sponsor-sublabel">このプロジェクトを支えてくださる方を募集しています</div>
-  <div class="sponsor-arc-wrap" id="sponsorCircles"></div>
 </section>
 
 <footer class="footer">
@@ -577,24 +545,36 @@
 </footer>
 
 <script>
-  // スポンサー半円（上向き弧に7個並べる）
-  const wrap = document.getElementById('sponsorCircles');
+  // 7個の下向き半円弧
+  // idx=0,1: スポンサー募集　idx=2: ヘルプ　idx=3: ご意見スポンサー　idx=4: サポートメンバー　idx=5,6: スポンサー募集
+  const miniWrap = document.getElementById('sponsorMini');
   const total = 7;
   const R = 130;
   const cx = 160;
-  const cy = 175;
+  const cy = 0;
 
-  for (let i = 0; i < total; i++) {
-    const angle = Math.PI + (Math.PI / (total - 1)) * i;
+  const config = [
+    { text: 'スポンサー<br>募集中', cls: '',     special: '',               href: '#' },
+    { text: 'スポンサー<br>募集中', cls: '',     special: '',               href: '#' },
+    { text: 'ヘルプ',              cls: 'blue',  special: 'side-special',   href: 'help.html' },
+    { text: 'ご意見<br>スポンサー',cls: 'gold',  special: 'center-special', href: 'contact.html' },
+    { text: 'サポート<br>メンバー<br>募集中', cls: 'blue', special: 'side-special', href: 'support.html' },
+    { text: 'スポンサー<br>募集中', cls: '',     special: '',               href: '#' },
+    { text: 'スポンサー<br>募集中', cls: '',     special: '',               href: '#' },
+  ];
+
+  config.forEach((item, i) => {
+    const angle = (Math.PI / (total - 1)) * i;
     const x = cx + R * Math.cos(angle) - 29;
     const y = cy + R * Math.sin(angle) - 29;
-    const el = document.createElement('div');
-    el.className = 'sponsor-circle';
+    const el = document.createElement('a');
+    el.href = item.href;
+    el.className = 'sponsor-circle' + (item.special ? ' ' + item.special : '');
+    el.innerHTML = '<div class="sponsor-circle-text' + (item.cls ? ' ' + item.cls : '') + '">' + item.text + '</div>';
     el.style.left = x + 'px';
     el.style.top = y + 'px';
-    el.innerHTML = '<div class="sponsor-circle-text">スポンサー<br>募集中</div>';
-    wrap.appendChild(el);
-  }
+    miniWrap.appendChild(el);
+  });
 </script>
 </body>
 </html>

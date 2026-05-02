@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light only">
+<title>ご意見 — お互い様プロジェクト</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&family=Zen+Kaku+Gothic+New:wght@300;400&family=Klee+One:wght@400;600&display=swap');
+  :root { color-scheme:light only; --ink:#1a1208; --paper:#f5f0e8; --gold:#b8860b; --gray:#6b6355; --border:#c8b99a; --cream:#faf6ee; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#f5f0e8!important; color:#1a1208!important; font-family:'Noto Serif JP',serif; min-height:100vh; }
+  .back-bar { position:fixed; top:0; left:0; right:0; z-index:100; padding:14px 20px; display:flex; align-items:center; background:rgba(245,240,232,0.92); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); }
+  .back-link { font-family:'Zen Kaku Gothic New',sans-serif; font-size:12px; letter-spacing:2px; color:var(--gold); text-decoration:none; display:flex; align-items:center; gap:6px; transition:opacity 0.2s; }
+  .back-link:hover { opacity:0.6; }
+  .back-bar-title { flex:1; text-align:center; font-family:'Klee One',cursive; font-size:13px; color:var(--gray); letter-spacing:3px; }
+  .back-bar-space { width:60px; }
+  .container { max-width:600px; margin:0 auto; padding:100px 24px 60px; }
+  .page-header { text-align:center; margin-bottom:40px; }
+  .page-en { font-family:'Zen Kaku Gothic New',sans-serif; font-size:9px; letter-spacing:5px; color:var(--gold); text-transform:uppercase; margin-bottom:8px; }
+  .page-title { font-family:'Noto Serif JP',serif; font-size:28px; font-weight:300; letter-spacing:8px; color:var(--ink); margin-bottom:16px; }
+  .page-divider { width:40px; height:1px; background:var(--border); margin:0 auto 20px; }
+  .intro-card { background:white; border:1px solid var(--border); border-radius:2px; padding:28px 32px; margin-bottom:28px; box-shadow:0 2px 16px rgba(0,0,0,0.05); }
+  .intro-text { font-family:'Klee One',cursive; font-size:14px; color:var(--gray); line-height:2.2; }
+  .intro-text strong { color:var(--ink); }
+  .form-card { background:white; border:1px solid var(--border); border-radius:2px; padding:32px; box-shadow:0 2px 16px rgba(0,0,0,0.05); }
+  .form-title { font-family:'Zen Kaku Gothic New',sans-serif; font-size:11px; letter-spacing:4px; color:var(--gold); margin-bottom:24px; }
+  .form-group { margin-bottom:20px; }
+  .form-group label { display:block; font-family:'Zen Kaku Gothic New',sans-serif; font-size:10px; letter-spacing:2px; color:var(--gray); margin-bottom:8px; }
+  input, textarea, select { width:100%; padding:12px 14px; border:1px solid var(--border); border-radius:1px; font-family:'Noto Serif JP',serif; font-size:14px; color:var(--ink); background:var(--paper); transition:border-color 0.2s; }
+  input:focus, textarea:focus, select:focus { outline:none; border-color:var(--gold); }
+  textarea { min-height:140px; resize:vertical; line-height:1.8; }
+  .category-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .category-btn { padding:10px; border:1px solid var(--border); background:var(--cream); font-family:'Zen Kaku Gothic New',sans-serif; font-size:11px; letter-spacing:1px; color:var(--gray); cursor:pointer; border-radius:1px; transition:all 0.2s; text-align:center; }
+  .category-btn.selected { border-color:var(--gold); background:white; color:var(--gold); }
+  .btn-submit { width:100%; padding:16px; border:none; background:var(--ink); color:var(--paper); font-family:'Noto Serif JP',serif; font-size:14px; letter-spacing:4px; cursor:pointer; transition:all 0.3s; border-radius:1px; }
+  .btn-submit:hover { background:var(--gold); }
+  .success-msg { display:none; text-align:center; padding:20px; font-family:'Klee One',cursive; font-size:15px; color:var(--gold); line-height:2; }
+</style>
+</head>
+<body>
+<div class="back-bar">
+  <a href="index.html" class="back-link">← 表紙へ</a>
+  <div class="back-bar-title">お互い様プロジェクト</div>
+  <div class="back-bar-space"></div>
+</div>
+<div class="container">
+  <div class="page-header">
+    <div class="page-en">Your Voice</div>
+    <div class="page-title">ご 意 見</div>
+    <div class="page-divider"></div>
+  </div>
+  <div class="intro-card">
+    <div class="intro-text">
+      <strong>あなたの声が、プロジェクトを育てます。</strong><br><br>
+      使いにくいところ、もっとこうしてほしいこと、<br>
+      なんでも教えてください。<br>
+      小さな一言が、大きな変化になります。
+    </div>
+  </div>
+  <div class="form-card">
+    <div class="form-title">— 声 を 届 け る —</div>
+    <form id="contactForm">
+      <input type="hidden" name="access_key" value="993fcf8d-e618-47db-b863-f45b3c5b5418">
+      <input type="hidden" name="subject" value="【ご意見】お互い様プロジェクト">
+      <input type="hidden" name="category" id="categoryInput" value="全般">
+      <div class="form-group">
+        <label>カテゴリ（任意）</label>
+        <div class="category-grid">
+          <div class="category-btn" onclick="selectCat(this,'使いやすさ')">使いやすさ</div>
+          <div class="category-btn" onclick="selectCat(this,'デザイン')">デザイン</div>
+          <div class="category-btn" onclick="selectCat(this,'機能のアイデア')">機能のアイデア</div>
+          <div class="category-btn" onclick="selectCat(this,'その他')">その他</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>お名前（任意）</label>
+        <input type="text" name="name" placeholder="匿名でも大丈夫です">
+      </div>
+      <div class="form-group">
+        <label>メールアドレス（任意）</label>
+        <input type="email" name="email" placeholder="返信希望の方はご記入ください">
+      </div>
+      <div class="form-group">
+        <label>ご意見・ご感想 *</label>
+        <textarea name="message" required placeholder="どんな小さなことでも、ありがたく受け取ります。"></textarea>
+      </div>
+      <button type="submit" class="btn-submit">意 見 を 届 け る</button>
+    </form>
+    <div class="success-msg" id="successMsg">
+      ありがとうございます🌿<br>大切に読ませていただきます。
+    </div>
+  </div>
+</div>
+<script>
+  function selectCat(el, val) {
+    document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('categoryInput').value = val;
+  }
+  document.getElementById('contactForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = this.querySelector('.btn-submit');
+    btn.textContent = '送信中...'; btn.disabled = true;
+    const res = await fetch('https://api.web3forms.com/submit', { method:'POST', body: new FormData(this) });
+    if (res.ok) {
+      this.style.display = 'none';
+      document.getElementById('successMsg').style.display = 'block';
+    } else {
+      btn.textContent = '送信できませんでした。もう一度お試しください。';
+      btn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
