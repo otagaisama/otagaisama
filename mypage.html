@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light only">
+<title>マイページ — お互い様プロジェクト</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@200;300;400;700&family=Zen+Kaku+Gothic+New:wght@300;400&family=Shippori+Mincho:wght@400;500;700&family=Klee+One:wght@400;600&display=swap');
+
+  :root {
+    color-scheme: light only;
+    --ink: #1a1208;
+    --paper: #f5f0e8;
+    --gold: #b8860b;
+    --gold-light: #d4a843;
+    --gray: #6b6355;
+    --border: #c8b99a;
+    --cream: #faf6ee;
+    --kuu-bg: #dff0f8;
+    --red: #8b1a1a;
+    --blue: #5a8ba8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; background: #f5f0e8 !important; }
+
+  body {
+    background: #f5f0e8 !important;
+    color: #1a1208 !important;
+    font-family: 'Noto Serif JP', serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* 和紙テクスチャ */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ===== ヘッダーバー ===== */
+  .top-bar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    background: rgba(245,240,232,0.92);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+  }
+  .back-link {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: var(--gold);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: opacity 0.2s;
+  }
+  .back-link:hover { opacity: 0.6; }
+  .top-bar-title {
+    flex: 1;
+    text-align: center;
+    font-family: 'Shippori Mincho', serif;
+    font-size: 13px;
+    color: var(--ink);
+    letter-spacing: 5px;
+  }
+  .top-bar-right { width: 80px; display: flex; justify-content: flex-end; }
+
+  /* ===== メインコンテナ ===== */
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 88px 24px 80px;
+  }
+
+  /* ===== ローディング ===== */
+  #view-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    gap: 20px;
+  }
+  .loading-spinner {
+    width: 32px; height: 32px;
+    border: 2px solid var(--border);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--gray);
+  }
+
+  /* ===== 未ログイン ===== */
+  #view-unauth {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    text-align: center;
+    gap: 20px;
+  }
+  .unauth-icon { font-size: 48px; opacity: 0.5; }
+  .unauth-text {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 13px;
+    color: var(--gray);
+    letter-spacing: 2px;
+    line-height: 2;
+  }
+
+  /* ===== メインコンテンツ ===== */
+  #view-main { display: none; }
+
+  /* ページタイトル */
+  .page-header {
+    text-align: center;
+    margin-bottom: 32px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.1s forwards;
+  }
+  .page-en {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 9px;
+    letter-spacing: 5px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .page-title {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 26px;
+    font-weight: 400;
+    letter-spacing: 8px;
+    color: var(--ink);
+  }
+  .page-divider {
+    width: 40px; height: 1px;
+    background: var(--border);
+    margin: 16px auto 0;
+  }
+
+  /* ===== プロフィールカード ===== */
+  .profile-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 32px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.05);
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.2s forwards;
+  }
+
+  /* クウアバター */
+  .avatar-wrap {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--kuu-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  .avatar-kuu-float { animation: kuuFloat 4s ease-in-out infinite; }
+  @keyframes kuuFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
+  .kuu-eye-small { animation: kuuBlink 5s ease-in-out infinite; transform-origin:center; }
+  .kuu-eye-small-r { animation: kuuBlink 5s ease-in-out 0.05s infinite; transform-origin:center; }
+  @keyframes kuuBlink { 0%,90%,100%{transform:scaleY(1)} 95%{transform:scaleY(0.05)} }
+
+  .profile-info { flex: 1; min-width: 0; }
+  .profile-label {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .profile-name {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 22px;
+    font-weight: 400;
+    letter-spacing: 4px;
+    color: var(--ink);
+    margin-bottom: 6px;
+    word-break: break-all;
+  }
+  .profile-email {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 11px;
+    color: var(--gray);
+    letter-spacing: 1px;
+    word-break: break-all;
+  }
+
+  /* ===== 統計カード ===== */
+  .stats-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.35s forwards;
+  }
+
+  .stat-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 24px 20px;
+    text-align: center;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 40%;
+    height: 1px;
+    background: var(--gold);
+    opacity: 0.4;
+  }
+
+  .stat-label {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--gray);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .stat-icon { font-size: 20px; margin-bottom: 6px; opacity: 0.7; }
+  .stat-count {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .stat-count.gold { color: var(--gold); }
+  .stat-unit {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 10px;
+    color: var(--border);
+    letter-spacing: 2px;
+  }
+
+  /* ===== タブ ===== */
+  .tab-section {
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.5s forwards;
+  }
+
+  .tab-bar {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 14px 8px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--gray);
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-bottom: -1px;
+  }
+  .tab-btn.active {
+    color: var(--ink);
+    border-bottom-color: var(--gold);
+  }
+  .tab-btn:hover:not(.active) { color: var(--ink); }
+
+  /* パネル */
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ===== カード一覧 ===== */
+  .room-list { display: flex; flex-direction: column; gap: 14px; }
+
+  .room-item {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 20px 24px;
+    box-shadow: 0 1px 8px rgba(0,0,0,0.04);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    cursor: pointer;
+    transition: all 0.25s;
+    text-decoration: none;
+    color: inherit;
+    animation: fadeIn 0.4s ease;
+  }
+  .room-item:hover {
+    border-color: var(--gold);
+    box-shadow: 0 4px 20px rgba(184,134,11,0.1);
+    transform: translateY(-2px);
+  }
+
+  .room-num-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .room-num-label {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 8px;
+    letter-spacing: 2px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .room-num-val {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--ink);
+    line-height: 1;
+  }
+
+  .room-divider {
+    width: 1px; height: 36px;
+    background: var(--border);
+    opacity: 0.5;
+    flex-shrink: 0;
+  }
+
+  .room-info { flex: 1; min-width: 0; }
+  .room-info-label {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--gold);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+  .room-info-date {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 11px;
+    color: var(--gray);
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .room-info-posts {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 10px;
+    color: var(--border);
+    letter-spacing: 1px;
+  }
+  .room-info-posts span { color: var(--gold); }
+
+  .room-arrow {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 12px;
+    color: var(--border);
+    flex-shrink: 0;
+    transition: color 0.2s, transform 0.2s;
+  }
+  .room-item:hover .room-arrow {
+    color: var(--gold);
+    transform: translateX(3px);
+  }
+
+  /* 空状態 */
+  .empty-state {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--gray);
+  }
+  .empty-icon { font-size: 36px; margin-bottom: 16px; opacity: 0.4; }
+  .empty-text {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 12px;
+    letter-spacing: 2px;
+    line-height: 2.2;
+  }
+
+  /* ===== ログアウトボタン ===== */
+  .logout-area {
+    margin-top: 40px;
+    text-align: center;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.65s forwards;
+  }
+  .btn-logout {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 13px 32px;
+    border: 1px solid var(--border);
+    background: transparent;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--gray);
+    cursor: pointer;
+    border-radius: 1px;
+    transition: all 0.3s;
+  }
+  .btn-logout:hover {
+    border-color: var(--red);
+    color: var(--red);
+    background: rgba(139,26,26,0.04);
+  }
+
+  /* ===== ボタン（共通） ===== */
+  .btn-main {
+    display: inline-block;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    padding: 14px 28px;
+    font-family: 'Shippori Mincho', serif;
+    font-size: 13px;
+    letter-spacing: 3px;
+    cursor: pointer;
+    transition: background 0.3s;
+    text-decoration: none;
+    border-radius: 2px;
+  }
+  .btn-main:hover { background: var(--gold); }
+
+  /* ===== 金線 ===== */
+  .gold-line {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 28px 0;
+    opacity: 0.35;
+  }
+
+  /* ===== アニメーション ===== */
+  @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+  @media (max-width: 480px) {
+    .container { padding: 80px 16px 60px; }
+    .profile-card { gap: 16px; padding: 24px 18px; }
+    .stat-count { font-size: 28px; }
+    .room-item { padding: 16px 16px; gap: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- トップバー -->
+<div class="top-bar">
+  <a href="index.html" class="back-link">← 表紙へ</a>
+  <div class="top-bar-title">お 互 い 様</div>
+  <div class="top-bar-right"></div>
+</div>
+
+<div class="container">
+
+  <!-- ローディング -->
+  <div id="view-loading">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">読み込み中...</div>
+  </div>
+
+  <!-- 未ログイン -->
+  <div id="view-unauth">
+    <div class="unauth-icon">🏮</div>
+    <div class="unauth-text">
+      マイページを見るには<br>
+      ログインが必要です
+    </div>
+    <a href="auth.html" class="btn-main">ログイン · 登録</a>
+  </div>
+
+  <!-- メインコンテンツ -->
+  <div id="view-main">
+
+    <div class="page-header">
+      <div class="page-en">My Page</div>
+      <div class="page-title">マ イ ペ ー ジ</div>
+      <div class="page-divider"></div>
+    </div>
+
+    <!-- プロフィールカード -->
+    <div class="profile-card">
+      <div class="avatar-wrap">
+        <svg width="60" height="60" viewBox="30 60 180 185" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="kg" cx="50%" cy="40%" r="55%">
+              <stop offset="0%" stop-color="#e8f6fc"/>
+              <stop offset="100%" stop-color="#b8d8ec"/>
+            </radialGradient>
+            <radialGradient id="kc" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#f8c8d0" stop-opacity="0.8"/>
+              <stop offset="100%" stop-color="#f8c8d0" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <g class="avatar-kuu-float">
+            <path d="M80 175 Q80 215 120 220 Q160 215 160 175" fill="#c4e0f4" opacity="0.8"/>
+            <ellipse cx="120" cy="130" rx="54" ry="52" fill="url(#kg)"/>
+            <circle cx="68" cy="125" r="14" fill="#c8e2f4"/>
+            <circle cx="172" cy="125" r="14" fill="#c8e2f4"/>
+            <circle cx="68" cy="125" r="8" fill="#dceef8"/>
+            <circle cx="172" cy="125" r="8" fill="#dceef8"/>
+            <ellipse cx="120" cy="82" rx="44" ry="22" fill="#8abcd8"/>
+            <circle cx="90" cy="78" r="18" fill="#8abcd8"/>
+            <circle cx="150" cy="78" r="18" fill="#8abcd8"/>
+            <circle cx="120" cy="70" r="20" fill="#9acae0"/>
+            <ellipse cx="108" cy="74" rx="8" ry="5" fill="white" opacity="0.3" transform="rotate(-20 108 74)"/>
+            <ellipse cx="90" cy="140" rx="14" ry="9" fill="url(#kc)"/>
+            <ellipse cx="150" cy="140" rx="14" ry="9" fill="url(#kc)"/>
+            <g class="kuu-eye-small">
+              <ellipse cx="103" cy="128" rx="11" ry="13" fill="white"/>
+              <ellipse cx="103" cy="130" rx="8" ry="9" fill="#5a8ba8"/>
+              <ellipse cx="103" cy="130" rx="5" ry="6" fill="#2a4a5a"/>
+              <circle cx="106" cy="127" r="3" fill="white"/>
+            </g>
+            <g class="kuu-eye-small-r">
+              <ellipse cx="137" cy="128" rx="11" ry="13" fill="white"/>
+              <ellipse cx="137" cy="130" rx="8" ry="9" fill="#5a8ba8"/>
+              <ellipse cx="137" cy="130" rx="5" ry="6" fill="#2a4a5a"/>
+              <circle cx="140" cy="127" r="3" fill="white"/>
+            </g>
+            <circle cx="120" cy="144" r="2" fill="#8aacbc" opacity="0.5"/>
+            <path d="M112 154 Q120 160 128 154" stroke="#7a9cac" stroke-width="2" fill="none" stroke-linecap="round"/>
+          </g>
+        </svg>
+      </div>
+      <div class="profile-info">
+        <div class="profile-label">Pen Name</div>
+        <div class="profile-name" id="profile-name">—</div>
+        <div class="profile-email" id="profile-email">—</div>
+      </div>
+    </div>
+
+    <!-- 統計 -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Sent</div>
+        <div class="stat-icon">🏮</div>
+        <div class="stat-count gold" id="count-sent">—</div>
+        <div class="stat-unit">枚 の 感 謝</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Received</div>
+        <div class="stat-icon">✉️</div>
+        <div class="stat-count" id="count-received">—</div>
+        <div class="stat-unit">枚 の 感 謝</div>
+      </div>
+    </div>
+
+    <div class="gold-line"></div>
+
+    <!-- タブ -->
+    <div class="tab-section">
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab('sent')">送 っ た カ ー ド</button>
+        <button class="tab-btn" onclick="switchTab('received')">も ら っ た カ ー ド</button>
+      </div>
+
+      <!-- 送ったカード -->
+      <div class="tab-panel active" id="panel-sent">
+        <div class="room-list" id="list-sent">
+          <div class="empty-state">
+            <div class="loading-spinner" style="margin:0 auto 16px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- もらったカード -->
+      <div class="tab-panel" id="panel-received">
+        <div class="room-list" id="list-received">
+          <div class="empty-state">
+            <div class="loading-spinner" style="margin:0 auto 16px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ログアウト -->
+    <div class="logout-area">
+      <button class="btn-logout" onclick="doLogout()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        ロ グ ア ウ ト
+      </button>
+    </div>
+
+  </div><!-- /view-main -->
+
+</div><!-- /container -->
+
+<script>
+  const SUPABASE_URL = 'https://damussuizcfzqkfkpwwm.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhbXVzc3VpemNmenFrZmtwd3dtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0NTcwOTIsImV4cCI6MjA5MTAzMzA5Mn0.Xp93BfRowa9gG7ZMRQxyyKiYXgWRN4Gk5xLxaGTiUIo';
+
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let currentUser = null;
+
+  // ===== 初期化 =====
+  window.onload = async () => {
+    const { data: { session } } = await db.auth.getSession();
+
+    if (!session) {
+      showView('unauth');
+      return;
+    }
+
+    currentUser = session.user;
+    await loadPage();
+  };
+
+  // ===== ページ読み込み =====
+  async function loadPage() {
+    // プロフィール取得
+    const email = currentUser.email || '';
+    const meta = currentUser.user_metadata || {};
+    const penName = meta.pen_name || meta.name || email.split('@')[0] || '名無し';
+
+    document.getElementById('profile-name').textContent = penName;
+    document.getElementById('profile-email').textContent = email;
+
+    // 送ったカード（自分が作ったルーム）を取得
+    const { data: sentRooms, error: sentErr } = await db
+      .from('rooms')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .order('created_at', { ascending: false });
+
+    // もらったカード（自分がpostした部屋）を取得
+    const { data: receivedPosts, error: recvErr } = await db
+      .from('room_posts')
+      .select('room_id, created_at')
+      .eq('user_id', currentUser.id)
+      .order('created_at', { ascending: false });
+
+    // 統計カウント
+    const sentCount = sentRooms ? sentRooms.length : 0;
+    const receivedRoomIds = receivedPosts
+      ? [...new Set(receivedPosts.map(p => p.room_id))]
+      : [];
+    const receivedCount = receivedRoomIds.length;
+
+    document.getElementById('count-sent').textContent = sentCount;
+    document.getElementById('count-received').textContent = receivedCount;
+
+    // 送ったカード一覧レンダリング
+    await renderSentRooms(sentRooms);
+
+    // もらったカード一覧レンダリング
+    await renderReceivedRooms(receivedRoomIds, receivedPosts);
+
+    showView('main');
+  }
+
+  // ===== 送ったカード一覧 =====
+  async function renderSentRooms(rooms) {
+    const el = document.getElementById('list-sent');
+    if (!rooms || rooms.length === 0) {
+      el.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">🏮</div>
+          <div class="empty-text">まだカードを作っていません<br>最初の感謝の部屋を作りましょう</div>
+        </div>`;
+      return;
+    }
+
+    // 各ルームの投稿数を取得
+    const items = await Promise.all(rooms.map(async room => {
+      const { count } = await db
+        .from('room_posts')
+        .select('*', { count: 'exact', head: true })
+        .eq('room_id', room.room_id);
+      return { ...room, postCount: count || 0 };
+    }));
+
+    el.innerHTML = items.map(room => `
+      <a class="room-item" href="card.html?room=${room.room_id}">
+        <div class="room-num-badge">
+          <div class="room-num-label">No.</div>
+          <div class="room-num-val">${String(room.id || '?').padStart(4, '0')}</div>
+        </div>
+        <div class="room-divider"></div>
+        <div class="room-info">
+          <div class="room-info-label">感 謝 の 部 屋</div>
+          <div class="room-info-date">${formatDate(room.created_at)}</div>
+          <div class="room-info-posts">届いたメッセージ <span>${room.postCount}</span> 件</div>
+        </div>
+        <div class="room-arrow">→</div>
+      </a>
+    `).join('');
+  }
+
+  // ===== もらったカード一覧 =====
+  async function renderReceivedRooms(roomIds, posts) {
+    const el = document.getElementById('list-received');
+    if (!roomIds || roomIds.length === 0) {
+      el.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">✉️</div>
+          <div class="empty-text">まだ感謝を届けていません<br>QRコードから感謝を送りましょう</div>
+        </div>`;
+      return;
+    }
+
+    // 各ルームの情報を取得
+    const items = await Promise.all(roomIds.map(async roomId => {
+      const { data: roomData } = await db
+        .from('rooms')
+        .select('id, created_at')
+        .eq('room_id', roomId)
+        .single();
+
+      const roomPosts = posts.filter(p => p.room_id === roomId);
+      const lastDate = roomPosts.length > 0
+        ? roomPosts.sort((a,b) => new Date(b.created_at) - new Date(a.created_at))[0].created_at
+        : null;
+
+      return {
+        room_id: roomId,
+        id: roomData?.id || '????',
+        postCount: roomPosts.length,
+        lastDate,
+      };
+    }));
+
+    el.innerHTML = items.map(room => `
+      <a class="room-item" href="card.html?room=${room.room_id}">
+        <div class="room-num-badge">
+          <div class="room-num-label">No.</div>
+          <div class="room-num-val">${String(room.id).padStart(4, '0')}</div>
+        </div>
+        <div class="room-divider"></div>
+        <div class="room-info">
+          <div class="room-info-label">送 っ た 感 謝</div>
+          <div class="room-info-date">${formatDate(room.lastDate)}</div>
+          <div class="room-info-posts">送ったメッセージ <span>${room.postCount}</span> 件</div>
+        </div>
+        <div class="room-arrow">→</div>
+      </a>
+    `).join('');
+  }
+
+  // ===== ビュー切替 =====
+  function showView(name) {
+    document.getElementById('view-loading').style.display = 'none';
+    document.getElementById('view-unauth').style.display = 'none';
+    document.getElementById('view-main').style.display = 'none';
+
+    if (name === 'unauth') {
+      document.getElementById('view-unauth').style.display = 'flex';
+    } else if (name === 'main') {
+      document.getElementById('view-main').style.display = 'block';
+    }
+  }
+
+  // ===== タブ切替 =====
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelector(`.tab-btn[onclick="switchTab('${tab}')"]`).classList.add('active');
+    document.getElementById('panel-' + tab).classList.add('active');
+  }
+
+  // ===== ログアウト =====
+  async function doLogout() {
+    await db.auth.signOut();
+    window.location.href = 'index.html';
+  }
+
+  // ===== ユーティリティ =====
+  function formatDate(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+  }
+</script>
+</body>
+</html>
