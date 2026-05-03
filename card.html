@@ -543,7 +543,14 @@
         QRコード付きの番号札を受け取って、<br>
         大切な人に渡してください。
       </p>
-      <button class="btn-create" id="btn-generate" onclick="generateRoom()">
+      <button class="btn-create" id="btn-generate" onclick="generateRoom(const { data: { session } } = await db.auth.getSession();
+const userId = session?.user?.id || null;
+
+const { data, error } = await db
+  .from('rooms')
+  .insert([{ room_id: roomId, user_id: userId }])
+  .select()
+  .single();)">
         部　屋　を　生　成　す　る
       </button>
       <div id="create-msg" class="msg"></div>
@@ -655,7 +662,14 @@ window.onload = async () => {
 };
 
 // ===== 部屋生成 =====
-async function generateRoom() {
+async function generateRoom(const { data: { session } } = await db.auth.getSession();
+const userId = session?.user?.id || null;
+
+const { data, error } = await db
+  .from('rooms')
+  .insert([{ room_id: roomId, user_id: userId }])
+  .select()
+  .single();) {
   const btn = document.getElementById('btn-generate');
   const msg = document.getElementById('create-msg');
   btn.disabled = true;
