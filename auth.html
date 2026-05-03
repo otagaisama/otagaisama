@@ -485,6 +485,19 @@
   const { createClient } = supabase;
   const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+  // ===== リダイレクト先（?next= があればそこへ、なければcard.html） =====
+  function getNextUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const next = params.get('next');
+    // 同一オリジンのみ許可（オープンリダイレクト対策）
+    try {
+      const decoded = decodeURIComponent(next || '');
+      const url = new URL(decoded);
+      if (url.origin === window.location.origin) return decoded;
+    } catch {}
+    return 'card.html';
+  }
+
   // ===== タブ切り替え =====
   function switchTab(tab) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -554,7 +567,7 @@
     }
 
     showMsg('login-msg', 'ログイン成功！ 移動します...', 'success');
-    setTimeout(() => { window.location.href = 'card.html'; }, 800);
+    setTimeout(() => { window.location.href = getNextUrl(); }, 800);
   }
 
   // ===== 新規登録 =====
@@ -592,10 +605,10 @@
       return;
     }
 
-    // メール確認OFFの場合はそのままcard.htmlへ
+    // メール確認OFFの場合はそのままnext先へ
     if (data.session) {
       showMsg('register-msg', '登録完了！ 移動します...', 'success');
-      setTimeout(() => { window.location.href = 'card.html'; }, 800);
+      setTimeout(() => { window.location.href = getNextUrl(); }, 800);
     } else {
       // 万一確認メールが必要な場合
       showMsg('register-msg', '確認メールを送信しました。メールをご確認ください。', 'success');
@@ -607,7 +620,7 @@
   (async () => {
     const { data: { session } } = await db.auth.getSession();
     if (session) {
-      window.location.href = 'card.html';
+      window.location.href = getNextUrl();
     }
   })();
 
