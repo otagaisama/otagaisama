@@ -488,5 +488,72 @@
     starsEl.appendChild(s);
   }
 </script>
+<!-- ========================================
+  全ページ共通：マイページアイコン
+  </body>の直前に貼り付けてください
+  Supabase SDKが読み込まれてないページは
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  を<head>内に追加してください
+======================================== -->
+
+<style>
+.mypage-fab {
+  position: fixed;
+  top: 14px;
+  right: 16px;
+  z-index: 200;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(245,240,232,0.92);
+  border: 1px solid #c8b99a;
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.25s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.mypage-fab:hover {
+  border-color: #b8860b;
+  box-shadow: 0 4px 16px rgba(184,134,11,0.2);
+  transform: scale(1.08);
+}
+.mypage-fab svg {
+  width: 16px; height: 16px;
+  stroke: #6b6355;
+  transition: stroke 0.25s;
+}
+.mypage-fab:hover svg { stroke: #b8860b; }
+
+/* ログイン済みは金色に */
+.mypage-fab.logged-in {
+  border-color: #b8860b;
+}
+.mypage-fab.logged-in svg { stroke: #b8860b; }
+</style>
+
+<a id="mypageFab" class="mypage-fab" href="mypage.html" title="マイページ">
+  <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="8" r="4"/>
+    <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+  </svg>
+</a>
+
+<script>
+(async () => {
+  // Supabaseが読み込まれてるページだけ動く
+  if (typeof supabase === 'undefined') return;
+  const SUPABASE_URL = 'https://damussuizcfzqkfkpwwm.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhbXVzc3VpemNmenFrZmtwd3dtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0NTcwOTIsImV4cCI6MjA5MTAzMzA5Mn0.Xp93BfRowa9gG7ZMRQxyyKiYXgWRN4Gk5xLxaGTiUIo';
+  const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const { data: { session } } = await db.auth.getSession();
+  if (session) {
+    document.getElementById('mypageFab').classList.add('logged-in');
+  }
+})();
+</script>
 </body>
 </html>
