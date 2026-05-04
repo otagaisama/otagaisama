@@ -544,11 +544,9 @@
         大切な人に渡してください。
       </p>
       <button class="btn-create" id="btn-generate" onclick="generateRoom(const { data: { session } } = await db.auth.getSession();
-const userId = session?.user?.id || null;
-
 const { data, error } = await db
   .from('rooms')
-  .insert([{ room_id: roomId, user_id: userId }])
+  .insert([{ room_id: roomId }])
   .select()
   .single();)">
         部　屋　を　生　成　す　る
@@ -663,11 +661,9 @@ window.onload = async () => {
 
 // ===== 部屋生成 =====
 async function generateRoom(const { data: { session } } = await db.auth.getSession();
-const userId = session?.user?.id || null;
-
 const { data, error } = await db
   .from('rooms')
-  .insert([{ room_id: roomId, user_id: userId }])
+  .insert([{ room_id: roomId }])
   .select()
   .single();) {
   const btn = document.getElementById('btn-generate');
