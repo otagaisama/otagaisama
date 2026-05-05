@@ -412,6 +412,17 @@
     <!-- ===== 登録パネル ===== -->
     <div class="panel" id="panel-register">
       <div class="form-group">
+        <label class="form-label" for="reg-penname">ペンネーム <span style="color:var(--red);font-size:10px;">必須</span></label>
+        <input
+          class="form-input"
+          type="text"
+          id="reg-penname"
+          placeholder="表示名（後から変更できます）"
+          maxlength="20"
+          autocomplete="nickname"
+        >
+      </div>
+      <div class="form-group">
         <label class="form-label" for="reg-email">メールアドレス</label>
         <input
           class="form-input"
@@ -485,19 +496,6 @@
   const { createClient } = supabase;
   const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // ===== リダイレクト先（?next= があればそこへ、なければcard.html） =====
-  function getNextUrl() {
-    const params = new URLSearchParams(window.location.search);
-    const next = params.get('next');
-    // 同一オリジンのみ許可（オープンリダイレクト対策）
-    try {
-      const decoded = decodeURIComponent(next || '');
-      const url = new URL(decoded);
-      if (url.origin === window.location.origin) return decoded;
-    } catch {}
-    return 'card.html';
-  }
-
   // ===== タブ切り替え =====
   function switchTab(tab) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -567,25 +565,33 @@
     }
 
     showMsg('login-msg', 'ログイン成功！ 移動します...', 'success');
-    setTimeout(() => { window.location.href = getNextUrl(); }, 800);
+    setTimeout(() => { window.location.href = 'card.html'; }, 800);
   }
 
   // ===== 新規登録 =====
   async function doRegister() {
+    const penname = document.getElementById('reg-penname').value.trim();
     const email = document.getElementById('reg-email').value.trim();
     const password = document.getElementById('reg-password').value;
     const password2 = document.getElementById('reg-password2').value;
 
+    if (!penname) {
+      showMsg('register-msg', 'ペンネームを入力してください', 'error');
+      document.getElementById('reg-penname').focus();
+      return;
+    }
+    if (penname.length < 2) {
+      showMsg('register-msg', 'ペンネームは2文字以上で入力してください', 'error');
+      return;
+    }
     if (!email || !password) {
       showMsg('register-msg', 'メールアドレスとパスワードを入力してください', 'error');
       return;
     }
-
     if (password.length < 6) {
       showMsg('register-msg', 'パスワードは6文字以上で設定してください', 'error');
       return;
     }
-
     if (password !== password2) {
       showMsg('register-msg', 'パスワードが一致しません', 'error');
       return;
@@ -594,7 +600,12 @@
     setLoading('btn-register', 'reg-btn-text', true);
     showMsg('register-msg', '', '');
 
-    const { data, error } = await db.auth.signUp({ email, password });
+    // user_metadataにpen_nameを保存
+    const { data, error } = await db.auth.signUp({
+      email,
+      password,
+      options: { data: { pen_name: penname } }
+    });
 
     if (error) {
       let msg = '登録に失敗しました';
@@ -605,12 +616,21 @@
       return;
     }
 
-    // メール確認OFFの場合はそのままnext先へ
+    // profilesテーブルにも保存（あれば）
+    if (data.user) {
+      try {
+        await db.from('profiles').upsert({
+          id: data.user.id,
+          username: penname,
+          created_at: new Date().toISOString(),
+        }, { onConflict: 'id' });
+      } catch { /* テーブルなくてもOK */ }
+    }
+
     if (data.session) {
       showMsg('register-msg', '登録完了！ 移動します...', 'success');
       setTimeout(() => { window.location.href = getNextUrl(); }, 800);
     } else {
-      // 万一確認メールが必要な場合
       showMsg('register-msg', '確認メールを送信しました。メールをご確認ください。', 'success');
       setLoading('btn-register', 'reg-btn-text', false, '登 録 す る');
     }
@@ -620,7 +640,7 @@
   (async () => {
     const { data: { session } } = await db.auth.getSession();
     if (session) {
-      window.location.href = getNextUrl();
+      window.location.href = 'card.html';
     }
   })();
 
