@@ -543,12 +543,7 @@
         QRコード付きの番号札を受け取って、<br>
         大切な人に渡してください。
       </p>
-      <button class="btn-create" id="btn-generate" onclick="generateRoom(const { data: { session } } = await db.auth.getSession();
-const { data, error } = await db
-  .from('rooms')
-  .insert([{ room_id: roomId }])
-  .select()
-  .single();)">
+      <button class="btn-create" id="btn-generate" onclick="generateRoom()">
         部　屋　を　生　成　す　る
       </button>
       <div id="create-msg" class="msg"></div>
@@ -668,18 +663,18 @@ async function generateRoom() {
   msg.textContent = '';
 
   try {
-    // ランダムなroom_idを生成
+    const { data: { session } } = await db.auth.getSession();
+    const userId = session?.user?.id || null;
+
     const roomId = crypto.randomUUID();
 
-    // ナンバリング取得（rooms テーブルに保存）
     const { data, error } = await db
       .from('rooms')
-      .insert([{ room_id: roomId }])
+      .insert([{ room_id: roomId, user_id: userId }])
       .select()
       .single();
 
     if (error) {
-      // roomsテーブルがない場合はpostsテーブルで代替
       await showResult(roomId, Math.floor(Math.random() * 9000) + 1000);
       return;
     }
@@ -687,10 +682,8 @@ async function generateRoom() {
     await showResult(roomId, data.id);
 
   } catch (e) {
-    // roomsテーブルがなくてもランダム番号で動かす
     const roomId = crypto.randomUUID();
-    const fakeNumber = Math.floor(Math.random() * 9000) + 1000;
-    await showResult(roomId, fakeNumber);
+    await showResult(roomId, Math.floor(Math.random() * 9000) + 1000);
   }
 }
 
@@ -786,9 +779,11 @@ async function submitPost() {
   msg.textContent = '';
 
   try {
+    const { data: { session } } = await db.auth.getSession();
+    const userId = session?.user?.id || null;
+
     let imageUrl = null;
 
-    // 画像アップロード
     if (selectedFile) {
       const ext = selectedFile.name.split('.').pop();
       const fileName = `${currentRoomId}/${Date.now()}.${ext}`;
@@ -804,18 +799,17 @@ async function submitPost() {
       }
     }
 
-    // 投稿保存
     const { error } = await db
       .from('room_posts')
       .insert([{
         room_id: currentRoomId,
+        user_id: userId,
         content: text || null,
         image_url: imageUrl,
       }]);
 
     if (error) throw error;
 
-    // リセット
     document.getElementById('post-text').value = '';
     document.getElementById('post-image').value = '';
     document.getElementById('image-preview').style.display = 'none';
@@ -834,7 +828,6 @@ async function submitPost() {
     btn.textContent = '感　謝　を　送　る';
   }
 }
-
 // ===== 画像プレビュー =====
 function previewImage(input) {
   if (input.files && input.files[0]) {
