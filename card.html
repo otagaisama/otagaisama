@@ -660,12 +660,7 @@ window.onload = async () => {
 };
 
 // ===== 部屋生成 =====
-async function generateRoom(const { data: { session } } = await db.auth.getSession();
-const { data, error } = await db
-  .from('rooms')
-  .insert([{ room_id: roomId }])
-  .select()
-  .single();) {
+async function generateRoom() {
   const btn = document.getElementById('btn-generate');
   const msg = document.getElementById('create-msg');
   btn.disabled = true;
