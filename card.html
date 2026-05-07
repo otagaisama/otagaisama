@@ -997,11 +997,12 @@ async function loadPosts() {
   const list = document.getElementById('posts-list');
   list.innerHTML = '<div class="loading">読み込み中...</div>';
 
-  const { data, error } = await db
-    .from('room_posts')
-    .select('*')
-    .eq('room_id', currentRoomId)
-    .order('created_at', { ascending: false });
+  // オーナー画面では返信のみ、受取人画面では全件表示
+  let query = db.from('room_posts').select('*').eq('room_id', currentRoomId);
+  if (isOwner) {
+    query = query.eq('post_type', 'reply');
+  }
+  const { data, error } = await query.order('created_at', { ascending: false });
 
   if (error || !data || data.length === 0) {
     list.innerHTML = `
