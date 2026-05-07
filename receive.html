@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>感謝カードを受け取る｜お互い様</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;500;700&family=Zen+Kaku+Gothic+New:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --cream: #f5f0e8;
+      --ink: #2c2416;
+      --ink-light: #6b5f4e;
+      --gold: #c9a84c;
+      --gold-light: #e8d5a3;
+      --red: #9b2335;
+      --white: #fefcf8;
+      --border: #d4c9b0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--cream);
+      color: var(--ink);
+      font-family: 'Noto Serif JP', serif;
+      min-height: 100vh;
+      background-image:
+        radial-gradient(ellipse at 20% 20%, rgba(201,168,76,0.06) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 80%, rgba(155,35,53,0.04) 0%, transparent 60%);
+    }
+
+    /* ヘッダー */
+    .header {
+      background: var(--ink);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-logo {
+      color: var(--gold);
+      font-size: 15px;
+      letter-spacing: 0.12em;
+    }
+    .header-sub {
+      color: rgba(201,168,76,0.5);
+      font-size: 11px;
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+    }
+
+    /* メインコンテナ */
+    .container {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 24px 16px 80px;
+    }
+
+    /* ローディング */
+    .loading-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--ink-light);
+      font-size: 14px;
+    }
+    .loading-dot {
+      display: inline-block;
+      width: 6px; height: 6px;
+      background: var(--gold);
+      border-radius: 50%;
+      margin: 0 3px;
+      animation: blink 1.2s ease-in-out infinite;
+    }
+    .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes blink {
+      0%,80%,100% { opacity: 0.2; transform: scale(1); }
+      40% { opacity: 1; transform: scale(1.3); }
+    }
+
+    /* エラー */
+    .error-state {
+      text-align: center;
+      padding: 60px 20px;
+    }
+    .error-icon { font-size: 40px; margin-bottom: 16px; }
+    .error-msg { color: var(--ink-light); font-size: 14px; line-height: 1.8; }
+
+    /* カード表示エリア */
+    #card-section { display: none; }
+
+    /* 送り主ラベル */
+    .from-label {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .from-label-inner {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--ink);
+      color: var(--gold);
+      padding: 6px 18px;
+      border-radius: 20px;
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+    }
+
+    /* メインカード */
+    .main-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(44,36,22,0.10), 0 1px 4px rgba(44,36,22,0.06);
+      position: relative;
+    }
+    .main-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--gold), var(--gold-light), var(--gold));
+    }
+
+    .card-header {
+      padding: 20px 20px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .card-number {
+      font-size: 11px;
+      color: var(--ink-light);
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+      letter-spacing: 0.08em;
+    }
+    .card-date {
+      font-size: 11px;
+      color: var(--ink-light);
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+    }
+
+    .card-body {
+      padding: 24px 20px;
+    }
+    .card-message {
+      font-size: 17px;
+      line-height: 2;
+      color: var(--ink);
+      white-space: pre-wrap;
+      min-height: 80px;
+    }
+
+    .card-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .card-sender {
+      font-size: 13px;
+      color: var(--ink-light);
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+    }
+    .card-sender strong {
+      color: var(--ink);
+      font-weight: 500;
+    }
+    .card-label {
+      font-size: 10px;
+      color: var(--gold);
+      border: 1px solid var(--gold-light);
+      padding: 2px 8px;
+      border-radius: 10px;
+      letter-spacing: 0.08em;
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+    }
+
+    /* スポンサー枠 */
+    .sponsor-section {
+      margin: 20px 0;
+    }
+    .sponsor-label {
+      font-size: 10px;
+      color: var(--ink-light);
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+    .sponsor-banner {
+      background: var(--white);
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .sponsor-banner:hover { border-color: var(--gold); }
+    .sponsor-banner-text {
+      font-size: 13px;
+      color: var(--ink-light);
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+    }
+    .sponsor-banner-name {
+      font-size: 15px;
+      color: var(--ink);
+      font-weight: 500;
+      margin-top: 4px;
+    }
+    .sponsor-banner-tag {
+      font-size: 11px;
+      color: var(--gold);
+      margin-top: 4px;
+    }
+
+    /* 受け取りセクション */
+    .receive-section {
+      margin-top: 24px;
+    }
+    .section-title {
+      font-size: 14px;
+      color: var(--ink-light);
+      letter-spacing: 0.08em;
+      margin-bottom: 16px;
+      text-align: center;
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+    }
+
+    /* 未ログイン：登録ボタン */
+    .login-prompt {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 20px;
+      text-align: center;
+    }
+    .login-prompt-msg {
+      font-size: 14px;
+      color: var(--ink-light);
+      line-height: 1.8;
+      margin-bottom: 20px;
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+    }
+    .btn-register {
+      display: block;
+      width: 100%;
+      background: var(--ink);
+      color: var(--gold);
+      border: none;
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 15px;
+      font-family: 'Noto Serif JP', serif;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn-register:hover { opacity: 0.85; }
+
+    /* ログイン済み：返信フォーム */
+    .reply-form { display: none; }
+
+    /* 返信済みバナー */
+    .replied-banner {
+      display: none;
+      background: linear-gradient(135deg, #f0f7f0, #e8f4e8);
+      border: 1px solid #a8d5a8;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+    .replied-icon { font-size: 28px; margin-bottom: 8px; }
+    .replied-msg {
+      font-size: 13px;
+      color: #3a6b3a;
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+      line-height: 1.7;
+    }
+
+    /* 返信カード */
+    .reply-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(44,36,22,0.06);
+    }
+    .reply-card-header {
+      padding: 14px 16px;
+      background: rgba(201,168,76,0.08);
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--ink-light);
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+      letter-spacing: 0.08em;
+    }
+    .reply-textarea {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      background: transparent;
+      font-family: 'Noto Serif JP', serif;
+      font-size: 15px;
+      color: var(--ink);
+      line-height: 1.9;
+      resize: none;
+      min-height: 140px;
+      outline: none;
+    }
+    .reply-textarea::placeholder { color: var(--border); }
+    .reply-textarea:disabled {
+      background: #f8f5ef;
+      color: var(--ink-light);
+      cursor: not-allowed;
+    }
+    .reply-count {
+      text-align: right;
+      font-size: 11px;
+      color: var(--ink-light);
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+      padding: 0 16px 10px;
+    }
+    .reply-footer {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .reply-notice {
+      font-size: 11px;
+      color: var(--ink-light);
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+    }
+    .btn-send {
+      background: var(--gold);
+      color: var(--ink);
+      border: none;
+      border-radius: 6px;
+      padding: 10px 24px;
+      font-size: 13px;
+      font-family: 'Noto Serif JP', serif;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      font-weight: 500;
+    }
+    .btn-send:hover { opacity: 0.85; }
+    .btn-send:active { transform: scale(0.98); }
+    .btn-send:disabled {
+      background: var(--border);
+      color: var(--ink-light);
+      cursor: not-allowed;
+    }
+
+    /* 返信プレビュー（送信後） */
+    .reply-preview {
+      display: none;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .reply-preview-header {
+      padding: 12px 16px;
+      background: rgba(201,168,76,0.08);
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--gold);
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .reply-preview-body {
+      padding: 16px;
+      font-size: 15px;
+      line-height: 1.9;
+      color: var(--ink);
+      white-space: pre-wrap;
+    }
+
+    /* トースト */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--ink);
+      color: var(--gold);
+      padding: 12px 24px;
+      border-radius: 24px;
+      font-size: 13px;
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+      letter-spacing: 0.06em;
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 100;
+      white-space: nowrap;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* フッター */
+    .page-footer {
+      text-align: center;
+      margin-top: 40px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+    .footer-logo {
+      font-size: 13px;
+      color: var(--ink-light);
+      letter-spacing: 0.12em;
+      margin-bottom: 6px;
+    }
+    .footer-sub {
+      font-size: 11px;
+      color: var(--border);
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+    }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div>
+    <div class="header-logo">お互い様</div>
+    <div class="header-sub">感謝のキャッチボール</div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- ローディング -->
+  <div class="loading-state" id="loading">
+    <div style="margin-bottom:16px;">
+      <span class="loading-dot"></span>
+      <span class="loading-dot"></span>
+      <span class="loading-dot"></span>
+    </div>
+    <div>カードを読み込んでいます</div>
+  </div>
+
+  <!-- エラー -->
+  <div class="error-state" id="error-state" style="display:none;">
+    <div class="error-icon">📭</div>
+    <div class="error-msg" id="error-msg">カードが見つかりませんでした。<br>URLをご確認ください。</div>
+  </div>
+
+  <!-- カード本体 -->
+  <div id="card-section">
+
+    <!-- 送り主ラベル -->
+    <div class="from-label">
+      <div class="from-label-inner">
+        <span>✉</span>
+        <span id="from-label-text">〇〇さん からのカード</span>
+      </div>
+    </div>
+
+    <!-- メインカード -->
+    <div class="main-card">
+      <div class="card-header">
+        <div class="card-number" id="card-number">No. ????</div>
+        <div class="card-date" id="card-date">----/--/--</div>
+      </div>
+      <div class="card-body">
+        <div class="card-message" id="card-message">（メッセージを読み込み中）</div>
+      </div>
+      <div class="card-footer">
+        <div class="card-sender">送り主：<strong id="card-sender-name">---</strong></div>
+        <div class="card-label">感謝カード</div>
+      </div>
+    </div>
+
+    <!-- スポンサー枠 -->
+    <div class="sponsor-section">
+      <div class="sponsor-label">— スポンサー —</div>
+      <div class="sponsor-banner" onclick="showToast('スポンサーページへ移動します（準備中）')">
+        <div class="sponsor-banner-text">このカードのスポンサー</div>
+        <div class="sponsor-banner-name">株式会社〇〇〇〇</div>
+        <div class="sponsor-banner-tag">#地域応援 #お互い様サポーター</div>
+      </div>
+    </div>
+
+    <!-- 受け取りセクション -->
+    <div class="receive-section">
+      <div class="section-title">— このカードを受け取る —</div>
+
+      <!-- 未ログイン時 -->
+      <div class="login-prompt" id="login-prompt">
+        <div class="login-prompt-msg">
+          受け取りを記録するには<br>会員登録（無料）が必要です。<br>
+          <small style="font-size:12px;color:var(--border);">登録後、このページに自動で戻ります。</small>
+        </div>
+        <button class="btn-register" onclick="goToAuth()">登録して受け取る</button>
+      </div>
+
+      <!-- ログイン済み：返信フォーム -->
+      <div class="reply-form" id="reply-form">
+
+        <!-- 返信済みバナー -->
+        <div class="replied-banner" id="replied-banner">
+          <div class="replied-icon">🙏</div>
+          <div class="replied-msg">
+            返信カードを送りました。<br>
+            <small>返信は1回のみ・編集はできません</small>
+          </div>
+        </div>
+
+        <!-- 返信プレビュー（送信後） -->
+        <div class="reply-preview" id="reply-preview">
+          <div class="reply-preview-header">
+            <span>✓</span>
+            <span>あなたの返信カード</span>
+          </div>
+          <div class="reply-preview-body" id="reply-preview-body"></div>
+        </div>
+
+        <!-- 返信入力フォーム -->
+        <div id="reply-input-area">
+          <div class="reply-card">
+            <div class="reply-card-header">返信カードを書く（送信後は編集できません）</div>
+            <textarea
+              class="reply-textarea"
+              id="reply-textarea"
+              placeholder="感謝の気持ちや一言を書いてください…"
+              maxlength="300"
+              oninput="updateCount()"
+            ></textarea>
+            <div class="reply-count"><span id="char-count">0</span> / 300</div>
+            <div class="reply-footer">
+              <div class="reply-notice">1回のみ送信可</div>
+              <button class="btn-send" id="btn-send" onclick="sendReply()">送る</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ページフッター -->
+    <div class="page-footer">
+      <div class="footer-logo">お互い様プロジェクト</div>
+      <div class="footer-sub">心の価値を、かたちに。</div>
+    </div>
+
+  </div><!-- /card-section -->
+
+</div><!-- /container -->
+
+<!-- トースト -->
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+  const SUPABASE_URL = 'https://damussuizcfzqkfkpwwm.supabase.co';
+  const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY'; // ← Supabaseダッシュボードから取得して設定
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // URLからroom_idを取得
+  const params = new URLSearchParams(location.search);
+  const roomId = params.get('room') || params.get('id');
+
+  let currentUser = null;
+  let roomData = null;
+  let postData = null;
+  let hasReplied = false;
+
+  // ========== 初期化 ==========
+  async function init() {
+    if (!roomId) {
+      showError('URLにカードIDが含まれていません。');
+      return;
+    }
+
+    // ログイン状態確認
+    const { data: { session } } = await supabase.auth.getSession();
+    currentUser = session?.user || null;
+
+    // カードデータ取得
+    await loadCard();
+  }
+
+  // ========== カード取得 ==========
+  async function loadCard() {
+    try {
+      // rooms取得（確定済みのみ表示）
+      const { data: room, error: roomErr } = await supabase
+        .from('rooms')
+        .select('*, profiles!rooms_user_id_fkey(nickname)')
+        .eq('id', roomId)
+        .eq('status', 'confirmed') // 確定済みのみ
+        .single();
+
+      if (roomErr || !room) {
+        showError('カードが見つかりませんでした。<br>まだ確定されていないか、URLが誤っています。');
+        return;
+      }
+      roomData = room;
+
+      // 最初の投稿（本文）取得
+      const { data: posts } = await supabase
+        .from('room_posts')
+        .select('*')
+        .eq('room_id', roomId)
+        .order('created_at', { ascending: true })
+        .limit(1);
+
+      postData = posts?.[0] || null;
+      renderCard(room, postData);
+
+      // ログイン済みなら返信チェック
+      if (currentUser) {
+        await checkReplied();
+        showReplyForm();
+      } else {
+        document.getElementById('login-prompt').style.display = 'block';
+      }
+
+    } catch (e) {
+      showError('読み込みエラーが発生しました。');
+      console.error(e);
+    }
+  }
+
+  // ========== カード描画 ==========
+  function renderCard(room, post) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('card-section').style.display = 'block';
+
+    const senderName = room.profiles?.nickname || '匿名';
+    document.getElementById('from-label-text').textContent = `${senderName} さんからのカード`;
+    document.getElementById('card-sender-name').textContent = senderName;
+
+    // カード番号
+    const seq = room.card_number || room.id?.slice(0,6)?.toUpperCase() || '????';
+    document.getElementById('card-number').textContent = `No. ${seq}`;
+
+    // 日付
+    const d = new Date(room.created_at);
+    document.getElementById('card-date').textContent =
+      `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+
+    // メッセージ
+    document.getElementById('card-message').textContent = post?.content || room.message || '（メッセージなし）';
+  }
+
+  // ========== 返信済みチェック ==========
+  async function checkReplied() {
+    const { data: replies } = await supabase
+      .from('room_posts')
+      .select('*')
+      .eq('room_id', roomId)
+      .eq('user_id', currentUser.id)
+      .eq('post_type', 'reply');
+
+    if (replies && replies.length > 0) {
+      hasReplied = true;
+      const reply = replies[0];
+      showRepliedState(reply.content);
+    }
+  }
+
+  // ========== 返信フォーム表示 ==========
+  function showReplyForm() {
+    document.getElementById('login-prompt').style.display = 'none';
+    const form = document.getElementById('reply-form');
+    form.style.display = 'block';
+  }
+
+  // ========== 返信済み表示 ==========
+  function showRepliedState(content) {
+    document.getElementById('reply-input-area').style.display = 'none';
+    document.getElementById('replied-banner').style.display = 'block';
+    document.getElementById('reply-preview').style.display = 'block';
+    document.getElementById('reply-preview-body').textContent = content;
+  }
+
+  // ========== 返信送信 ==========
+  window.sendReply = async function() {
+    if (hasReplied) return;
+    const text = document.getElementById('reply-textarea').value.trim();
+    if (!text) { showToast('メッセージを入力してください'); return; }
+
+    const btn = document.getElementById('btn-send');
+    btn.disabled = true;
+    btn.textContent = '送信中…';
+
+    try {
+      const { error } = await supabase.from('room_posts').insert({
+        room_id: roomId,
+        user_id: currentUser.id,
+        content: text,
+        post_type: 'reply'
+      });
+
+      if (error) throw error;
+
+      hasReplied = true;
+      showRepliedState(text);
+      showToast('🙏 返信カードを送りました');
+
+    } catch (e) {
+      console.error(e);
+      btn.disabled = false;
+      btn.textContent = '送る';
+      showToast('送信エラーが発生しました');
+    }
+  };
+
+  // ========== 認証ページへ ==========
+  window.goToAuth = function() {
+    const returnUrl = encodeURIComponent(location.href);
+    location.href = `auth.html?return=${returnUrl}`;
+  };
+
+  // ========== 文字数カウント ==========
+  window.updateCount = function() {
+    const len = document.getElementById('reply-textarea').value.length;
+    document.getElementById('char-count').textContent = len;
+  };
+
+  // ========== エラー表示 ==========
+  function showError(msg) {
+    document.getElementById('loading').style.display = 'none';
+    const err = document.getElementById('error-state');
+    err.style.display = 'block';
+    document.getElementById('error-msg').innerHTML = msg;
+  }
+
+  // ========== トースト ==========
+  window.showToast = function(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  };
+
+  // 認証後の自動戻り処理
+  const returnParam = params.get('return');
+  if (!returnParam) {
+    supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN') {
+        // auth.htmlからのリダイレクト後に再チェック
+        init();
+      }
+    });
+  }
+
+  init();
+</script>
+</body>
+</html>

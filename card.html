@@ -17,6 +17,8 @@
     --red: #8b1a1a;
     --gray: #6b6355;
     --border: #c8b99a;
+    --green: #3a6b3a;
+    --green-bg: #f0f7f0;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -28,7 +30,6 @@
     min-height: 100vh;
   }
 
-  /* 和紙テクスチャ背景 */
   body::before {
     content: '';
     position: fixed;
@@ -47,7 +48,6 @@
     padding: 40px 24px;
   }
 
-  /* ヘッダー */
   .header {
     text-align: center;
     margin-bottom: 48px;
@@ -79,7 +79,6 @@
     font-weight: 300;
   }
 
-  /* ビュー切り替え */
   .view { display: none; }
   .view.active { display: block; }
 
@@ -93,11 +92,7 @@
     box-shadow: 0 2px 20px rgba(0,0,0,0.06);
   }
 
-  .create-icon {
-    font-size: 48px;
-    margin-bottom: 20px;
-    opacity: 0.7;
-  }
+  .create-icon { font-size: 48px; margin-bottom: 20px; opacity: 0.7; }
 
   .create-card h2 {
     font-size: 18px;
@@ -130,16 +125,8 @@
     border-radius: 1px;
   }
 
-  .btn-create:hover {
-    background: var(--gold);
-    transform: translateY(-1px);
-  }
-
-  .btn-create:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-  }
+  .btn-create:hover { background: var(--gold); transform: translateY(-1px); }
+  .btn-create:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
   /* ===== 生成結果 ===== */
   .result-card {
@@ -188,9 +175,7 @@
     background: white;
   }
 
-  #qrcode canvas, #qrcode img {
-    display: block;
-  }
+  #qrcode canvas, #qrcode img { display: block; }
 
   .room-url {
     font-family: 'Zen Kaku Gothic New', sans-serif;
@@ -225,10 +210,7 @@
     border-radius: 1px;
   }
 
-  .btn-secondary:hover {
-    background: var(--paper);
-    border-color: var(--ink);
-  }
+  .btn-secondary:hover { background: var(--paper); border-color: var(--ink); }
 
   .btn-primary {
     flex: 1;
@@ -256,10 +238,7 @@
     border-bottom: 1px solid var(--border);
   }
 
-  .room-badge {
-    display: flex;
-    flex-direction: column;
-  }
+  .room-badge { display: flex; flex-direction: column; }
 
   .room-badge-label {
     font-family: 'Zen Kaku Gothic New', sans-serif;
@@ -290,12 +269,77 @@
     border-radius: 1px;
   }
 
-  .share-btn:hover {
-    border-color: var(--ink);
-    color: var(--ink);
+  .share-btn:hover { border-color: var(--ink); color: var(--ink); }
+
+  /* ===== 確定バナー ===== */
+  /* 下書き中バナー */
+  .draft-banner {
+    background: #fffbf0;
+    border: 1px solid var(--gold-light);
+    border-radius: 2px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
   }
 
-  /* 投稿フォーム */
+  .draft-banner-text {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 12px;
+    color: var(--gray);
+    letter-spacing: 1px;
+    line-height: 1.7;
+  }
+
+  .draft-banner-text strong {
+    display: block;
+    color: var(--gold);
+    font-size: 13px;
+    margin-bottom: 2px;
+    letter-spacing: 2px;
+  }
+
+  .btn-confirm {
+    flex-shrink: 0;
+    padding: 12px 24px;
+    border: 1px solid var(--gold);
+    background: var(--gold);
+    color: white;
+    font-family: 'Noto Serif JP', serif;
+    font-size: 13px;
+    letter-spacing: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 1px;
+    white-space: nowrap;
+  }
+
+  .btn-confirm:hover {
+    background: #9a6f09;
+    border-color: #9a6f09;
+  }
+
+  /* 確定済みバナー */
+  .confirmed-banner {
+    background: var(--green-bg);
+    border: 1px solid #a8d5a8;
+    border-radius: 2px;
+    padding: 14px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 12px;
+    color: var(--green);
+    letter-spacing: 1px;
+  }
+
+  .confirmed-banner-icon { font-size: 18px; }
+
+  /* ===== 投稿フォーム ===== */
   .post-form {
     background: white;
     border: 1px solid var(--border);
@@ -303,6 +347,13 @@
     padding: 24px;
     margin-bottom: 24px;
     box-shadow: 0 1px 8px rgba(0,0,0,0.04);
+    transition: opacity 0.3s;
+  }
+
+  /* 確定後はフォームをロック */
+  .post-form.locked {
+    opacity: 0.6;
+    pointer-events: none;
   }
 
   .post-form h3 {
@@ -314,9 +365,7 @@
     font-family: 'Zen Kaku Gothic New', sans-serif;
   }
 
-  .form-group {
-    margin-bottom: 16px;
-  }
+  .form-group { margin-bottom: 16px; }
 
   .form-group label {
     display: block;
@@ -342,10 +391,8 @@
     transition: border-color 0.2s;
   }
 
-  textarea:focus {
-    outline: none;
-    border-color: var(--gold);
-  }
+  textarea:focus { outline: none; border-color: var(--gold); }
+  textarea:disabled { cursor: not-allowed; opacity: 0.7; }
 
   .image-upload {
     border: 1px dashed var(--border);
@@ -357,11 +404,7 @@
     background: var(--paper);
   }
 
-  .image-upload:hover {
-    border-color: var(--gold);
-    background: #faf6ee;
-  }
-
+  .image-upload:hover { border-color: var(--gold); background: #faf6ee; }
   .image-upload input { display: none; }
 
   .image-upload-text {
@@ -371,12 +414,7 @@
     color: var(--gray);
   }
 
-  .image-preview {
-    margin-top: 12px;
-    max-width: 100%;
-    border-radius: 2px;
-    display: none;
-  }
+  .image-preview { margin-top: 12px; max-width: 100%; border-radius: 2px; display: none; }
 
   .btn-post {
     width: 100%;
@@ -395,7 +433,7 @@
   .btn-post:hover { background: var(--gold); }
   .btn-post:disabled { opacity: 0.5; cursor: not-allowed; }
 
-  /* 投稿一覧 */
+  /* ===== 投稿一覧 ===== */
   .posts-section h3 {
     font-size: 12px;
     letter-spacing: 3px;
@@ -413,6 +451,12 @@
     margin-bottom: 16px;
     box-shadow: 0 1px 8px rgba(0,0,0,0.04);
     animation: fadeIn 0.4s ease;
+  }
+
+  /* 返信投稿は少しインデント */
+  .post-item.post-reply {
+    border-left: 3px solid var(--gold-light);
+    margin-left: 16px;
   }
 
   @keyframes fadeIn {
@@ -435,6 +479,8 @@
     text-transform: uppercase;
   }
 
+  .post-type.reply { color: var(--green); }
+
   .post-time {
     font-family: 'Zen Kaku Gothic New', sans-serif;
     font-size: 10px;
@@ -456,7 +502,6 @@
     border: 1px solid var(--border);
   }
 
-  /* 装飾的な金の線 */
   .gold-line {
     height: 1px;
     background: linear-gradient(90deg, transparent, var(--gold), transparent);
@@ -464,7 +509,6 @@
     opacity: 0.4;
   }
 
-  /* メッセージ */
   .msg {
     text-align: center;
     padding: 20px;
@@ -477,7 +521,6 @@
   .msg-error { color: var(--red); }
   .msg-success { color: var(--gold); }
 
-  /* ローディング */
   .loading {
     text-align: center;
     padding: 40px;
@@ -497,7 +540,111 @@
     line-height: 2;
   }
 
-  /* コピー完了トースト */
+  /* 確定確認モーダル */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(26,18,8,0.6);
+    z-index: 300;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .modal-overlay.show { display: flex; }
+
+  .modal {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 36px 28px;
+    max-width: 400px;
+    width: 100%;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.15);
+    animation: modalIn 0.2s ease;
+  }
+
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .modal-icon {
+    font-size: 36px;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .modal h3 {
+    font-size: 17px;
+    font-weight: 400;
+    letter-spacing: 3px;
+    color: var(--ink);
+    margin-bottom: 12px;
+    text-align: center;
+  }
+
+  .modal p {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 13px;
+    color: var(--gray);
+    line-height: 1.9;
+    text-align: center;
+    margin-bottom: 28px;
+  }
+
+  .modal-note {
+    background: #fff8e8;
+    border: 1px solid var(--gold-light);
+    border-radius: 2px;
+    padding: 12px 16px;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 12px;
+    color: #8a6200;
+    line-height: 1.8;
+    margin-bottom: 24px;
+    letter-spacing: 1px;
+  }
+
+  .modal-buttons {
+    display: flex;
+    gap: 12px;
+  }
+
+  .modal-btn-cancel {
+    flex: 1;
+    padding: 14px;
+    border: 1px solid var(--border);
+    background: transparent;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: var(--gray);
+    cursor: pointer;
+    border-radius: 1px;
+    transition: all 0.2s;
+  }
+
+  .modal-btn-cancel:hover { border-color: var(--ink); color: var(--ink); }
+
+  .modal-btn-ok {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    background: var(--gold);
+    color: white;
+    font-family: 'Noto Serif JP', serif;
+    font-size: 13px;
+    letter-spacing: 3px;
+    cursor: pointer;
+    border-radius: 1px;
+    transition: all 0.2s;
+  }
+
+  .modal-btn-ok:hover { background: #9a6f09; }
+  .modal-btn-ok:disabled { opacity: 0.5; cursor: not-allowed; }
+
   .toast {
     position: fixed;
     bottom: 32px;
@@ -521,6 +668,8 @@
     .create-card, .result-card { padding: 28px 20px; }
     .room-number-value { font-size: 36px; }
     .action-buttons { flex-direction: column; }
+    .draft-banner { flex-direction: column; align-items: flex-start; }
+    .modal-buttons { flex-direction: column; }
   }
 </style>
 </head>
@@ -557,19 +706,15 @@
         <div class="room-number-label">Room Number</div>
         <div class="room-number-value" id="result-number">—</div>
       </div>
-
       <div class="qr-section">
         <div id="qrcode"></div>
         <div class="room-url" id="result-url"></div>
       </div>
-
       <div class="action-buttons">
         <button class="btn-secondary" onclick="copyUrl()">URLをコピー</button>
         <button class="btn-primary" onclick="goToRoom()">部屋に入る</button>
       </div>
-
       <div class="gold-line"></div>
-
       <div style="text-align:center; font-family:'Zen Kaku Gothic New',sans-serif; font-size:12px; color:var(--gray); letter-spacing:2px; line-height:2;">
         このQRコードを名刺に印刷して<br>
         大切な人に渡してください
@@ -587,8 +732,24 @@
       <button class="share-btn" onclick="copyUrl()">QR / URL</button>
     </div>
 
+    <!-- ▼ 下書き中バナー（確定前のみ表示） -->
+    <div class="draft-banner" id="draft-banner" style="display:none;">
+      <div class="draft-banner-text">
+        <strong>下 書 き 中</strong>
+        確定するまで相手には「準備中」と表示されます。<br>
+        メッセージを書き終えたら「確定する」を押してください。
+      </div>
+      <button class="btn-confirm" onclick="openConfirmModal()">確 定 す る</button>
+    </div>
+
+    <!-- ▼ 確定済みバナー（確定後のみ表示） -->
+    <div class="confirmed-banner" id="confirmed-banner" style="display:none;">
+      <span class="confirmed-banner-icon">✓</span>
+      <span>このカードは公開中です。相手に届いています。</span>
+    </div>
+
     <!-- 投稿フォーム -->
-    <div class="post-form">
+    <div class="post-form" id="post-form">
       <h3>感 謝 を 届 け る</h3>
       <div class="form-group">
         <label>メッセージ</label>
@@ -612,13 +773,31 @@
 
     <!-- 投稿一覧 -->
     <div class="posts-section">
-      <h3>— こ の 部 屋 の 記 録 —</h3>
+      <!-- ③ ラベル修正：「届いたメッセージ」→「返信の記録」 -->
+      <h3>— 返 信 の 記 録 —</h3>
       <div id="posts-list">
         <div class="loading">読み込み中...</div>
       </div>
     </div>
   </div>
 
+</div><!-- /container -->
+
+<!-- 確定確認モーダル -->
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal">
+    <div class="modal-icon">🏮</div>
+    <h3>カードを確定しますか？</h3>
+    <p>確定すると相手にカードが公開されます。</p>
+    <div class="modal-note">
+      ⚠ 確定後はメッセージの編集ができません。<br>
+      内容をよくご確認のうえ確定してください。
+    </div>
+    <div class="modal-buttons">
+      <button class="modal-btn-cancel" onclick="closeConfirmModal()">もどる</button>
+      <button class="modal-btn-ok" id="modal-btn-ok" onclick="confirmCard()">確　定　す　る</button>
+    </div>
+  </div>
 </div>
 
 <!-- トースト -->
@@ -633,20 +812,20 @@ const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let currentRoomId = null;
 let currentRoomNumber = null;
+let currentRoomDbId = null;   // roomsテーブルのUUID（is_confirmed更新に使う）
+let isConfirmed = false;
+let isOwner = false;
 let selectedFile = null;
 
 // ===== 初期化 =====
 window.onload = async () => {
-  // ===== ログインチェック =====
   const { data: { session } } = await db.auth.getSession();
   if (!session) {
-    // 未ログイン → auth.htmlへ（元のURLを ?next= に保存して戻れるように）
     const next = encodeURIComponent(window.location.href);
     window.location.href = `auth.html?next=${next}`;
     return;
   }
 
-  // URLにroom_idがあれば部屋を開く
   const params = new URLSearchParams(window.location.search);
   const roomId = params.get('room');
   if (roomId) {
@@ -657,49 +836,44 @@ window.onload = async () => {
 // ===== 部屋生成 =====
 async function generateRoom() {
   const btn = document.getElementById('btn-generate');
-  const msg = document.getElementById('create-msg');
   btn.disabled = true;
   btn.textContent = '生成中...';
-  msg.textContent = '';
 
   try {
     const { data: { session } } = await db.auth.getSession();
     const userId = session?.user?.id || null;
-
     const roomId = crypto.randomUUID();
 
     const { data, error } = await db
       .from('rooms')
-      .insert([{ room_id: roomId, user_id: userId }])
+      .insert([{ room_id: roomId, user_id: userId, is_confirmed: false }])
       .select()
       .single();
 
     if (error) {
-      await showResult(roomId, Math.floor(Math.random() * 9000) + 1000);
+      await showResult(roomId, Math.floor(Math.random() * 9000) + 1000, null);
       return;
     }
-
-    await showResult(roomId, data.id);
-
+    await showResult(roomId, data.id, data.id);
   } catch (e) {
     const roomId = crypto.randomUUID();
-    await showResult(roomId, Math.floor(Math.random() * 9000) + 1000);
+    await showResult(roomId, Math.floor(Math.random() * 9000) + 1000, null);
   }
 }
 
-async function showResult(roomId, number) {
+async function showResult(roomId, number, dbId) {
   currentRoomId = roomId;
+  currentRoomDbId = dbId;
   currentRoomNumber = String(number).padStart(4, '0');
 
-  const url = `${window.location.origin}${window.location.pathname}?room=${roomId}`;
+  const receiveUrl = `${window.location.origin}${window.location.pathname.replace('card.html','receive.html')}?room=${roomId}`;
 
   document.getElementById('result-number').textContent = `No. ${currentRoomNumber}`;
-  document.getElementById('result-url').textContent = url;
+  document.getElementById('result-url').textContent = receiveUrl;
 
-  // QR生成
   document.getElementById('qrcode').innerHTML = '';
   new QRCode(document.getElementById('qrcode'), {
-    text: url,
+    text: receiveUrl,
     width: 180,
     height: 180,
     colorDark: '#1a1208',
@@ -713,21 +887,109 @@ async function showResult(roomId, number) {
 async function openRoom(roomId) {
   currentRoomId = roomId;
 
-  // room番号を取得
   try {
-    const { data } = await db
+    const { data: { session } } = await db.auth.getSession();
+    const currentUserId = session?.user?.id;
+
+    const { data: room } = await db
       .from('rooms')
-      .select('id')
+      .select('id, user_id, is_confirmed')
       .eq('room_id', roomId)
       .single();
-    currentRoomNumber = data ? String(data.id).padStart(4, '0') : '????';
+
+    if (room) {
+      currentRoomNumber = String(room.id).padStart(4, '0');
+      currentRoomDbId = room.id;
+      isConfirmed = room.is_confirmed === true;
+      isOwner = room.user_id === currentUserId;
+    } else {
+      currentRoomNumber = roomId.slice(0, 4).toUpperCase();
+      isConfirmed = false;
+      isOwner = false;
+    }
   } catch {
-    currentRoomNumber = roomId.slice(0, 4).toUpperCase();
+    currentRoomNumber = '????';
+    isConfirmed = false;
+    isOwner = false;
   }
 
   document.getElementById('room-display-number').textContent = `No. ${currentRoomNumber}`;
   showView('room');
+  updateRoomUI();
   await loadPosts();
+}
+
+// ===== 部屋UIを確定状態に合わせて更新 =====
+function updateRoomUI() {
+  const draftBanner    = document.getElementById('draft-banner');
+  const confirmedBanner = document.getElementById('confirmed-banner');
+  const postForm       = document.getElementById('post-form');
+  const postText       = document.getElementById('post-text');
+  const postImage      = document.getElementById('post-image');
+  const btnPost        = document.getElementById('btn-post');
+
+  if (isOwner) {
+    if (isConfirmed) {
+      // オーナー・確定済み：確定バナー表示・フォームロック
+      draftBanner.style.display    = 'none';
+      confirmedBanner.style.display = 'flex';
+      postForm.classList.add('locked');
+      postText.disabled  = true;
+      postImage.disabled = true;
+      btnPost.disabled   = true;
+    } else {
+      // オーナー・未確定：下書きバナー表示
+      draftBanner.style.display    = 'flex';
+      confirmedBanner.style.display = 'none';
+      postForm.classList.remove('locked');
+      postText.disabled  = false;
+      postImage.disabled = false;
+      btnPost.disabled   = false;
+    }
+  } else {
+    // 受取人：バナーなし・フォーム使用可
+    draftBanner.style.display    = 'none';
+    confirmedBanner.style.display = 'none';
+    postForm.classList.remove('locked');
+  }
+}
+
+// ===== 確定モーダル =====
+function openConfirmModal() {
+  document.getElementById('confirm-modal').classList.add('show');
+}
+
+function closeConfirmModal() {
+  document.getElementById('confirm-modal').classList.remove('show');
+}
+
+async function confirmCard() {
+  const btn = document.getElementById('modal-btn-ok');
+  btn.disabled = true;
+  btn.textContent = '確定中...';
+
+  try {
+    // roomsテーブルのis_confirmedをtrueに更新
+    // ※ room_idカラムで検索（UUIDの文字列）
+    const { error } = await db
+      .from('rooms')
+      .update({ is_confirmed: true })
+      .eq('room_id', currentRoomId);
+
+    if (error) throw error;
+
+    isConfirmed = true;
+    closeConfirmModal();
+    updateRoomUI();
+    showToast('✓ カードを確定しました。相手に公開されました。');
+
+  } catch (e) {
+    console.error(e);
+    showToast('エラーが発生しました。もう一度お試しください。');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '確　定　す　る';
+  }
 }
 
 // ===== 投稿読み込み =====
@@ -744,29 +1006,33 @@ async function loadPosts() {
   if (error || !data || data.length === 0) {
     list.innerHTML = `
       <div class="empty-posts">
-        まだ何もありません<br>
-        最初の感謝を届けてみてください
+        まだ返信はありません<br>
+        カードを渡した相手からの返信を待ちましょう
       </div>`;
     return;
   }
 
-  list.innerHTML = data.map(post => `
-    <div class="post-item">
-      <div class="post-meta">
-        <span class="post-type">感 謝</span>
-        <span class="post-time">${formatDate(post.created_at)}</span>
-      </div>
-      ${post.content ? `<div class="post-content">${escapeHtml(post.content)}</div>` : ''}
-      ${post.image_url ? `<img class="post-image" src="${post.image_url}" alt="投稿画像">` : ''}
-    </div>
-  `).join('');
+  list.innerHTML = data.map(post => {
+    const isReply = post.post_type === 'reply';
+    return `
+      <div class="post-item ${isReply ? 'post-reply' : ''}">
+        <div class="post-meta">
+          <span class="post-type ${isReply ? 'reply' : ''}">${isReply ? '返 信' : '感 謝'}</span>
+          <span class="post-time">${formatDate(post.created_at)}</span>
+        </div>
+        ${post.content ? `<div class="post-content">${escapeHtml(post.content)}</div>` : ''}
+        ${post.image_url ? `<img class="post-image" src="${post.image_url}" alt="投稿画像">` : ''}
+      </div>`;
+  }).join('');
 }
 
 // ===== 投稿送信 =====
 async function submitPost() {
+  if (isConfirmed && isOwner) return; // 確定後はオーナーは送信不可
+
   const text = document.getElementById('post-text').value.trim();
-  const btn = document.getElementById('btn-post');
-  const msg = document.getElementById('post-msg');
+  const btn  = document.getElementById('btn-post');
+  const msg  = document.getElementById('post-msg');
 
   if (!text && !selectedFile) {
     msg.textContent = 'メッセージか画像を入れてください';
@@ -783,18 +1049,14 @@ async function submitPost() {
     const userId = session?.user?.id || null;
 
     let imageUrl = null;
-
     if (selectedFile) {
       const ext = selectedFile.name.split('.').pop();
       const fileName = `${currentRoomId}/${Date.now()}.${ext}`;
       const { data: uploadData, error: uploadError } = await db.storage
         .from('room-images')
         .upload(fileName, selectedFile);
-
       if (!uploadError) {
-        const { data: urlData } = db.storage
-          .from('room-images')
-          .getPublicUrl(fileName);
+        const { data: urlData } = db.storage.from('room-images').getPublicUrl(fileName);
         imageUrl = urlData.publicUrl;
       }
     }
@@ -806,6 +1068,7 @@ async function submitPost() {
         user_id: userId,
         content: text || null,
         image_url: imageUrl,
+        post_type: isOwner ? 'original' : 'reply',
       }]);
 
     if (error) throw error;
@@ -819,7 +1082,6 @@ async function submitPost() {
     msg.className = 'msg msg-success';
 
     await loadPosts();
-
   } catch (e) {
     msg.textContent = '送信に失敗しました。もう一度お試しください。';
     msg.className = 'msg msg-error';
@@ -828,6 +1090,7 @@ async function submitPost() {
     btn.textContent = '感　謝　を　送　る';
   }
 }
+
 // ===== 画像プレビュー =====
 function previewImage(input) {
   if (input.files && input.files[0]) {
@@ -844,13 +1107,8 @@ function previewImage(input) {
 
 // ===== URL コピー =====
 function copyUrl() {
-  const url = currentRoomId
-    ? `${window.location.origin}${window.location.pathname}?room=${currentRoomId}`
-    : document.getElementById('result-url').textContent;
-
-  navigator.clipboard.writeText(url).then(() => {
-    showToast('URLをコピーしました');
-  });
+  const receiveUrl = `${window.location.origin}${window.location.pathname.replace('card.html','receive.html')}?room=${currentRoomId}`;
+  navigator.clipboard.writeText(receiveUrl).then(() => showToast('URLをコピーしました'));
 }
 
 // ===== 部屋に入る =====
@@ -871,7 +1129,7 @@ function showToast(msg) {
   const toast = document.getElementById('toast');
   toast.textContent = msg;
   toast.classList.add('show');
-  setTimeout(() => toast.classList.remove('show'), 2500);
+  setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
 function formatDate(iso) {
@@ -884,14 +1142,8 @@ function escapeHtml(str) {
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 </script>
-<!-- ========================================
-  全ページ共通：マイページアイコン
-  </body>の直前に貼り付けてください
-  Supabase SDKが読み込まれてないページは
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  を<head>内に追加してください
-======================================== -->
 
+<!-- マイページFAB -->
 <style>
 .mypage-fab {
   position: fixed;
@@ -923,11 +1175,7 @@ function escapeHtml(str) {
   transition: stroke 0.25s;
 }
 .mypage-fab:hover svg { stroke: #b8860b; }
-
-/* ログイン済みは金色に */
-.mypage-fab.logged-in {
-  border-color: #b8860b;
-}
+.mypage-fab.logged-in { border-color: #b8860b; }
 .mypage-fab.logged-in svg { stroke: #b8860b; }
 </style>
 
@@ -940,15 +1188,10 @@ function escapeHtml(str) {
 
 <script>
 (async () => {
-  // Supabaseが読み込まれてるページだけ動く
   if (typeof supabase === 'undefined') return;
-  const SUPABASE_URL = 'https://damussuizcfzqkfkpwwm.supabase.co';
-  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhbXVzc3VpemNmenFrZmtwd3dtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0NTcwOTIsImV4cCI6MjA5MTAzMzA5Mn0.Xp93BfRowa9gG7ZMRQxyyKiYXgWRN4Gk5xLxaGTiUIo';
-  const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  const { data: { session } } = await db.auth.getSession();
-  if (session) {
-    document.getElementById('mypageFab').classList.add('logged-in');
-  }
+  const db2 = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const { data: { session } } = await db2.auth.getSession();
+  if (session) document.getElementById('mypageFab').classList.add('logged-in');
 })();
 </script>
 </body>
