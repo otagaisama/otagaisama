@@ -644,7 +644,7 @@
     document.getElementById('card-sender-name').textContent = senderName;
 
     // カード番号
-    const seq = room.card_number || room.id?.slice(0,6)?.toUpperCase() || '????';
+    const seq = room.card_number || String(room.id).padStart(4,'0') || '????';
     document.getElementById('card-number').textContent = `No. ${seq}`;
 
     // 日付
