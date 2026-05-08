@@ -654,6 +654,29 @@
 
     // メッセージ
     document.getElementById('card-message').textContent = post?.content || room.message || '（メッセージなし）';
+    // 画像表示
+const cardBody = document.querySelector('.card-body');
+const existingImg = cardBody.querySelector('.card-image-wrap');
+if (existingImg) existingImg.remove();
+
+if (post?.image_url) {
+  const wrap = document.createElement('div');
+  wrap.className = 'card-image-wrap';
+  wrap.style.cssText = 'margin-top: 20px;';
+
+  const img = document.createElement('img');
+  img.src = post.image_url;
+  img.alt = '添付画像';
+  img.style.cssText = `
+    max-width: 100%;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 12px rgba(44,36,22,0.08);
+    display: block;
+  `;
+  wrap.appendChild(img);
+  cardBody.appendChild(wrap);
+}
   }
 
   // ========== 返信済みチェック ==========
