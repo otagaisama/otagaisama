@@ -599,7 +599,7 @@
       const { data: room, error: roomErr } = await supabase
         .from('rooms')
         .select('*, profiles!rooms_user_id_fkey(nickname)')
-        .eq('id', roomId)
+        .eq('room_id', roomId)
         .eq('status', 'confirmed') // 確定済みのみ
         .single();
 
