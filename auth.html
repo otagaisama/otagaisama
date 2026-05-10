@@ -33,7 +33,6 @@
     overflow-x: hidden;
   }
 
-  /* 和紙テクスチャ */
   body::before {
     content: '';
     position: fixed;
@@ -43,7 +42,6 @@
     z-index: 0;
   }
 
-  /* 上の金線 */
   body::after {
     content: '';
     position: fixed;
@@ -56,7 +54,6 @@
   }
   @keyframes lineDown { from{height:0;opacity:0} to{height:60px;opacity:1} }
 
-  /* ===== メインラッパ ===== */
   .auth-wrap {
     position: relative;
     z-index: 1;
@@ -68,7 +65,6 @@
     align-items: center;
   }
 
-  /* ロゴエリア */
   .logo-area {
     text-align: center;
     margin-bottom: 36px;
@@ -117,6 +113,9 @@
     animation: fadeUp 1s ease 0.6s forwards;
   }
 
+  /* リセット系パネルではタブを隠す */
+  .tab-bar.hidden { display: none; }
+
   .tab-btn {
     flex: 1;
     padding: 14px 0;
@@ -151,14 +150,30 @@
     animation: fadeUp 1s ease 0.9s forwards;
   }
 
-  /* パネル切り替え */
   .panel { display: none; }
   .panel.active { display: block; }
 
-  /* フォームグループ */
-  .form-group {
-    margin-bottom: 22px;
+  /* パネルタイトル（リセット系で使用） */
+  .panel-title {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 16px;
+    letter-spacing: 5px;
+    color: var(--ink);
+    text-align: center;
+    margin-bottom: 8px;
   }
+
+  .panel-desc {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--gray);
+    text-align: center;
+    line-height: 1.9;
+    margin-bottom: 28px;
+  }
+
+  .form-group { margin-bottom: 22px; }
 
   .form-label {
     display: block;
@@ -184,20 +199,14 @@
     -webkit-appearance: none;
   }
 
-  .form-input::placeholder {
-    color: #c0b8a8;
-    font-size: 13px;
-  }
+  .form-input::placeholder { color: #c0b8a8; font-size: 13px; }
 
   .form-input:focus {
     border-color: var(--gold);
     box-shadow: 0 0 0 3px rgba(184,134,11,0.08);
   }
 
-  /* パスワードラッパ */
-  .pw-wrap {
-    position: relative;
-  }
+  .pw-wrap { position: relative; }
 
   .pw-toggle {
     position: absolute;
@@ -215,7 +224,6 @@
   }
   .pw-toggle:hover { color: var(--ink); }
 
-  /* ===== 送信ボタン ===== */
   .btn-submit {
     width: 100%;
     padding: 16px;
@@ -245,18 +253,10 @@
   .btn-submit:hover::before { transform: translateX(0); }
   .btn-submit span { position: relative; z-index: 1; }
 
-  .btn-submit:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
+  .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
   .btn-submit:disabled::before { display: none; }
 
-  /* ===== メッセージ ===== */
-  .msg-area {
-    margin-top: 16px;
-    min-height: 20px;
-    text-align: center;
-  }
+  .msg-area { margin-top: 16px; min-height: 20px; text-align: center; }
 
   .msg {
     font-family: 'Zen Kaku Gothic New', sans-serif;
@@ -267,7 +267,6 @@
   .msg-error { color: var(--red); }
   .msg-success { color: var(--gold); }
 
-  /* ===== セパレータ ===== */
   .form-sep {
     height: 1px;
     background: linear-gradient(90deg, transparent, var(--border), transparent);
@@ -275,7 +274,40 @@
     opacity: 0.6;
   }
 
-  /* ===== トップへ戻るリンク ===== */
+  /* ===== パスワードを忘れた リンク ===== */
+  .forgot-link {
+    display: block;
+    text-align: right;
+    margin-top: -10px;
+    margin-bottom: 20px;
+  }
+
+  .forgot-link button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--gray);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color 0.2s;
+  }
+  .forgot-link button:hover { color: var(--gold); }
+
+  /* ===== 確認メール送信済み画面 ===== */
+  .confirm-icon {
+    width: 48px; height: 48px;
+    border: 1px solid var(--gold);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 20px;
+  }
+
   .back-link-area {
     margin-top: 28px;
     text-align: center;
@@ -295,10 +327,8 @@
     border: none;
     transition: color 0.2s;
   }
-
   .back-link:hover { color: var(--ink); }
 
-  /* ===== ローディングスピナー ===== */
   .spinner {
     display: inline-block;
     width: 14px; height: 14px;
@@ -311,7 +341,6 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* ===== フッター ===== */
   .footer {
     position: fixed;
     bottom: 0; left: 0; right: 0;
@@ -327,7 +356,6 @@
     letter-spacing: 3px;
   }
 
-  /* ===== 注記テキスト ===== */
   .form-note {
     font-family: 'Zen Kaku Gothic New', sans-serif;
     font-size: 11px;
@@ -337,6 +365,25 @@
     text-align: center;
     margin-top: 16px;
   }
+
+  /* パネル間ナビ */
+  .panel-nav {
+    text-align: center;
+    margin-top: 20px;
+  }
+  .panel-nav button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--gray);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color 0.2s;
+  }
+  .panel-nav button:hover { color: var(--gold); }
 
   @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
   @keyframes fadeIn { from{opacity:0} to{opacity:1} }
@@ -359,8 +406,8 @@
     <div class="logo-divider"></div>
   </div>
 
-  <!-- タブ -->
-  <div class="tab-bar">
+  <!-- タブ（login / register のみ表示） -->
+  <div class="tab-bar" id="tab-bar">
     <button class="tab-btn active" id="tab-login" onclick="switchTab('login')">
       ロ グ イ ン
     </button>
@@ -376,28 +423,20 @@
     <div class="panel active" id="panel-login">
       <div class="form-group">
         <label class="form-label" for="login-email">メールアドレス</label>
-        <input
-          class="form-input"
-          type="email"
-          id="login-email"
-          placeholder="your@email.com"
-          autocomplete="email"
-        >
+        <input class="form-input" type="email" id="login-email" placeholder="your@email.com" autocomplete="email">
       </div>
 
       <div class="form-group">
         <label class="form-label" for="login-password">パスワード</label>
         <div class="pw-wrap">
-          <input
-            class="form-input"
-            type="password"
-            id="login-password"
-            placeholder="パスワード"
-            autocomplete="current-password"
-            style="padding-right: 56px;"
-          >
-          <button class="pw-toggle" onclick="togglePw('login-password', this)" type="button">表示</button>
+          <input class="form-input" type="password" id="login-password" placeholder="パスワード" autocomplete="current-password" style="padding-right:56px;">
+          <button class="pw-toggle" onclick="togglePw('login-password',this)" type="button">表示</button>
         </div>
+      </div>
+
+      <!-- パスワードを忘れた -->
+      <div class="forgot-link">
+        <button onclick="showPanel('forgot')">パスワードをお忘れの方</button>
       </div>
 
       <button class="btn-submit" id="btn-login" onclick="doLogin()">
@@ -413,53 +452,24 @@
     <div class="panel" id="panel-register">
       <div class="form-group">
         <label class="form-label" for="reg-penname">ペンネーム <span style="color:var(--red);font-size:10px;">必須</span></label>
-        <input
-          class="form-input"
-          type="text"
-          id="reg-penname"
-          placeholder="表示名（後から変更できます）"
-          maxlength="20"
-          autocomplete="nickname"
-        >
+        <input class="form-input" type="text" id="reg-penname" placeholder="表示名（後から変更できます）" maxlength="20" autocomplete="nickname">
       </div>
       <div class="form-group">
         <label class="form-label" for="reg-email">メールアドレス</label>
-        <input
-          class="form-input"
-          type="email"
-          id="reg-email"
-          placeholder="your@email.com"
-          autocomplete="email"
-        >
+        <input class="form-input" type="email" id="reg-email" placeholder="your@email.com" autocomplete="email">
       </div>
-
       <div class="form-group">
         <label class="form-label" for="reg-password">パスワード</label>
         <div class="pw-wrap">
-          <input
-            class="form-input"
-            type="password"
-            id="reg-password"
-            placeholder="6文字以上"
-            autocomplete="new-password"
-            style="padding-right: 56px;"
-          >
-          <button class="pw-toggle" onclick="togglePw('reg-password', this)" type="button">表示</button>
+          <input class="form-input" type="password" id="reg-password" placeholder="6文字以上" autocomplete="new-password" style="padding-right:56px;">
+          <button class="pw-toggle" onclick="togglePw('reg-password',this)" type="button">表示</button>
         </div>
       </div>
-
       <div class="form-group">
         <label class="form-label" for="reg-password2">パスワード（確認）</label>
         <div class="pw-wrap">
-          <input
-            class="form-input"
-            type="password"
-            id="reg-password2"
-            placeholder="もう一度入力"
-            autocomplete="new-password"
-            style="padding-right: 56px;"
-          >
-          <button class="pw-toggle" onclick="togglePw('reg-password2', this)" type="button">表示</button>
+          <input class="form-input" type="password" id="reg-password2" placeholder="もう一度入力" autocomplete="new-password" style="padding-right:56px;">
+          <button class="pw-toggle" onclick="togglePw('reg-password2',this)" type="button">表示</button>
         </div>
       </div>
 
@@ -472,7 +482,90 @@
       </div>
 
       <div class="form-note">
-        登録後、すぐにご利用いただけます。
+        登録後、確認メールをお送りします。<br>メール内のリンクをクリックしてご利用開始ください。
+      </div>
+    </div>
+
+    <!-- ===== メール確認待ちパネル ===== -->
+    <div class="panel" id="panel-verify">
+      <div class="confirm-icon">✉</div>
+      <div class="panel-title">確 認 メ ー ル 送 信</div>
+      <div class="panel-desc">
+        ご登録のメールアドレスに<br>確認メールをお送りしました。<br><br>
+        メール内のリンクをクリックすると<br>ログインできるようになります。
+      </div>
+      <div class="panel-nav">
+        <button onclick="showLoginTab()">← ログイン画面へ戻る</button>
+      </div>
+    </div>
+
+    <!-- ===== パスワードリセット申請パネル ===== -->
+    <div class="panel" id="panel-forgot">
+      <div class="panel-title">パスワード再設定</div>
+      <div class="panel-desc">
+        登録済みのメールアドレスを入力してください。<br>再設定用のリンクをお送りします。
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="forgot-email">メールアドレス</label>
+        <input class="form-input" type="email" id="forgot-email" placeholder="your@email.com" autocomplete="email">
+      </div>
+
+      <button class="btn-submit" id="btn-forgot" onclick="doForgot()">
+        <span id="forgot-btn-text">リンクを送 信</span>
+      </button>
+
+      <div class="msg-area">
+        <div class="msg" id="forgot-msg"></div>
+      </div>
+
+      <div class="panel-nav">
+        <button onclick="showLoginTab()">← ログイン画面へ戻る</button>
+      </div>
+    </div>
+
+    <!-- ===== リセットメール送信済みパネル ===== -->
+    <div class="panel" id="panel-forgot-sent">
+      <div class="confirm-icon">✉</div>
+      <div class="panel-title">メール送信完了</div>
+      <div class="panel-desc">
+        パスワード再設定用のリンクを<br>メールアドレスへお送りしました。<br><br>
+        メールをご確認いただき、<br>リンクをクリックしてください。
+      </div>
+      <div class="panel-nav">
+        <button onclick="showLoginTab()">← ログイン画面へ戻る</button>
+      </div>
+    </div>
+
+    <!-- ===== 新パスワード設定パネル ===== -->
+    <div class="panel" id="panel-new-password">
+      <div class="panel-title">新しいパスワード</div>
+      <div class="panel-desc">
+        新しいパスワードを設定してください。
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="new-password">新しいパスワード</label>
+        <div class="pw-wrap">
+          <input class="form-input" type="password" id="new-password" placeholder="6文字以上" autocomplete="new-password" style="padding-right:56px;">
+          <button class="pw-toggle" onclick="togglePw('new-password',this)" type="button">表示</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="new-password2">パスワード（確認）</label>
+        <div class="pw-wrap">
+          <input class="form-input" type="password" id="new-password2" placeholder="もう一度入力" autocomplete="new-password" style="padding-right:56px;">
+          <button class="pw-toggle" onclick="togglePw('new-password2',this)" type="button">表示</button>
+        </div>
+      </div>
+
+      <button class="btn-submit" id="btn-new-pw" onclick="doNewPassword()">
+        <span id="new-pw-btn-text">パスワードを更新</span>
+      </button>
+
+      <div class="msg-area">
+        <div class="msg" id="new-pw-msg"></div>
       </div>
     </div>
 
@@ -496,18 +589,75 @@
   const { createClient } = supabase;
   const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // ===== タブ切り替え =====
-  function switchTab(tab) {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  // ===== URLハッシュ確認（リセットリンク踏んだ後の処理） =====
+  // Supabaseはリセットリンクに #access_token または ?type=recovery を付与する
+  (async () => {
+    // まず既存セッション確認
+    const { data: { session } } = await db.auth.getSession();
+
+    const hash = window.location.hash;
+    const params = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(hash.replace('#', ''));
+
+    // type=recovery → 新パスワード設定画面へ
+    if (
+      hashParams.get('type') === 'recovery' ||
+      params.get('type') === 'recovery'
+    ) {
+      showPanel('new-password');
+      return;
+    }
+
+    // type=signup → メール確認完了 → ログイン画面へ（ログイン済みならcard.htmlへ）
+    if (
+      hashParams.get('type') === 'signup' ||
+      params.get('type') === 'signup'
+    ) {
+      // 確認完了後はセッションができてるのでcard.htmlへ
+      if (session) {
+        window.location.href = 'card.html';
+        return;
+      }
+      showMsg('login-msg', 'メール確認が完了しました。ログインしてください。', 'success');
+      return;
+    }
+
+    // 通常：ログイン済みならcard.htmlへ
+    if (session) {
+      window.location.href = 'card.html';
+    }
+  })();
+
+  // ===== パネル切り替え =====
+  function showPanel(name) {
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-    document.getElementById('tab-' + tab).classList.add('active');
-    document.getElementById('panel-' + tab).classList.add('active');
+    document.getElementById('panel-' + name).classList.add('active');
+
+    // タブはlogin/registerのみ表示
+    const tabBar = document.getElementById('tab-bar');
+    if (name === 'login' || name === 'register') {
+      tabBar.classList.remove('hidden');
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('tab-' + name).classList.add('active');
+    } else {
+      tabBar.classList.add('hidden');
+    }
+  }
+
+  function switchTab(tab) {
+    showPanel(tab);
     clearMsgs();
   }
 
+  function showLoginTab() {
+    switchTab('login');
+  }
+
   function clearMsgs() {
-    document.getElementById('login-msg').textContent = '';
-    document.getElementById('register-msg').textContent = '';
+    ['login-msg','register-msg','forgot-msg','new-pw-msg'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.textContent = ''; el.className = 'msg'; }
+    });
   }
 
   // ===== パスワード表示トグル =====
@@ -527,15 +677,12 @@
     const btn = document.getElementById(btnId);
     const text = document.getElementById(textId);
     btn.disabled = loading;
-    if (loading) {
-      text.innerHTML = '<span class="spinner"></span>処理中...';
-    } else {
-      text.textContent = label;
-    }
+    text.innerHTML = loading ? '<span class="spinner"></span>処理中...' : label;
   }
 
   function showMsg(id, text, type) {
     const el = document.getElementById(id);
+    if (!el) return;
     el.textContent = text;
     el.className = 'msg msg-' + type;
   }
@@ -558,7 +705,7 @@
     if (error) {
       let msg = 'ログインに失敗しました';
       if (error.message.includes('Invalid login')) msg = 'メールアドレスまたはパスワードが違います';
-      if (error.message.includes('Email not confirmed')) msg = 'メール確認が必要です';
+      if (error.message.includes('Email not confirmed')) msg = 'メールの確認が完了していません。届いたメールのリンクをクリックしてください';
       showMsg('login-msg', msg, 'error');
       setLoading('btn-login', 'login-btn-text', false, 'ログ イン');
       return;
@@ -600,11 +747,13 @@
     setLoading('btn-register', 'reg-btn-text', true);
     showMsg('register-msg', '', '');
 
-    // user_metadataにpen_nameを保存
     const { data, error } = await db.auth.signUp({
       email,
       password,
-      options: { data: { pen_name: penname } }
+      options: {
+        data: { pen_name: penname },
+        emailRedirectTo: 'https://otagaisama.github.io/otagaisama/auth.html'
+      }
     });
 
     if (error) {
@@ -616,7 +765,7 @@
       return;
     }
 
-    // profilesテーブルにも保存（あれば）
+    // profilesテーブルに保存（確認前でも仮登録）
     if (data.user) {
       try {
         await db.from('profiles').upsert({
@@ -627,29 +776,85 @@
       } catch { /* テーブルなくてもOK */ }
     }
 
-    if (data.session) {
-      showMsg('register-msg', '登録完了！ 移動します...', 'success');
-      setTimeout(() => { window.location.href = getNextUrl(); }, 800);
+    // メール確認が必要な場合（session=null）
+    if (!data.session) {
+      showPanel('verify');
     } else {
-      showMsg('register-msg', '確認メールを送信しました。メールをご確認ください。', 'success');
-      setLoading('btn-register', 'reg-btn-text', false, '登 録 す る');
+      // メール確認OFFの場合（念のため残す）
+      showMsg('register-msg', '登録完了！ 移動します...', 'success');
+      setTimeout(() => { window.location.href = 'card.html'; }, 800);
     }
   }
 
-  // ===== 既ログイン確認（ページ開いたとき） =====
-  (async () => {
-    const { data: { session } } = await db.auth.getSession();
-    if (session) {
-      window.location.href = 'card.html';
+  // ===== パスワードリセット申請 =====
+  async function doForgot() {
+    const email = document.getElementById('forgot-email').value.trim();
+
+    if (!email) {
+      showMsg('forgot-msg', 'メールアドレスを入力してください', 'error');
+      return;
     }
-  })();
+
+    setLoading('btn-forgot', 'forgot-btn-text', true);
+    showMsg('forgot-msg', '', '');
+
+    const { error } = await db.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://otagaisama.github.io/otagaisama/auth.html'
+    });
+
+    if (error) {
+      showMsg('forgot-msg', '送信に失敗しました。しばらくしてから再度お試しください', 'error');
+      setLoading('btn-forgot', 'forgot-btn-text', false, 'リンクを送 信');
+      return;
+    }
+
+    // 成功（メアドが存在しなくてもSupabaseは成功を返す仕様）
+    showPanel('forgot-sent');
+  }
+
+  // ===== 新パスワード設定 =====
+  async function doNewPassword() {
+    const pw1 = document.getElementById('new-password').value;
+    const pw2 = document.getElementById('new-password2').value;
+
+    if (!pw1 || pw1.length < 6) {
+      showMsg('new-pw-msg', 'パスワードは6文字以上で入力してください', 'error');
+      return;
+    }
+    if (pw1 !== pw2) {
+      showMsg('new-pw-msg', 'パスワードが一致しません', 'error');
+      return;
+    }
+
+    setLoading('btn-new-pw', 'new-pw-btn-text', true);
+    showMsg('new-pw-msg', '', '');
+
+    const { error } = await db.auth.updateUser({ password: pw1 });
+
+    if (error) {
+      showMsg('new-pw-msg', 'パスワードの更新に失敗しました。リンクの有効期限が切れている可能性があります', 'error');
+      setLoading('btn-new-pw', 'new-pw-btn-text', false, 'パスワードを更新');
+      return;
+    }
+
+    showMsg('new-pw-msg', 'パスワードを更新しました。ログイン画面へ移動します...', 'success');
+    setTimeout(() => {
+      // ハッシュをクリアしてログイン画面へ
+      history.replaceState(null, '', window.location.pathname);
+      showLoginTab();
+    }, 1500);
+  }
 
   // ===== Enterキー対応 =====
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter') return;
-    const loginActive = document.getElementById('panel-login').classList.contains('active');
-    if (loginActive) doLogin();
-    else doRegister();
+    const active = document.querySelector('.panel.active');
+    if (!active) return;
+    const id = active.id;
+    if (id === 'panel-login') doLogin();
+    else if (id === 'panel-register') doRegister();
+    else if (id === 'panel-forgot') doForgot();
+    else if (id === 'panel-new-password') doNewPassword();
   });
 </script>
 </body>
