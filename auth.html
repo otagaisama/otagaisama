@@ -589,36 +589,41 @@
   const { createClient } = supabase;
   const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // ===== URLハッシュ確認（リセットリンク踏んだ後の処理） =====
-  // Supabaseはリセットリンクに #access_token または ?type=recovery を付与する
+  // ===== 認証状態の検知 =====
+  // PASSWORD_RECOVERY イベントを最優先で検知する
+  db.auth.onAuthStateChange((event, session) => {
+    if (event === 'PASSWORD_RECOVERY') {
+      // パスワードリセットリンクを踏んだ → 新パスワード設定画面へ
+      showPanel('new-password');
+    }
+  });
+
+  // ===== 初期表示の判定 =====
   (async () => {
-    // まず既存セッション確認
     const { data: { session } } = await db.auth.getSession();
 
     const hash = window.location.hash;
     const params = new URLSearchParams(window.location.search);
     const hashParams = new URLSearchParams(hash.replace('#', ''));
 
-    // type=recovery → 新パスワード設定画面へ
-    if (
-      hashParams.get('type') === 'recovery' ||
-      params.get('type') === 'recovery'
-    ) {
-      showPanel('new-password');
-      return;
-    }
-
-    // type=signup → メール確認完了 → ログイン画面へ（ログイン済みならcard.htmlへ）
+    // type=signup → メール確認完了
     if (
       hashParams.get('type') === 'signup' ||
       params.get('type') === 'signup'
     ) {
-      // 確認完了後はセッションができてるのでcard.htmlへ
       if (session) {
         window.location.href = 'card.html';
         return;
       }
       showMsg('login-msg', 'メール確認が完了しました。ログインしてください。', 'success');
+      return;
+    }
+
+    // type=recovery → onAuthStateChangeで処理するのでここでは何もしない
+    if (
+      hashParams.get('type') === 'recovery' ||
+      params.get('type') === 'recovery'
+    ) {
       return;
     }
 
