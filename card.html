@@ -844,12 +844,13 @@ async function generateRoom() {
     const userId = session?.user?.id || null;
     const roomId = crypto.randomUUID();
 
+    const meta = session?.user?.user_metadata || {};
+    const penName = meta.pen_name || meta.name || session?.user?.email?.split('@')[0] || '匿名';
     const { data, error } = await db
       .from('rooms')
-      .insert([{ room_id: roomId, user_id: userId, is_confirmed: false }])
-      .select()
+      .insert([{ room_id: roomId, user_id: userId, is_confirmed: false, pen_name: penName }])
+　　  .select()
       .single();
-
     if (error) {
       await showResult(roomId, Math.floor(Math.random() * 9000) + 1000, null);
       return;
