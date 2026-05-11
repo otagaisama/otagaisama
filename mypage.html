@@ -854,7 +854,7 @@
         : `返信はまだありません`;
 
       return `
-        <a class="room-item" href="card.html?room=${room.room_id}">
+        <a class="room-item" href="receive.html?room=${room.room_id}">
           <div class="room-num-badge">
             <div class="room-num-label">No.</div>
             <div class="room-num-val">${String(room.id || '?').padStart(4, '0')}</div>
@@ -887,7 +887,7 @@
       return { room_id: roomId, id: roomData?.id || '????', postCount: roomPosts.length, lastDate };
     }));
     el.innerHTML = items.map(room => `
-      <a class="room-item" href="card.html?room=${room.room_id}">
+      <a class="room-item" href="receive.html?room=${room.room_id}">
         <div class="room-num-badge">
           <div class="room-num-label">No.</div>
           <div class="room-num-val">${String(room.id).padStart(4, '0')}</div>
