@@ -639,7 +639,7 @@
     document.getElementById('loading').style.display = 'none';
     document.getElementById('card-section').style.display = 'block';
 
-    const senderName = room.profiles?.nickname || '匿名';
+    const senderName = room.pen_name || '匿名';
     document.getElementById('from-label-text').textContent = `${senderName} さんからのカード`;
     document.getElementById('card-sender-name').textContent = senderName;
 
