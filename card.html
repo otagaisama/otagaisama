@@ -1367,9 +1367,7 @@ function escapeHtml(str) {
 
 <script>
 (async () => {
-  if (typeof supabase === 'undefined') return;
-  const db2 = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  const { data: { session } } = await db2.auth.getSession();
+  const { data: { session } } = await db.auth.getSession();
   if (session) document.getElementById('mypageFab').classList.add('logged-in');
 })();
 </script>
