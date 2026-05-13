@@ -663,6 +663,96 @@
 
   .toast.show { transform: translateX(-50%) translateY(0); }
 
+  /* ===== QR画面：先に書いてねバナー ===== */
+  .write-first-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: #fff8e8;
+    border: 1.5px solid var(--gold);
+    border-radius: 2px;
+    padding: 16px 18px;
+    margin-bottom: 16px;
+    animation: pulseGold 2s ease-in-out 3;
+  }
+  @keyframes pulseGold {
+    0%,100% { box-shadow: 0 0 0 0 rgba(184,134,11,0); }
+    50%      { box-shadow: 0 0 0 6px rgba(184,134,11,0.18); }
+  }
+  .write-first-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+  .write-first-text {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 12px;
+    color: var(--gray);
+    line-height: 1.8;
+    letter-spacing: 1px;
+  }
+  .write-first-text strong {
+    display: block;
+    color: var(--gold);
+    font-size: 13px;
+    letter-spacing: 2px;
+    margin-bottom: 2px;
+  }
+
+  /* ===== QR画面：メインCTAボタン ===== */
+  .btn-enter-room {
+    width: 100%;
+    padding: 18px;
+    border: none;
+    background: var(--gold);
+    color: white;
+    font-family: 'Noto Serif JP', serif;
+    font-size: 15px;
+    letter-spacing: 3px;
+    cursor: pointer;
+    transition: all 0.3s;
+    border-radius: 1px;
+    margin-top: 20px;
+    box-shadow: 0 4px 16px rgba(184,134,11,0.3);
+  }
+  .btn-enter-room:hover {
+    background: #9a6f09;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(184,134,11,0.4);
+  }
+
+  /* ===== カウントダウン ===== */
+  .countdown-area {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    margin-top: 12px;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 12px;
+    color: var(--gray);
+    letter-spacing: 1px;
+    min-height: 28px;
+  }
+  #countdown-num {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gold);
+    min-width: 20px;
+    text-align: center;
+    line-height: 1;
+  }
+  .countdown-cancel {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--gray);
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 11px;
+    letter-spacing: 1px;
+    padding: 3px 10px;
+    cursor: pointer;
+    border-radius: 1px;
+    margin-left: 6px;
+    transition: all 0.2s;
+  }
+  .countdown-cancel:hover { border-color: var(--ink); color: var(--ink); }
+
   @media (max-width: 480px) {
     .container { padding: 24px 16px; }
     .create-card, .result-card { padding: 28px 20px; }
@@ -701,6 +791,16 @@
 
   <!-- 生成結果画面 -->
   <div id="view-result" class="view">
+
+    <!-- 先にメッセージを書くよう促すバナー -->
+    <div class="write-first-banner">
+      <div class="write-first-icon">📝</div>
+      <div class="write-first-text">
+        <strong>先にメッセージを書きましょう</strong>
+        QRを渡す前に、部屋に入ってメッセージを入力してください。
+      </div>
+    </div>
+
     <div class="result-card">
       <div class="room-number">
         <div class="room-number-label">Room Number</div>
@@ -710,9 +810,20 @@
         <div id="qrcode"></div>
         <div class="room-url" id="result-url"></div>
       </div>
+
+      <!-- メインCTA -->
+      <button class="btn-enter-room" onclick="goToRoom()">
+        📝 メッセージを書く → 部屋に入る
+      </button>
+
+      <!-- カウントダウン -->
+      <div class="countdown-area" id="countdown-area">
+        <span id="countdown-num">5</span>秒後に自動で移動します
+        <button class="countdown-cancel" onclick="cancelCountdown()">止める</button>
+      </div>
+
       <div class="action-buttons">
         <button class="btn-secondary" onclick="copyUrl()">URLをコピー</button>
-        <button class="btn-primary" onclick="goToRoom()">部屋に入る</button>
       </div>
       <div class="gold-line"></div>
       <div style="text-align:center; font-family:'Zen Kaku Gothic New',sans-serif; font-size:12px; color:var(--gray); letter-spacing:2px; line-height:2;">
@@ -816,6 +927,7 @@ let currentRoomDbId = null;   // roomsテーブルのUUID（is_confirmed更新�
 let isConfirmed = false;
 let isOwner = false;
 let selectedFile = null;
+let countdownTimer = null;
 
 // ===== 初期化 =====
 window.onload = async () => {
@@ -893,6 +1005,7 @@ async function showResult(roomId, number, dbId) {
   });
 
   showView('result');
+  startCountdown(5);
 }
 
 // ===== 部屋を開く =====
@@ -1148,8 +1261,37 @@ function copyUrl() {
   navigator.clipboard.writeText(receiveUrl).then(() => showToast('URLをコピーしました'));
 }
 
+// ===== カウントダウン =====
+function startCountdown(sec) {
+  const num = document.getElementById('countdown-num');
+  num.textContent = sec;
+  countdownTimer = setInterval(() => {
+    sec--;
+    num.textContent = sec;
+    if (sec <= 0) {
+      clearInterval(countdownTimer);
+      countdownTimer = null;
+      goToRoom();
+    }
+  }, 1000);
+}
+
+function cancelCountdown() {
+  if (countdownTimer) {
+    clearInterval(countdownTimer);
+    countdownTimer = null;
+  }
+  const area = document.getElementById('countdown-area');
+  area.style.opacity = '0.4';
+  area.innerHTML = '自動移動を止めました。準備ができたらボタンを押してください。';
+}
+
 // ===== 部屋に入る =====
 function goToRoom() {
+  if (countdownTimer) {
+    clearInterval(countdownTimer);
+    countdownTimer = null;
+  }
   if (currentRoomId) {
     window.history.pushState({}, '', `?room=${currentRoomId}`);
     openRoom(currentRoomId);
