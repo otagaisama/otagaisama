@@ -589,6 +589,20 @@
   const { createClient } = supabase;
   const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+  // ===== ?return= または ?next= パラメータを読んでリダイレクト先を返す =====
+  function getRedirectUrl() {
+    const p = new URLSearchParams(window.location.search);
+    const returnUrl = p.get('return') || p.get('next');
+    // 外部URLへの飛び先は拒否（同一オリジンのみ許可）
+    if (returnUrl) {
+      try {
+        const u = new URL(returnUrl, window.location.origin);
+        if (u.origin === window.location.origin) return u.href;
+      } catch {}
+    }
+    return 'card.html';
+  }
+
   // ===== 認証状態の検知 =====
   // PASSWORD_RECOVERY イベントを最優先で検知する
   db.auth.onAuthStateChange((event, session) => {
@@ -612,7 +626,7 @@
       params.get('type') === 'signup'
     ) {
       if (session) {
-        window.location.href = 'card.html';
+        window.location.href = getRedirectUrl();
         return;
       }
       showMsg('login-msg', 'メール確認が完了しました。ログインしてください。', 'success');
@@ -627,9 +641,9 @@
       return;
     }
 
-    // 通常：ログイン済みならcard.htmlへ
+    // 通常：ログイン済みならリダイレクト先へ
     if (session) {
-      window.location.href = 'card.html';
+      window.location.href = getRedirectUrl();
     }
   })();
 
@@ -717,7 +731,7 @@
     }
 
     showMsg('login-msg', 'ログイン成功！ 移動します...', 'success');
-    setTimeout(() => { window.location.href = 'card.html'; }, 800);
+    setTimeout(() => { window.location.href = getRedirectUrl(); }, 800);
   }
 
   // ===== 新規登録 =====
@@ -787,7 +801,7 @@
     } else {
       // メール確認OFFの場合（念のため残す）
       showMsg('register-msg', '登録完了！ 移動します...', 'success');
-      setTimeout(() => { window.location.href = 'card.html'; }, 800);
+      setTimeout(() => { window.location.href = getRedirectUrl(); }, 800);
     }
   }
 
