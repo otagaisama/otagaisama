@@ -456,6 +456,90 @@
     <div class="error-msg" id="error-msg">カードが見つかりませんでした。<br>URLをご確認ください。</div>
   </div>
 
+  <!-- room_idなし時の案内画面 -->
+  <div id="no-room-guide" style="display:none; text-align:center; padding:60px 20px;">
+    <div style="font-size:52px; margin-bottom:24px;">📮</div>
+    <div style="
+      font-family:'Noto Serif JP',serif;
+      font-size:18px;
+      letter-spacing:4px;
+      color:var(--ink);
+      margin-bottom:16px;
+    ">カードを受け取るには</div>
+    <div style="
+      width:40px; height:1px;
+      background:var(--border);
+      margin:0 auto 24px;
+    "></div>
+    <div style="
+      font-family:'Zen Kaku Gothic New',sans-serif;
+      font-size:13px;
+      color:var(--ink-light);
+      line-height:2.4;
+      letter-spacing:1px;
+      margin-bottom:36px;
+    ">
+      QRコードをスキャンするか<br>
+      送り主から受け取ったURLを<br>
+      直接開いてください
+    </div>
+    <div style="
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+      max-width:280px;
+      margin:0 auto 40px;
+    ">
+      <div style="
+        background:var(--white);
+        border:1px solid var(--border);
+        border-radius:12px;
+        padding:20px 16px;
+        display:flex;
+        align-items:center;
+        gap:16px;
+        text-align:left;
+      ">
+        <span style="font-size:28px; flex-shrink:0;">📷</span>
+        <div>
+          <div style="font-family:'Zen Kaku Gothic New',sans-serif;font-size:11px;letter-spacing:2px;color:var(--gold);margin-bottom:4px;">STEP 01</div>
+          <div style="font-size:13px;color:var(--ink);line-height:1.7;">送り主からもらった<br>QRコードをカメラで読み取る</div>
+        </div>
+      </div>
+      <div style="
+        font-family:'Zen Kaku Gothic New',sans-serif;
+        font-size:11px;
+        color:var(--border);
+        letter-spacing:2px;
+      ">— または —</div>
+      <div style="
+        background:var(--white);
+        border:1px solid var(--border);
+        border-radius:12px;
+        padding:20px 16px;
+        display:flex;
+        align-items:center;
+        gap:16px;
+        text-align:left;
+      ">
+        <span style="font-size:28px; flex-shrink:0;">🔗</span>
+        <div>
+          <div style="font-family:'Zen Kaku Gothic New',sans-serif;font-size:11px;letter-spacing:2px;color:var(--gold);margin-bottom:4px;">STEP 02</div>
+          <div style="font-size:13px;color:var(--ink);line-height:1.7;">送り主から共有された<br>URLをブラウザで開く</div>
+        </div>
+      </div>
+    </div>
+    <a href="index.html" style="
+      display:inline-block;
+      font-family:'Zen Kaku Gothic New',sans-serif;
+      font-size:11px;
+      letter-spacing:3px;
+      color:var(--ink-light);
+      text-decoration:underline;
+      text-underline-offset:4px;
+    ">← トップページへ戻る</a>
+  </div>
+
   <!-- カード本体 -->
   <div id="card-section">
 
@@ -580,7 +664,8 @@
   // ========== 初期化 ==========
   async function init() {
     if (!roomId) {
-      showError('URLにカードIDが含まれていません。');
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('no-room-guide').style.display = 'block';
       return;
     }
 
