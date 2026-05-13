@@ -836,8 +836,11 @@ window.onload = async () => {
 // ===== 部屋生成 =====
 async function generateRoom() {
   const btn = document.getElementById('btn-generate');
+  const msg = document.getElementById('create-msg');
   btn.disabled = true;
   btn.textContent = '生成中...';
+  msg.textContent = '';
+  msg.className = 'msg';
 
   try {
     const { data: { session } } = await db.auth.getSession();
@@ -849,16 +852,24 @@ async function generateRoom() {
     const { data, error } = await db
       .from('rooms')
       .insert([{ room_id: roomId, user_id: userId, is_confirmed: false, pen_name: penName }])
-　　  .select()
+      .select()
       .single();
+
     if (error) {
-      await showResult(roomId, Math.floor(Math.random() * 9000) + 1000, null);
+      msg.textContent = '部屋の作成に失敗しました。もう一度お試しください。';
+      msg.className = 'msg msg-error';
+      btn.disabled = false;
+      btn.textContent = '部　屋　を　生　成　す　る';
       return;
     }
+
     await showResult(roomId, data.id, data.id);
   } catch (e) {
-    const roomId = crypto.randomUUID();
-    await showResult(roomId, Math.floor(Math.random() * 9000) + 1000, null);
+    const msg = document.getElementById('create-msg');
+    msg.textContent = '通信エラーが発生しました。ネットワークを確認してもう一度お試しください。';
+    msg.className = 'msg msg-error';
+    btn.disabled = false;
+    btn.textContent = '部　屋　を　生　成　す　る';
   }
 }
 
