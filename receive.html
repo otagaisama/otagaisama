@@ -694,11 +694,11 @@
       }
       roomData = room;
 
-      // 最初の投稿（本文）取得
+      // 最初の投稿（本文）取得（room_postsのroom_idはUUID）
       const { data: posts } = await supabase
         .from('room_posts')
         .select('*')
-        .eq('room_id', roomId)
+        .eq('room_id', room.room_id)
         .order('created_at', { ascending: true })
         .limit(1);
 
@@ -729,8 +729,8 @@
     document.getElementById('card-sender-name').textContent = senderName;
 
     // カード番号
-    const seq = room.card_number || String(room.id).padStart(4,'0') || '????';
-    document.getElementById('card-number').textContent = `No. ${seq}`;
+    const seq = room.global_no ? `No.${String(room.user_card_no||'?').padStart(3,'0')}  #${room.global_no}` : `No. ${String(room.id).padStart(4,'0')}`;
+    document.getElementById('card-number').textContent = seq;
 
     // 日付
     const d = new Date(room.created_at);
@@ -769,7 +769,7 @@ if (post?.image_url) {
     const { data: replies } = await supabase
       .from('room_posts')
       .select('*')
-      .eq('room_id', roomId)
+      .eq('room_id', roomData.room_id)
       .eq('user_id', currentUser.id)
       .eq('post_type', 'reply');
 
@@ -807,7 +807,7 @@ if (post?.image_url) {
 
     try {
       const { error } = await supabase.from('room_posts').insert({
-        room_id: roomId,
+        room_id: roomData.room_id,
         user_id: currentUser.id,
         content: text,
         post_type: 'reply'
