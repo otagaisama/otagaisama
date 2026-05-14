@@ -922,6 +922,7 @@ const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let currentRoomId = null;
+let currentShortId = null;    // short_id（6文字）
 let currentRoomNumber = null;
 let currentRoomDbId = null;   // roomsテーブルのUUID（is_confirmed更新に使う）
 let isConfirmed = false;
@@ -961,10 +962,24 @@ async function generateRoom() {
 
     const meta = session?.user?.user_metadata || {};
     const penName = meta.pen_name || meta.name || session?.user?.email?.split('@')[0] || '匿名';
+
+    // このユーザーの既存カード枚数を取得してuser_card_noを決める
+    const { count } = await db
+      .from('rooms')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId);
+    const userCardNo = (count || 0) + 1;
+
     const { data, error } = await db
       .from('rooms')
-      .insert([{ room_id: roomId, user_id: userId, is_confirmed: false, pen_name: penName }])
-      .select()
+      .insert([{
+        room_id: roomId,
+        user_id: userId,
+        is_confirmed: false,
+        pen_name: penName,
+        user_card_no: userCardNo,
+      }])
+      .select('id, short_id, global_no, user_card_no')
       .single();
 
     if (error) {
@@ -975,7 +990,7 @@ async function generateRoom() {
       return;
     }
 
-    await showResult(roomId, data.id, data.id);
+    await showResult(roomId, data.short_id, data.id, data.user_card_no, data.global_no);
   } catch (e) {
     const msg = document.getElementById('create-msg');
     msg.textContent = '通信エラーが発生しました。ネットワークを確認してもう一度お試しください。';
@@ -985,14 +1000,15 @@ async function generateRoom() {
   }
 }
 
-async function showResult(roomId, number, dbId) {
+async function showResult(roomId, shortId, dbId, userCardNo, globalNo) {
   currentRoomId = roomId;
+  currentShortId = shortId;
   currentRoomDbId = dbId;
-  currentRoomNumber = String(number).padStart(4, '0');
+  currentRoomNumber = String(globalNo).padStart(4, '0');
 
-  const receiveUrl = `${window.location.origin}${window.location.pathname.replace('card.html','receive.html')}?room=${roomId}`;
+  const receiveUrl = `${window.location.origin}${window.location.pathname.replace('card.html','receive.html')}?room=${shortId}`;
 
-  document.getElementById('result-number').textContent = `No. ${currentRoomNumber}`;
+  document.getElementById('result-number').textContent = `No.${String(userCardNo).padStart(3,'0')}  #${globalNo}`;
   document.getElementById('result-url').textContent = receiveUrl;
 
   document.getElementById('qrcode').innerHTML = '';
@@ -1018,12 +1034,13 @@ async function openRoom(roomId) {
 
     const { data: room } = await db
       .from('rooms')
-      .select('id, user_id, is_confirmed')
-      .eq('room_id', roomId)
+      .select('id, user_id, is_confirmed, short_id, global_no, user_card_no')
+      .or(`room_id.eq.${roomId},short_id.eq.${roomId}`)
       .single();
 
     if (room) {
-      currentRoomNumber = String(room.id).padStart(4, '0');
+      currentShortId = room.short_id;
+      currentRoomNumber = String(room.global_no || room.id).padStart(4, '0');
       currentRoomDbId = room.id;
       isConfirmed = room.is_confirmed === true;
       isOwner = room.user_id === currentUserId;
@@ -1257,7 +1274,8 @@ function previewImage(input) {
 
 // ===== URL コピー =====
 function copyUrl() {
-  const receiveUrl = `${window.location.origin}${window.location.pathname.replace('card.html','receive.html')}?room=${currentRoomId}`;
+  const id = currentShortId || currentRoomId;
+  const receiveUrl = `${window.location.origin}${window.location.pathname.replace('card.html','receive.html')}?room=${id}`;
   navigator.clipboard.writeText(receiveUrl).then(() => showToast('URLをコピーしました'));
 }
 
