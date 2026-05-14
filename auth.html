@@ -790,6 +790,7 @@
         await db.from('profiles').upsert({
           id: data.user.id,
           username: penname,
+          email: email,
           created_at: new Date().toISOString(),
         }, { onConflict: 'id' });
       } catch { /* テーブルなくてもOK */ }
