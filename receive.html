@@ -681,12 +681,29 @@
   async function loadCard() {
     try {
       // rooms取得（確定済みのみ表示）
-      const { data: room, error: roomErr } = await supabase
+      // short_idで先に検索、なければroom_id(UUID)で検索
+      let room = null;
+      let roomErr = null;
+
+      const { data: r1, error: e1 } = await supabase
         .from('rooms')
         .select('*')
-        .or(`room_id.eq.${roomId},short_id.eq.${roomId}`)
+        .eq('short_id', roomId)
         .eq('is_confirmed', true)
-        .single();
+        .maybeSingle();
+
+      if (r1) {
+        room = r1;
+      } else {
+        const { data: r2, error: e2 } = await supabase
+          .from('rooms')
+          .select('*')
+          .eq('room_id', roomId)
+          .eq('is_confirmed', true)
+          .maybeSingle();
+        room = r2;
+        roomErr = e2;
+      }
 
       if (roomErr || !room) {
         showError('カードが見つかりませんでした。<br>まだ確定されていないか、URLが誤っています。');
