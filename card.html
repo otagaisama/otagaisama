@@ -753,14 +753,108 @@
   }
   .countdown-cancel:hover { border-color: var(--ink); color: var(--ink); }
 
-  @media (max-width: 480px) {
-    .container { padding: 24px 16px; }
-    .create-card, .result-card { padding: 28px 20px; }
-    .room-number-value { font-size: 36px; }
-    .action-buttons { flex-direction: column; }
-    .draft-banner { flex-direction: column; align-items: flex-start; }
-    .modal-buttons { flex-direction: column; }
+  /* ===== フォームヘッダー（タイトル＋ステータス） ===== */
+  .form-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
   }
+  .form-header h3 { margin-bottom: 0; }
+
+  .status-label {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 10px;
+    letter-spacing: 2px;
+    padding: 4px 10px;
+    border-radius: 2px;
+    background: #fff8e8;
+    border: 1px solid var(--gold-light);
+    color: var(--gold);
+  }
+  .status-label.confirmed {
+    background: var(--green-bg);
+    border-color: #a8d5a8;
+    color: var(--green);
+  }
+
+  /* ===== ボタン群 ===== */
+  .form-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  .btn-save {
+    flex: 1;
+    padding: 14px;
+    border: 1px solid var(--border);
+    background: transparent;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: var(--ink);
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 1px;
+  }
+  .btn-save:hover { background: var(--paper); border-color: var(--ink); }
+  .btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-post { flex: 1; }
+
+  .form-note {
+    text-align: center;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 11px;
+    color: var(--gray);
+    letter-spacing: 1px;
+    margin-top: 8px;
+  }
+
+  /* ===== 確定後：読み取り専用表示 ===== */
+  .post-readonly {
+    padding: 16px 0;
+  }
+  .post-readonly-text {
+    font-size: 14px;
+    line-height: 1.9;
+    color: var(--ink);
+    white-space: pre-wrap;
+    padding: 14px;
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 1px;
+    margin-bottom: 12px;
+  }
+  .post-readonly-image {
+    width: 100%;
+    border-radius: 2px;
+    border: 1px solid var(--border);
+    margin-top: 8px;
+  }
+
+  /* ===== 心が届きますように ===== */
+  .heart-message {
+    text-align: center;
+    font-size: 13px;
+    letter-spacing: 4px;
+    color: var(--gray);
+    padding: 40px 0 20px;
+    font-weight: 300;
+  }
+
+  /* ===== シェアボタン群 ===== */
+  .share-btns {
+    display: flex;
+    gap: 8px;
+  }
+
+  @media (max-width: 480px) {
+    .form-buttons { flex-direction: column; }
+    .share-btns { flex-direction: column; }
+  }
+
 </style>
 </head>
 <body>
@@ -840,17 +934,10 @@
         <div class="room-badge-label">Room</div>
         <div class="room-badge-number" id="room-display-number">—</div>
       </div>
-      <button class="share-btn" onclick="copyUrl()">QR / URL</button>
-    </div>
-
-    <!-- ▼ 下書き中バナー（確定前のみ表示） -->
-    <div class="draft-banner" id="draft-banner" style="display:none;">
-      <div class="draft-banner-text">
-        <strong>下 書 き 中</strong>
-        確定するまで相手には「準備中」と表示されます。<br>
-        メッセージを書き終えたら「確定する」を押してください。
+      <div class="share-btns">
+        <button class="share-btn" onclick="showQrModal()">QR 表 示</button>
+        <button class="share-btn" onclick="copyUrl()">URL コ ピ ー</button>
       </div>
-      <button class="btn-confirm" onclick="openConfirmModal()">確 定 す る</button>
     </div>
 
     <!-- ▼ 確定済みバナー（確定後のみ表示） -->
@@ -861,10 +948,13 @@
 
     <!-- 投稿フォーム -->
     <div class="post-form" id="post-form">
-      <h3>感 謝 を 届 け る</h3>
+      <div class="form-header">
+        <h3>心 を 届 け る</h3>
+        <span class="status-label" id="status-label">下 書 き 中</span>
+      </div>
       <div class="form-group">
         <label>メッセージ</label>
-        <textarea id="post-text" placeholder="ありがとう、という気持ちを言葉にしてください。"></textarea>
+        <textarea id="post-text" placeholder="心を言葉にしてください。確定まではメモとして使用可能。"></textarea>
       </div>
       <div class="form-group">
         <label>画像（任意）</label>
@@ -874,25 +964,28 @@
           <img id="image-preview" class="image-preview" alt="preview">
         </div>
       </div>
-      <button class="btn-post" id="btn-post" onclick="submitPost()">
-        感　謝　を　送　る
-      </button>
+      <div class="form-buttons">
+        <button class="btn-save" id="btn-save" onclick="saveAsDraft()">一 時 保 存</button>
+        <button class="btn-post" id="btn-post" onclick="submitPost()">確 定 し 届 け る</button>
+      </div>
+      <div class="form-note">※ 確定後は変更できません</div>
       <div id="post-msg" class="msg"></div>
     </div>
 
-    <div class="gold-line"></div>
+    <div class="heart-message">心が届きますように。</div>
 
-    <!-- 投稿一覧 -->
-    <div class="posts-section">
-      <!-- ③ ラベル修正：「届いたメッセージ」→「返信の記録」 -->
-      <h3>— 返 信 の 記 録 —</h3>
-      <div id="posts-list">
-        <div class="loading">読み込み中...</div>
-      </div>
-    </div>
-  </div>
-
+  
 </div><!-- /container -->
+
+<!-- QR表示モーダル -->
+<div class="modal-overlay" id="qr-modal">
+  <div class="modal" style="text-align:center;">
+    <div style="font-family:'Zen Kaku Gothic New',sans-serif; font-size:11px; letter-spacing:4px; color:var(--gold); margin-bottom:16px;">QR CODE</div>
+    <div id="qr-modal-code" style="display:inline-block; padding:16px; border:1px solid var(--border); background:white; margin-bottom:16px;"></div>
+    <div id="qr-modal-url" class="room-url" style="margin-bottom:20px;"></div>
+    <button class="modal-btn-cancel" onclick="closeQrModal()" style="width:100%;">閉 じ る</button>
+  </div>
+</div>
 
 <!-- 確定確認モーダル -->
 <div class="modal-overlay" id="confirm-modal">
@@ -1068,44 +1161,94 @@ async function openRoom(roomId) {
 
   document.getElementById('room-display-number').textContent = `No. ${currentRoomNumber}`;
   showView('room');
-  updateRoomUI();
+  await updateRoomUI();
+  setupAutoSave();
   await loadPosts();
 }
 
 // ===== 部屋UIを確定状態に合わせて更新 =====
-function updateRoomUI() {
-  const draftBanner    = document.getElementById('draft-banner');
+async function updateRoomUI() {
   const confirmedBanner = document.getElementById('confirmed-banner');
-  const postForm       = document.getElementById('post-form');
-  const postText       = document.getElementById('post-text');
-  const postImage      = document.getElementById('post-image');
-  const btnPost        = document.getElementById('btn-post');
+  const postForm        = document.getElementById('post-form');
+  const statusLabel     = document.getElementById('status-label');
+  const btnSave         = document.getElementById('btn-save');
+  const btnPost         = document.getElementById('btn-post');
+  const formNote        = document.querySelector('.form-note');
+  const formButtons     = document.querySelector('.form-buttons');
 
-  if (isOwner) {
-    if (isConfirmed) {
-      // オーナー・確定済み：確定バナー表示・フォームロック
-      draftBanner.style.display    = 'none';
-      confirmedBanner.style.display = 'flex';
-      postForm.classList.add('locked');
-      postText.disabled  = true;
-      postImage.disabled = true;
-      btnPost.disabled   = true;
-    } else {
-      // オーナー・未確定：下書きバナー表示
-      draftBanner.style.display    = 'flex';
-      confirmedBanner.style.display = 'none';
-      postForm.classList.remove('locked');
-      postText.disabled  = false;
-      postImage.disabled = false;
-      btnPost.disabled   = false;
-    }
-  } else {
-    // 受取人：バナーなし・フォーム使用可
-    draftBanner.style.display    = 'none';
+  if (!isOwner) {
+    // 受取人：フォーム非表示（card.htmlはオーナー専用）
+    postForm.style.display = 'none';
     confirmedBanner.style.display = 'none';
-    postForm.classList.remove('locked');
+    return;
+  }
+
+  if (isConfirmed) {
+    // 確定済み：バナー表示、フォームを読み取り専用に切り替え
+    confirmedBanner.style.display = 'flex';
+    statusLabel.textContent = '確 定 済 み';
+    statusLabel.classList.add('confirmed');
+    formButtons.style.display = 'none';
+    if (formNote) formNote.style.display = 'none';
+    document.getElementById('post-text').style.display = 'none';
+    document.querySelector('.image-upload').style.display = 'none';
+
+    // 保存済みコンテンツを読み取り専用で表示
+    await loadReadonlyContent();
+  } else {
+    // 未確定：編集可能
+    confirmedBanner.style.display = 'none';
+    statusLabel.textContent = '下 書 き 中';
+    statusLabel.classList.remove('confirmed');
+    formButtons.style.display = 'flex';
+
+    // 既存draftがあれば読み込む
+    await loadDraftContent();
   }
 }
+
+// ===== 確定後：読み取り専用コンテンツ表示 =====
+async function loadReadonlyContent() {
+  const { data } = await db
+    .from('room_posts')
+    .select('content, image_url, post_type')
+    .eq('room_id', currentRoomId)
+    .in('post_type', ['message', 'draft'])
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!data) return;
+
+  const form = document.getElementById('post-form');
+  let html = '<div class="post-readonly">';
+  if (data.content) html += `<div class="post-readonly-text">${escapeHtml(data.content)}</div>`;
+  if (data.image_url) html += `<img class="post-readonly-image" src="${data.image_url}" alt="投稿画像">`;
+  html += '</div>';
+
+  // textareaの後ろに挿入
+  const textarea = document.getElementById('post-text');
+  const div = document.createElement('div');
+  div.innerHTML = html;
+  textarea.parentNode.insertBefore(div, textarea.nextSibling);
+}
+
+// ===== 下書き読み込み =====
+async function loadDraftContent() {
+  const { data } = await db
+    .from('room_posts')
+    .select('content, image_url')
+    .eq('room_id', currentRoomId)
+    .eq('post_type', 'draft')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (data?.content) {
+    document.getElementById('post-text').value = data.content;
+  }
+}
+
 
 // ===== 確定モーダル =====
 function openConfirmModal() {
@@ -1120,58 +1263,13 @@ async function confirmCard() {
   const btn = document.getElementById('modal-btn-ok');
   btn.disabled = true;
   btn.textContent = '確定中...';
-
   try {
-    // roomsテーブルのis_confirmedをtrueに更新
-    // ※ room_idカラムで検索（UUIDの文字列）
-    const { error } = await db
-      .from('rooms')
-      .update({ is_confirmed: true })
-      .eq('id', currentRoomDbId);
-
+    const { error } = await db.from('rooms').update({ is_confirmed: true }).eq('id', currentRoomDbId);
     if (error) throw error;
-
     isConfirmed = true;
     closeConfirmModal();
-    updateRoomUI();
+    await updateRoomUI();
     showToast('✓ カードを確定しました。相手に公開されました。');
-
-    // 受信者へメール通知（登録済みユーザーのみ）
-    try {
-      const { data: replies } = await db
-        .from('room_posts')
-        .select('user_id')
-        .eq('room_id', currentRoomId)
-        .eq('post_type', 'reply');
-
-      if (replies && replies.length > 0) {
-        const recipientIds = [...new Set(replies.map(r => r.user_id))];
-        for (const uid of recipientIds) {
-          const { data: profile } = await db
-            .from('profiles')
-            .select('email')
-            .eq('id', uid)
-            .maybeSingle();
-
-          if (profile?.email) {
-            await fetch('https://api.web3forms.com/submit', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                access_key: '993fcf8d-e618-47db-b863-f45b3c5b5418',
-                to: profile.email,
-                subject: '【お互い様】メッセージが届きました',
-                message: 'メッセージが届きました。\n\nhttps://otagaisama.github.io/otagaisama/receive.html?room=' + (currentShortId || currentRoomId) + '\n\n※このメールは自動送信です',
-                from_name: 'お互い様プロジェクト',
-              })
-            });
-          }
-        }
-      }
-    } catch(notifyErr) {
-      console.error('通知エラー:', notifyErr);
-    }
-
   } catch (e) {
     console.error(e);
     showToast('エラーが発生しました。もう一度お試しください。');
@@ -1181,105 +1279,141 @@ async function confirmCard() {
   }
 }
 
-// ===== 投稿読み込み =====
-async function loadPosts() {
-  const list = document.getElementById('posts-list');
-  list.innerHTML = '<div class="loading">読み込み中...</div>';
+// ===== 自動保存セットアップ =====
+let draftPostId = null;
+let autoSaveTimer = null;
 
-  // オーナー画面では返信のみ、受取人画面では全件表示
-  let query = db.from('room_posts').select('*').eq('room_id', currentRoomId);
-  if (isOwner) {
-    query = query.eq('post_type', 'reply');
-  }
-  const { data, error } = await query.order('created_at', { ascending: false });
-
-  if (error || !data || data.length === 0) {
-    list.innerHTML = `
-      <div class="empty-posts">
-        まだ返信はありません<br>
-        カードを渡した相手からの返信を待ちましょう
-      </div>`;
-    return;
-  }
-
-  list.innerHTML = data.map(post => {
-    const isReply = post.post_type === 'reply';
-    return `
-      <div class="post-item ${isReply ? 'post-reply' : ''}">
-        <div class="post-meta">
-          <span class="post-type ${isReply ? 'reply' : ''}">${isReply ? '返 信' : '感 謝'}</span>
-          <span class="post-time">${formatDate(post.created_at)}</span>
-        </div>
-        ${post.content ? `<div class="post-content">${escapeHtml(post.content)}</div>` : ''}
-        ${post.image_url ? `<img class="post-image" src="${post.image_url}" alt="投稿画像">` : ''}
-      </div>`;
-  }).join('');
+function setupAutoSave() {
+  const textarea = document.getElementById('post-text');
+  if (!textarea) return;
+  textarea.addEventListener('input', () => {
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer = setTimeout(() => saveAsDraft(true), 3000);
+  });
 }
 
-// ===== 投稿送信 =====
-async function submitPost() {
-  if (isConfirmed && isOwner) return; // 確定後はオーナーは送信不可
-
+// ===== 一時保存 =====
+async function saveAsDraft(auto = false) {
+  if (isConfirmed) return;
   const text = document.getElementById('post-text').value.trim();
-  const btn  = document.getElementById('btn-post');
-  const msg  = document.getElementById('post-msg');
-
+  const btn = document.getElementById('btn-save');
+  const msg = document.getElementById('post-msg');
   if (!text && !selectedFile) {
-    msg.textContent = 'メッセージか画像を入れてください';
-    msg.className = 'msg msg-error';
+    if (!auto) { msg.textContent = '内容を入力してください'; msg.className = 'msg msg-error'; }
     return;
   }
-
-  btn.disabled = true;
-  btn.textContent = '送信中...';
-  msg.textContent = '';
-
+  if (!auto) { btn.disabled = true; btn.textContent = '保存中...'; }
   try {
     const { data: { session } } = await db.auth.getSession();
     const userId = session?.user?.id || null;
-
     let imageUrl = null;
     if (selectedFile) {
-　　　const compressed = await compressImage(selectedFile);
+      const compressed = await compressImage(selectedFile);
       const fileName = `${currentRoomId}/${Date.now()}.jpg`;
-      const { data: uploadData, error: uploadError } = await db.storage
-        .from('room-images')
-        .upload(fileName, compressed, { contentType: 'image/jpeg' });
+      const { error: uploadError } = await db.storage.from('room-images').upload(fileName, compressed, { contentType: 'image/jpeg' });
       if (!uploadError) {
         const { data: urlData } = db.storage.from('room-images').getPublicUrl(fileName);
         imageUrl = urlData.publicUrl;
       }
     }
+    if (draftPostId) {
+      await db.from('room_posts').update({ content: text || null, image_url: imageUrl }).eq('id', draftPostId);
+    } else {
+      const { data } = await db.from('room_posts').insert([{
+        room_id: currentRoomId, user_id: userId,
+        content: text || null, image_url: imageUrl, post_type: 'draft',
+      }]).select('id').single();
+      if (data) draftPostId = data.id;
+    }
+    msg.textContent = '保存しました';
+    msg.className = 'msg msg-success';
+    setTimeout(() => { if (msg.textContent === '保存しました') msg.textContent = ''; }, 2000);
+  } catch (e) {
+    console.error(e);
+    if (!auto) { msg.textContent = '保存に失敗しました'; msg.className = 'msg msg-error'; }
+  } finally {
+    if (!auto) { btn.disabled = false; btn.textContent = '一 時 保 存'; }
+  }
+}
 
-    const { error } = await db
-      .from('room_posts')
-      .insert([{
-        room_id: currentRoomId,
-        user_id: userId,
-        content: text || null,
-        image_url: imageUrl,
-        post_type: isOwner ? 'original' : 'reply',
-      }]);
+// ===== 確定し届ける =====
+async function submitPost() {
+  if (isConfirmed) return;
+  const text = document.getElementById('post-text').value.trim();
+  const btn  = document.getElementById('btn-post');
+  const msg  = document.getElementById('post-msg');
+  if (!text && !selectedFile) {
+    msg.textContent = 'メッセージか画像を入れてください';
+    msg.className = 'msg msg-error';
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = '送信中...';
+  msg.textContent = '';
+  try {
+    const { data: { session } } = await db.auth.getSession();
+    const userId = session?.user?.id || null;
+    let imageUrl = null;
+    if (selectedFile) {
+      const compressed = await compressImage(selectedFile);
+      const fileName = `${currentRoomId}/${Date.now()}.jpg`;
+      const { error: uploadError } = await db.storage.from('room-images').upload(fileName, compressed, { contentType: 'image/jpeg' });
+      if (!uploadError) {
+        const { data: urlData } = db.storage.from('room-images').getPublicUrl(fileName);
+        imageUrl = urlData.publicUrl;
+      }
+    }
+    // 既存draftを削除
+    if (draftPostId) {
+      await db.from('room_posts').delete().eq('id', draftPostId);
+      draftPostId = null;
+    }
+    // messageとしてinsert
+    const { error: insertError } = await db.from('room_posts').insert([{
+      room_id: currentRoomId, user_id: userId,
+      content: text || null, image_url: imageUrl, post_type: 'message',
+    }]);
+    if (insertError) throw insertError;
+    // is_confirmed=trueに同時更新
+    const { error: confirmError } = await db.from('rooms').update({ is_confirmed: true }).eq('id', currentRoomDbId);
+    if (confirmError) throw confirmError;
 
-    if (error) throw error;
-
+    isConfirmed = true;
     document.getElementById('post-text').value = '';
     document.getElementById('post-image').value = '';
     document.getElementById('image-preview').style.display = 'none';
     selectedFile = null;
-
-    msg.textContent = '感謝が届きました';
-    msg.className = 'msg msg-success';
-
-    await loadPosts();
+    showToast('✓ 心が届きました');
+    await updateRoomUI();
   } catch (e) {
+    console.error(e);
     msg.textContent = '送信に失敗しました。もう一度お試しください。';
     msg.className = 'msg msg-error';
   } finally {
     btn.disabled = false;
-    btn.textContent = '感　謝　を　送　る';
+    btn.textContent = '確 定 し 届 け る';
   }
 }
+
+// loadPostsはcard.htmlでは使用しない（receive.html用）
+async function loadPosts() {}
+
+function showQrModal() {
+  const id = currentShortId || currentRoomId;
+  const receiveUrl = `${window.location.origin}${window.location.pathname.replace('card.html','receive.html')}?room=${id}`;
+  document.getElementById('qr-modal-url').textContent = receiveUrl;
+  document.getElementById('qr-modal-code').innerHTML = '';
+  new QRCode(document.getElementById('qr-modal-code'), {
+    text: receiveUrl, width: 180, height: 180,
+    colorDark: '#1a1208', colorLight: '#ffffff',
+  });
+  document.getElementById('qr-modal').classList.add('show');
+}
+
+function closeQrModal() {
+  document.getElementById('qr-modal').classList.remove('show');
+}
+
 // ===== 画像圧縮 =====
 async function compressImage(file, maxWidthPx = 800, maxSizeMB = 2, quality = 0.85) {
   if (!file.type.startsWith('image/')) throw new Error('画像ファイルを選択してください');
