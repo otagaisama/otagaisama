@@ -1212,7 +1212,7 @@ async function loadReadonlyContent() {
   const { data } = await db
     .from('room_posts')
     .select('content, image_url, post_type')
-    .eq('room_id', currentRoomId)
+    .eq('room_id', currentRoomDbId)
     .in('post_type', ['message', 'draft'])
     .order('created_at', { ascending: false })
     .limit(1)
@@ -1238,7 +1238,7 @@ async function loadDraftContent() {
   const { data } = await db
     .from('room_posts')
     .select('content, image_url')
-    .eq('room_id', currentRoomId)
+    .eq('room_id', currentRoomDbId)
     .eq('post_type', 'draft')
     .order('created_at', { ascending: false })
     .limit(1)
@@ -1320,7 +1320,7 @@ async function saveAsDraft(auto = false) {
       await db.from('room_posts').update({ content: text || null, image_url: imageUrl }).eq('id', draftPostId);
     } else {
       const { data } = await db.from('room_posts').insert([{
-        room_id: currentRoomId, user_id: userId,
+        room_id: currentRoomDbId, user_id: userId,
         content: text || null, image_url: imageUrl, post_type: 'draft',
       }]).select('id').single();
       if (data) draftPostId = data.id;
@@ -1370,7 +1370,7 @@ async function submitPost() {
     }
     // messageとしてinsert
     const { error: insertError } = await db.from('room_posts').insert([{
-      room_id: currentRoomId, user_id: userId,
+      room_id: currentRoomDbId, user_id: userId,
       content: text || null, image_url: imageUrl, post_type: 'message',
     }]);
     if (insertError) throw insertError;
