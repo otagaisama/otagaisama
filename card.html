@@ -1396,6 +1396,7 @@ async function saveAsDraft(auto = false) {
     } else if (window._draftImageUrl) {
       imageUrl = window._draftImageUrl;
     }
+    console.log('draftPostId=', draftPostId, 'imageUrl=', imageUrl);
     if (draftPostId) {
       // image_urlはnullなら既存値を維持（nullで上書きしない）
       const updateData = { content: text || null };
