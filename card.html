@@ -1186,7 +1186,7 @@ async function openRoom(roomId) {
 
     if (room) {
       currentShortId    = room.short_id;
-      currentRoomNumber = String(room.global_no || room.id).padStart(4, '0');
+      currentRoomNumber = `No.${String(room.user_card_no || '?').padStart(3,'0')}  #${room.global_no || '?'}`;
       currentRoomDbId   = room.id;        // 数値PK（roomsのUPDATE用）
       currentRoomUuid   = room.room_id;   // UUID（room_postsのroom_id用）
       isConfirmed       = room.is_confirmed === true;
@@ -1202,7 +1202,7 @@ async function openRoom(roomId) {
     isOwner = false;
   }
 
-  document.getElementById('room-display-number').textContent = `No. ${currentRoomNumber}`;
+  document.getElementById('room-display-number').textContent = currentRoomNumber;
   showView('room');
   await updateRoomUI();
   setupAutoSave();
