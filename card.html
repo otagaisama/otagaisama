@@ -1017,7 +1017,8 @@ const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 let currentRoomId = null;
 let currentShortId = null;    // short_id（6文字）
 let currentRoomNumber = null;
-let currentRoomDbId = null;   // roomsテーブルのUUID（is_confirmed更新に使う）
+let currentRoomDbId = null;   // rooms.id（数値PK）→ roomsのUPDATE用
+let currentRoomUuid = null;   // rooms.room_id（UUID）→ room_postsのroom_id用
 let isConfirmed = false;
 let isOwner = false;
 let selectedFile = null;
@@ -1158,7 +1159,8 @@ async function openRoom(roomId) {
     if (room) {
       currentShortId    = room.short_id;
       currentRoomNumber = String(room.global_no || room.id).padStart(4, '0');
-      currentRoomDbId   = room.id;
+      currentRoomDbId   = room.id;        // 数値PK（roomsのUPDATE用）
+      currentRoomUuid   = room.room_id;   // UUID（room_postsのroom_id用）
       isConfirmed       = room.is_confirmed === true;
       isOwner           = room.user_id === currentUserId;
     } else {
@@ -1225,8 +1227,7 @@ async function loadReadonlyContent() {
   const { data } = await db
     .from('room_posts')
     .select('content, image_url, post_type')
-    .eq('room_id', currentRoomDbId)
-    .in('post_type', ['message', 'draft'])
+    .eq('room_id', currentRoomUuid)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -1251,7 +1252,7 @@ async function loadDraftContent() {
   const { data } = await db
     .from('room_posts')
     .select('content, image_url')
-    .eq('room_id', currentRoomDbId)
+    .eq('room_id', currentRoomUuid)
     .eq('post_type', 'draft')
     .order('created_at', { ascending: false })
     .limit(1)
@@ -1333,7 +1334,7 @@ async function saveAsDraft(auto = false) {
       await db.from('room_posts').update({ content: text || null, image_url: imageUrl }).eq('id', draftPostId);
     } else {
       const { data } = await db.from('room_posts').insert([{
-        room_id: currentRoomDbId, user_id: userId,
+        room_id: currentRoomUuid, user_id: userId,
         content: text || null, image_url: imageUrl, post_type: 'draft',
       }]).select('id').single();
       if (data) draftPostId = data.id;
@@ -1383,11 +1384,11 @@ async function submitPost() {
     }
     // messageとしてinsert
     const { error: insertError } = await db.from('room_posts').insert([{
-      room_id: currentRoomDbId, user_id: userId,
+      room_id: currentRoomUuid, user_id: userId,
       content: text || null, image_url: imageUrl, post_type: 'message',
     }]);
     if (insertError) throw insertError;
-    // is_confirmed=trueに同時更新
+    // is_confirmed=trueに同時更新（rooms.idで）
     const { error: confirmError } = await db.from('rooms').update({ is_confirmed: true }).eq('id', currentRoomDbId);
     if (confirmError) throw confirmError;
 
