@@ -1387,9 +1387,9 @@ async function saveAsDraft(auto = false) {
       const fileName = `${currentRoomUuid}/${Date.now()}.jpg`;
       const { data: uploadData, error: uploadError } = await db.storage.from('room-images').upload(fileName, compressed, { contentType: 'image/jpeg' });
       if (uploadError) {
-        console.error('画像アップロードエラー:', uploadError);
+        console.error('画像アップロードエラー:', JSON.stringify(uploadError));
       } else {
-        const { data: urlData } = db.storage.from('room-images').getPublicUrl(fileName);
+       console.log('アップロード成功:', uploadData); const { data: urlData } = db.storage.from('room-images').getPublicUrl(fileName);
         imageUrl = urlData.publicUrl;
         window._draftImageUrl = imageUrl;
       }
