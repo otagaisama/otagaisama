@@ -1369,7 +1369,7 @@ function setupAutoSave() {
 
 // ===== 一時保存 =====
 async function saveAsDraft(auto = false) {
-  if (isConfirmed) return;
+  console.log('saveAsDraft: currentRoomUuid=', currentRoomUuid);if (isConfirmed) return;
   const text = document.getElementById('post-text').value.trim();
   const btn = document.getElementById('btn-save');
   const msg = document.getElementById('post-msg');
