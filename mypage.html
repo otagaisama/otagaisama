@@ -863,54 +863,7 @@ async function renderSentRooms(rooms) {
   }).join('');
 }
 
-    const items = await Promise.all(rooms.map(async room => {
-      const { count: replyCount } = await db
-        .from('room_posts')
-        .select('*', { count: 'exact', head: true })
-        .eq('room_id', room.room_id)
-        .eq('post_type', 'reply');
-      return { ...room, replyCount: replyCount || 0 };
-    }));
-
-    el.innerHTML = items.map(room => {
-      const isConfirmed = room.is_confirmed === true;
-      const hasReply    = room.replyCount > 0;
-      // URLはshort_idがあればそちらを優先
-      const urlParam    = room.short_id || room.room_id;
-      // 番号表示：自分の何枚目 / 全体通し番号
-     const numVal = `No.${String(room.user_card_no||'?').padStart(3,'0')}  #${room.global_no||'?'}`;
-      const globalNo = '';
-      let badgesHtml = '';
-      if (!isConfirmed) {
-        badgesHtml += `<span class="status-badge badge-draft">下書き</span>`;
-      } else {
-        badgesHtml += `<span class="status-badge badge-published">● 公開中</span>`;
-      }
-      if (hasReply) {
-        badgesHtml += `<span class="status-badge badge-replied">✓ 返信あり</span>`;
-      }
-
-      const replyLabel = hasReply
-        ? `返信 <span>${room.replyCount}</span> 件`
-        : `返信はまだありません`;
-
-      return `
-        <a class="room-item" href="card.html?room=${urlParam}">
-          <div class="room-num-badge">
-            <div class="room-num-val" style="font-size:15px;letter-spacing:1px;">${numVal}</div>
-          </div>
-          <div class="room-divider"></div>
-          <div class="room-info">
-            <div class="room-info-label">感 謝 の 部 屋</div>
-            <div class="room-info-date">${formatDate(room.created_at)}</div>
-            <div class="room-info-sub">${replyLabel}</div>
-          </div>
-          <div class="room-badges">${badgesHtml}</div>
-          <div class="room-arrow">→</div>
-        </a>`;
-    }).join('');
-  }
-
+    
   // ===== もらったカード一覧 =====
   async function renderReceivedRooms(roomIds, posts) {
     const el = document.getElementById('list-received');
