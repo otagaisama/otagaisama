@@ -1389,7 +1389,8 @@ async function saveAsDraft(auto = false) {
       if (uploadError) {
         console.error('画像アップロードエラー:', JSON.stringify(uploadError));
       } else {
-       console.log('アップロード成功:', uploadData); const { data: urlData } = db.storage.from('room-images').getPublicUrl(fileName);
+       console.log('アップロード成功:', uploadData); 
+        const { data: urlData } = db.storage.from('room-images').getPublicUrl(fileName);
         imageUrl = urlData.publicUrl;
         window._draftImageUrl = imageUrl;
       }
