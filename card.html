@@ -1384,15 +1384,23 @@ async function saveAsDraft(auto = false) {
     let imageUrl = null;
     if (selectedFile) {
       const compressed = await compressImage(selectedFile);
-      const fileName = `${currentRoomId}/${Date.now()}.jpg`;
-      const { error: uploadError } = await db.storage.from('room-images').upload(fileName, compressed, { contentType: 'image/jpeg' });
-      if (!uploadError) {
+      const fileName = `${currentRoomUuid}/${Date.now()}.jpg`;
+      const { data: uploadData, error: uploadError } = await db.storage.from('room-images').upload(fileName, compressed, { contentType: 'image/jpeg' });
+      if (uploadError) {
+        console.error('画像アップロードエラー:', uploadError);
+      } else {
         const { data: urlData } = db.storage.from('room-images').getPublicUrl(fileName);
         imageUrl = urlData.publicUrl;
+        window._draftImageUrl = imageUrl;
       }
+    } else if (window._draftImageUrl) {
+      imageUrl = window._draftImageUrl;
     }
     if (draftPostId) {
-      await db.from('room_posts').update({ content: text || null, image_url: imageUrl }).eq('id', draftPostId);
+      // image_urlはnullなら既存値を維持（nullで上書きしない）
+      const updateData = { content: text || null };
+      if (imageUrl !== null) updateData.image_url = imageUrl;
+      await db.from('room_posts').update(updateData).eq('id', draftPostId);
     } else {
       const { data } = await db.from('room_posts').insert([{
         room_id: currentRoomUuid, user_id: userId,
