@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light only">
+<title>QRカード印刷 — お互い様プロジェクト</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@200;300;400;700&family=Zen+Kaku+Gothic+New:wght@300;400&family=Shippori+Mincho:wght@400;500;700&display=swap');
+
+  :root {
+    --ink: #1a1208;
+    --paper: #f5f0e8;
+    --gold: #b8860b;
+    --gray: #6b6355;
+    --border: #c8b99a;
+    --cream: #faf6ee;
+    --red: #8b1a1a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  /* ===== 画面表示用 ===== */
+  @media screen {
+    body {
+      background: #e8e0d0;
+      font-family: 'Noto Serif JP', serif;
+      min-height: 100vh;
+    }
+
+    .screen-ui {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 24px;
+    }
+
+    .screen-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .screen-en {
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+      font-size: 9px;
+      letter-spacing: 5px;
+      color: var(--gold);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .screen-title {
+      font-family: 'Shippori Mincho', serif;
+      font-size: 24px;
+      letter-spacing: 8px;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+    .screen-sub {
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+      font-size: 11px;
+      color: var(--gray);
+      letter-spacing: 2px;
+    }
+
+    .notice-box {
+      background: #fffbe8;
+      border: 1px solid var(--gold);
+      border-radius: 2px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+    }
+    .notice-box p {
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+      font-size: 11px;
+      color: var(--gray);
+      letter-spacing: 1px;
+      line-height: 2;
+    }
+    .notice-box strong { color: var(--gold); }
+
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+    }
+
+    .btn-reserve {
+      padding: 14px 32px;
+      background: var(--ink);
+      color: var(--paper);
+      border: none;
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+      font-size: 12px;
+      letter-spacing: 3px;
+      cursor: pointer;
+      border-radius: 1px;
+      transition: background 0.2s;
+    }
+    .btn-reserve:hover { background: var(--gold); }
+    .btn-reserve:disabled { background: var(--border); cursor: not-allowed; }
+
+    .btn-print {
+      padding: 14px 32px;
+      background: var(--gold);
+      color: white;
+      border: none;
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+      font-size: 12px;
+      letter-spacing: 3px;
+      cursor: pointer;
+      border-radius: 1px;
+      transition: background 0.2s;
+    }
+    .btn-print:hover { background: #9a6f00; }
+
+    .btn-back {
+      padding: 14px 24px;
+      background: transparent;
+      color: var(--gray);
+      border: 1px solid var(--border);
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+      font-size: 12px;
+      letter-spacing: 2px;
+      cursor: pointer;
+      border-radius: 1px;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+    }
+    .btn-back:hover { border-color: var(--ink); color: var(--ink); }
+
+    .status-msg {
+      text-align: center;
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+      font-size: 12px;
+      letter-spacing: 2px;
+      color: var(--gray);
+      margin-bottom: 20px;
+      min-height: 20px;
+    }
+    .status-msg.error { color: var(--red); }
+    .status-msg.success { color: var(--gold); }
+
+    .stock-info {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .stock-count {
+      font-family: 'Shippori Mincho', serif;
+      font-size: 36px;
+      color: var(--ink);
+      font-weight: 700;
+    }
+    .stock-label {
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: var(--gray);
+      margin-top: 4px;
+    }
+
+    /* 画面プレビュー */
+    .preview-wrap {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 20px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+      overflow: auto;
+    }
+    .preview-label {
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+      font-size: 9px;
+      letter-spacing: 3px;
+      color: var(--gold);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    #view-loading, #view-unauth, #view-main { }
+    #view-unauth { text-align: center; padding: 60px 0; }
+    .unauth-text {
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+      font-size: 13px;
+      color: var(--gray);
+      letter-spacing: 2px;
+      line-height: 2.2;
+      margin-bottom: 24px;
+    }
+    .btn-login {
+      display: inline-block;
+      background: var(--ink);
+      color: var(--paper);
+      padding: 14px 28px;
+      font-family: 'Zen Kaku Gothic New', sans-serif;
+      font-size: 12px;
+      letter-spacing: 3px;
+      text-decoration: none;
+      border-radius: 1px;
+    }
+
+    .loading-spinner {
+      width: 32px; height: 32px;
+      border: 2px solid var(--border);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 60px auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  }
+
+  /* ===== 印刷用スタイル ===== */
+  @media print {
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    body { background: white !important; margin: 0; padding: 0; }
+    .screen-ui { display: none !important; }
+    .print-sheet { display: block !important; }
+  }
+
+  /* ===== 名刺レイアウト（共通） ===== */
+  .print-sheet {
+    display: none; /* screen時は非表示、printで表示 */
+    width: 210mm;
+    min-height: 297mm;
+    background: white;
+    padding: 15mm 10mm;
+    margin: 0 auto;
+  }
+
+  /* 画面プレビュー用 */
+  .print-sheet.preview-mode {
+    display: block;
+    transform-origin: top left;
+    transform: scale(0.6);
+    width: 210mm;
+    margin-bottom: -118mm; /* scale分の余白調整 */
+  }
+
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 91mm);
+    grid-template-rows: repeat(5, 55mm);
+    gap: 4mm;
+    justify-content: center;
+  }
+
+  .card-item {
+    width: 91mm;
+    height: 55mm;
+    border: 0.3mm solid #c8b99a;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 4mm;
+    gap: 4mm;
+    background: white;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* 和紙テクスチャ風の背景 */
+  .card-item::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2mm,
+        rgba(200,185,154,0.04) 2mm,
+        rgba(200,185,154,0.04) 2.1mm
+      );
+    pointer-events: none;
+  }
+
+  /* 左：QRコード */
+  .card-qr {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5mm;
+  }
+  .card-qr canvas,
+  .card-qr img {
+    width: 30mm !important;
+    height: 30mm !important;
+  }
+  .card-qr-label {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 5pt;
+    color: #9a8878;
+    letter-spacing: 0.5pt;
+    text-align: center;
+  }
+
+  /* 右：テキスト情報 */
+  .card-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    padding: 1mm 0;
+  }
+
+  .card-project-name {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 7pt;
+    letter-spacing: 3pt;
+    color: #b8860b;
+    line-height: 1.6;
+  }
+
+  .card-tagline {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 6pt;
+    color: #6b6355;
+    letter-spacing: 1pt;
+    line-height: 1.8;
+  }
+
+  .card-divider {
+    height: 0.2mm;
+    background: #c8b99a;
+    margin: 1mm 0;
+  }
+
+  .card-id-area {
+    display: flex;
+    flex-direction: column;
+    gap: 1mm;
+  }
+
+  .card-no {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 9pt;
+    font-weight: 700;
+    color: #1a1208;
+    letter-spacing: 1pt;
+  }
+
+  .card-short-id {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 6pt;
+    color: #9a8878;
+    letter-spacing: 1pt;
+  }
+
+  .card-url {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 5pt;
+    color: #b8860b;
+    letter-spacing: 0.3pt;
+    word-break: break-all;
+    line-height: 1.5;
+  }
+
+  /* 右上：小さい装飾 */
+  .card-deco {
+    position: absolute;
+    top: 2mm;
+    right: 2mm;
+    font-size: 8pt;
+    opacity: 0.15;
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== 画面UI ===== -->
+<div class="screen-ui">
+  <div class="screen-header">
+    <div class="screen-en">Print QR Cards</div>
+    <div class="screen-title">Q R カ ー ド 印 刷</div>
+    <div class="screen-sub">未使用カードを名刺サイズで印刷します</div>
+  </div>
+
+  <!-- ローディング -->
+  <div id="view-loading">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <!-- 未ログイン -->
+  <div id="view-unauth" style="display:none;">
+    <div class="unauth-text">印刷ページを使うには<br>ログインが必要です</div>
+    <a href="auth.html" class="btn-login">ログイン · 登録</a>
+  </div>
+
+  <!-- メインUI -->
+  <div id="view-main" style="display:none;">
+
+    <div class="notice-box">
+      <p>
+        🖨️ <strong>印刷方法：</strong>「印刷する」ボタンを押してください<br>
+        印刷設定で <strong>「余白：なし」「背景のグラフィック：オン」</strong> を推奨します<br>
+        ChromeでPDF保存する場合は「送信先：PDFに保存」を選択してください
+      </p>
+    </div>
+
+    <div class="stock-info">
+      <div class="stock-count" id="stockCount">—</div>
+      <div class="stock-label">未使用カードのストック数（最大20枚）</div>
+    </div>
+
+    <div class="status-msg" id="statusMsg"></div>
+
+    <div class="btn-row">
+      <button class="btn-reserve" id="btnReserve" onclick="reserveRooms()">
+        10部屋まとめて予約する
+      </button>
+      <button class="btn-print" onclick="doPrint()">
+        🖨️ 印刷する
+      </button>
+      <a href="mypage.html" class="btn-back">← マイページへ</a>
+    </div>
+
+    <div class="preview-wrap">
+      <div class="preview-label">印刷プレビュー（実寸の60%）</div>
+      <div id="previewContainer"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== 印刷用シート（印刷時のみ表示） ===== -->
+<div class="print-sheet" id="printSheet">
+  <div class="cards-grid" id="cardsGrid"></div>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://damussuizcfzqkfkpwwm.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhbXVzc3VpemNmenFrZmtwd3dtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0NTcwOTIsImV4cCI6MjA5MTAzMzA5Mn0.Xp93BfRowa9gG7ZMRQxyyKiYXgWRN4Gk5xLxaGTiUIo';
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let currentUser = null;
+  let unusedRooms = [];
+
+  window.onload = async () => {
+    const { data: { session } } = await db.auth.getSession();
+    if (!session) {
+      document.getElementById('view-loading').style.display = 'none';
+      document.getElementById('view-unauth').style.display = 'block';
+      return;
+    }
+    currentUser = session.user;
+    await loadUnusedRooms();
+    document.getElementById('view-loading').style.display = 'none';
+    document.getElementById('view-main').style.display = 'block';
+  };
+
+  // 未使用カード取得
+  async function loadUnusedRooms() {
+    // is_confirmed=falseの部屋を取得
+    const { data: rooms } = await db
+      .from('rooms')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .eq('is_confirmed', false)
+      .order('created_at', { ascending: true });
+
+    if (!rooms) { unusedRooms = []; updateUI(); return; }
+
+    // draftがないもの（純粋な未使用）を抽出
+    const checked = await Promise.all(rooms.map(async r => {
+      const { count } = await db
+        .from('room_posts')
+        .select('*', { count: 'exact', head: true })
+        .eq('room_id', r.room_id);
+      return { ...r, postCount: count || 0 };
+    }));
+
+    unusedRooms = checked.filter(r => r.postCount === 0);
+    updateUI();
+    await renderCards(unusedRooms.slice(0, 10));
+  }
+
+  function updateUI() {
+    const count = unusedRooms.length;
+    document.getElementById('stockCount').textContent = count;
+
+    const btn = document.getElementById('btnReserve');
+    if (count >= 20) {
+      btn.disabled = true;
+      btn.textContent = 'ストックが上限（20枚）に達しています';
+    } else if (count >= 10) {
+      btn.textContent = 'さらに10部屋予約する';
+    } else {
+      btn.textContent = '10部屋まとめて予約する';
+    }
+  }
+
+  // 10部屋まとめて予約
+  async function reserveRooms() {
+    const count = unusedRooms.length;
+    if (count >= 20) return;
+
+    const btn = document.getElementById('btnReserve');
+    const msg = document.getElementById('statusMsg');
+    btn.disabled = true;
+    msg.textContent = '予約中...';
+    msg.className = 'status-msg';
+
+    try {
+      // user_card_no の最大値を取得
+      const { data: existing } = await db
+        .from('rooms')
+        .select('user_card_no')
+        .eq('user_id', currentUser.id)
+        .order('user_card_no', { ascending: false })
+        .limit(1);
+      const maxCardNo = existing?.[0]?.user_card_no || 0;
+
+      // global_no の最大値を取得
+      const { data: globalMax } = await db
+        .from('rooms')
+        .select('global_no')
+        .order('global_no', { ascending: false })
+        .limit(1);
+      let globalNo = globalMax?.[0]?.global_no || 0;
+
+      // 10部屋分のデータを作成
+      const newRooms = [];
+      for (let i = 0; i < 10; i++) {
+        const shortId = generateShortId();
+        newRooms.push({
+          room_id: crypto.randomUUID(),
+          user_id: currentUser.id,
+          is_confirmed: false,
+          short_id: shortId,
+          user_card_no: maxCardNo + i + 1,
+          global_no: globalNo + i + 1,
+          recipient_memo: null,
+          access_notified: false,
+        });
+      }
+
+      const { error } = await db.from('rooms').insert(newRooms);
+      if (error) throw error;
+
+      msg.textContent = '10部屋を予約しました！';
+      msg.className = 'status-msg success';
+      await loadUnusedRooms();
+    } catch (e) {
+      msg.textContent = '予約に失敗しました: ' + e.message;
+      msg.className = 'status-msg error';
+      btn.disabled = false;
+    }
+  }
+
+  // short_id生成（5文字英数字）
+  function generateShortId() {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    return Array.from({length: 5}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  }
+
+  // カードレンダリング
+  async function renderCards(rooms) {
+    const grid = document.getElementById('cardsGrid');
+    grid.innerHTML = '';
+
+    // 10枚に満たない場合は空カードで埋める
+    const cards = [...rooms];
+    while (cards.length < 10) cards.push(null);
+
+    for (const room of cards) {
+      const div = document.createElement('div');
+      div.className = 'card-item';
+
+      if (!room) {
+        // 空スロット
+        div.innerHTML = `
+          <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;opacity:0.2;">
+            <span style="font-family:'Zen Kaku Gothic New',sans-serif;font-size:8pt;letter-spacing:2pt;color:#6b6355;">未 使 用</span>
+          </div>`;
+        grid.appendChild(div);
+        continue;
+      }
+
+      const receiveUrl = `https://otagaisama.github.io/otagaisama/receive.html?room=${room.short_id || room.room_id}`;
+      const numVal = `No.${String(room.user_card_no || '?').padStart(3, '0')}`;
+
+      div.innerHTML = `
+        <div class="card-deco">🏮</div>
+        <div class="card-qr">
+          <canvas id="qr-${room.room_id}"></canvas>
+          <div class="card-qr-label">スキャンして感謝を届ける</div>
+        </div>
+        <div class="card-info">
+          <div>
+            <div class="card-project-name">お 互 い 様</div>
+            <div class="card-tagline">感謝をつなぐプロジェクト</div>
+          </div>
+          <div class="card-divider"></div>
+          <div class="card-id-area">
+            <div class="card-no">${numVal}  #${room.global_no || '?'}</div>
+            <div class="card-short-id">ID: ${room.short_id || '—'}</div>
+            <div class="card-url">${receiveUrl}</div>
+          </div>
+        </div>`;
+
+      grid.appendChild(div);
+
+      // QRコード生成
+      try {
+        await QRCode.toCanvas(
+          document.getElementById(`qr-${room.room_id}`),
+          receiveUrl,
+          { width: 113, margin: 1, color: { dark: '#1a1208', light: '#ffffff' } }
+        );
+      } catch (e) {
+        console.error('QR生成エラー', e);
+      }
+    }
+
+    // プレビューにも反映
+    const preview = document.getElementById('previewContainer');
+    const clone = document.getElementById('printSheet').cloneNode(true);
+    clone.style.display = 'block';
+    clone.classList.add('preview-mode');
+    clone.id = 'previewSheet';
+    preview.innerHTML = '';
+    preview.appendChild(clone);
+
+    // プレビューのQRも生成
+    const previewCards = preview.querySelectorAll('.card-item');
+    rooms.forEach((room, i) => {
+      if (!room) return;
+      const canvas = previewCards[i]?.querySelector('canvas');
+      if (!canvas) return;
+      const receiveUrl = `https://otagaisama.github.io/otagaisama/receive.html?room=${room.short_id || room.room_id}`;
+      QRCode.toCanvas(canvas, receiveUrl, { width: 113, margin: 1, color: { dark: '#1a1208', light: '#ffffff' } }).catch(() => {});
+    });
+  }
+
+  // 印刷実行
+  function doPrint() {
+    if (unusedRooms.length === 0) {
+      alert('印刷できるカードがありません。先に部屋を予約してください。');
+      return;
+    }
+    window.print();
+  }
+</script>
+</body>
+</html>
