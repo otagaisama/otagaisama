@@ -553,6 +553,55 @@
   @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
   @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
 
+  .action-btns {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.42s forwards;
+  }
+  .action-btn {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 18px 24px;
+    border-radius: 2px;
+    text-decoration: none;
+    font-family: 'Shippori Mincho', serif;
+    font-size: 14px;
+    letter-spacing: 3px;
+    transition: all 0.25s;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+  }
+  .action-btn-primary {
+    background: var(--ink);
+    color: var(--paper);
+    border: 1px solid var(--ink);
+  }
+  .action-btn-primary:hover { background: var(--gold); border-color: var(--gold); }
+  .action-btn-secondary {
+    background: white;
+    color: var(--ink);
+    border: 1px solid var(--border);
+  }
+  .action-btn-secondary:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+    box-shadow: 0 4px 20px rgba(184,134,11,0.1);
+    transform: translateY(-1px);
+  }
+  .action-btn-icon { font-size: 18px; flex-shrink: 0; }
+  .action-btn-text { flex: 1; }
+  .action-btn-arrow {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 14px;
+    opacity: 0.4;
+    transition: transform 0.2s, opacity 0.2s;
+    flex-shrink: 0;
+  }
+  .action-btn:hover .action-btn-arrow { opacity: 1; transform: translateX(4px); }
+
   @media (max-width: 480px) {
     .container { padding: 80px 16px 60px; }
     .profile-card, .stats-card { padding: 22px 18px; }
@@ -561,6 +610,7 @@
     .room-item { padding: 14px 16px; gap: 12px; }
     .room-badges { gap: 3px; }
     .status-badge { font-size: 8px; padding: 2px 7px; }
+    .action-btn { padding: 16px 18px; font-size: 13px; letter-spacing: 2px; }
   }
 </style>
 </head>
@@ -703,6 +753,20 @@
         ポイントは換金機能開始時に遡って付与されます<br>
         感謝を送る＝1pt・受け取る＝2pt（β版記録中）
       </div>
+    </div>
+
+    <!-- アクションボタン -->
+    <div class="action-btns">
+      <a href="card.html" class="action-btn action-btn-primary">
+        <span class="action-btn-icon">🏮</span>
+        <span class="action-btn-text">心 を 届 け る</span>
+        <span class="action-btn-arrow">→</span>
+      </a>
+      <a href="receive.html" class="action-btn action-btn-secondary">
+        <span class="action-btn-icon">📮</span>
+        <span class="action-btn-text">Q R 名 刺 を も ら っ た 方 へ</span>
+        <span class="action-btn-arrow">→</span>
+      </a>
     </div>
 
     <div class="gold-line"></div>
