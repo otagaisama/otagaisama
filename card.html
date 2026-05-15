@@ -1126,28 +1126,41 @@ async function openRoom(roomId) {
     const currentUserId = session?.user?.id;
 
     let room = null;
+
+    // 1. short_idで検索
     const { data: r1 } = await db
       .from('rooms')
       .select('id, user_id, is_confirmed, short_id, global_no, user_card_no, room_id')
       .eq('short_id', roomId)
       .maybeSingle();
-    if (r1) {
-      room = r1;
-    } else {
+    if (r1) room = r1;
+
+    // 2. room_id（旧UUID文字列）で検索
+    if (!room) {
       const { data: r2 } = await db
         .from('rooms')
         .select('id, user_id, is_confirmed, short_id, global_no, user_card_no, room_id')
         .eq('room_id', roomId)
         .maybeSingle();
-      room = r2;
+      if (r2) room = r2;
+    }
+
+    // 3. id（PK UUID）で検索
+    if (!room) {
+      const { data: r3 } = await db
+        .from('rooms')
+        .select('id, user_id, is_confirmed, short_id, global_no, user_card_no, room_id')
+        .eq('id', roomId)
+        .maybeSingle();
+      if (r3) room = r3;
     }
 
     if (room) {
-      currentShortId = room.short_id;
+      currentShortId    = room.short_id;
       currentRoomNumber = String(room.global_no || room.id).padStart(4, '0');
-      currentRoomDbId = room.id;
-      isConfirmed = room.is_confirmed === true;
-      isOwner = room.user_id === currentUserId;
+      currentRoomDbId   = room.id;
+      isConfirmed       = room.is_confirmed === true;
+      isOwner           = room.user_id === currentUserId;
     } else {
       currentRoomNumber = roomId.slice(0, 4).toUpperCase();
       isConfirmed = false;
