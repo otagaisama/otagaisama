@@ -1032,11 +1032,22 @@ async function openRoom(roomId) {
     const { data: { session } } = await db.auth.getSession();
     const currentUserId = session?.user?.id;
 
-    const { data: room } = await db
+    let room = null;
+    const { data: r1 } = await db
       .from('rooms')
-      .select('id, user_id, is_confirmed, short_id, global_no, user_card_no')
-      .or(`room_id.eq.${roomId},short_id.eq.${roomId}`)
-      .single();
+      .select('id, user_id, is_confirmed, short_id, global_no, user_card_no, room_id')
+      .eq('short_id', roomId)
+      .maybeSingle();
+    if (r1) {
+      room = r1;
+    } else {
+      const { data: r2 } = await db
+        .from('rooms')
+        .select('id, user_id, is_confirmed, short_id, global_no, user_card_no, room_id')
+        .eq('room_id', roomId)
+        .maybeSingle();
+      room = r2;
+    }
 
     if (room) {
       currentShortId = room.short_id;
@@ -1116,7 +1127,7 @@ async function confirmCard() {
     const { error } = await db
       .from('rooms')
       .update({ is_confirmed: true })
-      .eq('room_id', currentRoomId);
+      .eq('id', currentRoomDbId);
 
     if (error) throw error;
 
@@ -1124,6 +1135,42 @@ async function confirmCard() {
     closeConfirmModal();
     updateRoomUI();
     showToast('✓ カードを確定しました。相手に公開されました。');
+
+    // 受信者へメール通知（登録済みユーザーのみ）
+    try {
+      const { data: replies } = await db
+        .from('room_posts')
+        .select('user_id')
+        .eq('room_id', currentRoomId)
+        .eq('post_type', 'reply');
+
+      if (replies && replies.length > 0) {
+        const recipientIds = [...new Set(replies.map(r => r.user_id))];
+        for (const uid of recipientIds) {
+          const { data: profile } = await db
+            .from('profiles')
+            .select('email')
+            .eq('id', uid)
+            .maybeSingle();
+
+          if (profile?.email) {
+            await fetch('https://api.web3forms.com/submit', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                access_key: '993fcf8d-e618-47db-b863-f45b3c5b5418',
+                to: profile.email,
+                subject: '【お互い様】メッセージが届きました',
+                message: 'メッセージが届きました。\n\nhttps://otagaisama.github.io/otagaisama/receive.html?room=' + (currentShortId || currentRoomId) + '\n\n※このメールは自動送信です',
+                from_name: 'お互い様プロジェクト',
+              })
+            });
+          }
+        }
+      }
+    } catch(notifyErr) {
+      console.error('通知エラー:', notifyErr);
+    }
 
   } catch (e) {
     console.error(e);
