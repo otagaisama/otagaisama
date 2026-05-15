@@ -590,7 +590,7 @@
       div.innerHTML = `
         <div class="card-deco">🏮</div>
         <div class="card-qr">
-          <canvas id="qr-${room.room_id}"></canvas>
+          <div id="qr-${room.room_id}"></div>
           <div class="card-qr-label">スキャンして感謝を届ける</div>
         </div>
         <div class="card-info">
@@ -610,11 +610,11 @@
 
       // QRコード生成
       try {
-        await QRCode.toCanvas(
-          document.getElementById(`qr-${room.room_id}`),
-          receiveUrl,
-          { width: 113, margin: 1, color: { dark: '#1a1208', light: '#ffffff' } }
-        );
+        new QRCode(document.getElementById(`qr-${room.room_id}`), {
+          text: receiveUrl,
+          width: 113,
+          height: 113
+        });
       } catch (e) {
         console.error('QR生成エラー', e);
       }
@@ -629,15 +629,6 @@
     preview.innerHTML = '';
     preview.appendChild(clone);
 
-    // プレビューのQRも生成
-    const previewCards = preview.querySelectorAll('.card-item');
-    rooms.forEach((room, i) => {
-      if (!room) return;
-      const canvas = previewCards[i]?.querySelector('canvas');
-      if (!canvas) return;
-      const receiveUrl = `https://otagaisama.github.io/otagaisama/receive.html?room=${room.short_id || room.room_id}`;
-      QRCode.toCanvas(canvas, receiveUrl, { width: 113, margin: 1, color: { dark: '#1a1208', light: '#ffffff' } }).catch(() => {});
-    });
   }
 
   // 印刷実行
