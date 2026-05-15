@@ -1387,7 +1387,8 @@ async function submitPost() {
     await updateRoomUI();
   } catch (e) {
     console.error(e);
-    msg.textContent = '送信に失敗しました。もう一度お試しください。';
+    const detail = e?.message || e?.details || JSON.stringify(e) || '不明';
+    msg.textContent = `失敗: ${detail}`;
     msg.className = 'msg msg-error';
   } finally {
     btn.disabled = false;
