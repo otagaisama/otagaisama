@@ -850,6 +850,34 @@
     gap: 8px;
   }
 
+  /* ===== 返信表示（確定後） ===== */
+  .reply-readonly-section {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+  .reply-readonly-label {
+    text-align: center;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--gray);
+    margin-bottom: 14px;
+  }
+  .reply-readonly-item {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 14px;
+    margin-bottom: 10px;
+  }
+  .reply-readonly-text {
+    font-size: 14px;
+    line-height: 1.9;
+    color: var(--ink);
+    white-space: pre-wrap;
+  }
+
   @media (max-width: 480px) {
     .form-buttons { flex-direction: column; }
     .share-btns { flex-direction: column; }
@@ -1224,23 +1252,39 @@ async function updateRoomUI() {
 
 // ===== 確定後：読み取り専用コンテンツ表示 =====
 async function loadReadonlyContent() {
-  const { data } = await db
+  const { data: posts } = await db
     .from('room_posts')
-    .select('content, image_url, post_type')
+    .select('content, image_url, post_type, created_at')
     .eq('room_id', currentRoomUuid)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .in('post_type', ['message', 'reply'])
+    .order('created_at', { ascending: true });
 
-  if (!data) return;
+  if (!posts || posts.length === 0) return;
 
-  const form = document.getElementById('post-form');
-  let html = '<div class="post-readonly">';
-  if (data.content) html += `<div class="post-readonly-text">${escapeHtml(data.content)}</div>`;
-  if (data.image_url) html += `<img class="post-readonly-image" src="${data.image_url}" alt="投稿画像">`;
-  html += '</div>';
+  const myPost  = posts.find(p => p.post_type === 'message');
+  const replies = posts.filter(p => p.post_type === 'reply');
 
-  // textareaの後ろに挿入
+  let html = '';
+
+  if (myPost) {
+    html += '<div class="post-readonly">';
+    if (myPost.content) html += `<div class="post-readonly-text">${escapeHtml(myPost.content)}</div>`;
+    if (myPost.image_url) html += `<img class="post-readonly-image" src="${myPost.image_url}" alt="投稿画像">`;
+    html += '</div>';
+  }
+
+  if (replies.length > 0) {
+    html += '<div class="reply-readonly-section">';
+    html += '<div class="reply-readonly-label">— 届いた返信 —</div>';
+    replies.forEach(r => {
+      html += '<div class="reply-readonly-item">';
+      if (r.content) html += `<div class="reply-readonly-text">${escapeHtml(r.content)}</div>`;
+      if (r.image_url) html += `<img class="post-readonly-image" src="${r.image_url}" alt="返信画像">`;
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+
   const textarea = document.getElementById('post-text');
   const div = document.createElement('div');
   div.innerHTML = html;
