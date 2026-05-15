@@ -825,7 +825,7 @@
       // URLはshort_idがあればそちらを優先
       const urlParam    = room.short_id || room.room_id;
       // 番号表示：自分の何枚目 / 全体通し番号
-      const numVal = `No.${String(room.user_card_no||'?').padStart(3,'0')}  #${room.global_no||'?'}`;
+     const numVal = `No.${String(roomData?.user_card_no||'?').padStart(3,'0')}  #${roomData?.global_no||'?'}`;
       const globalNo = '';
       let badgesHtml = '';
       if (!isConfirmed) {
@@ -844,7 +844,7 @@
       return `
         <a class="room-item" href="card.html?room=${urlParam}">
           <div class="room-num-badge">
-            <div class="room-num-val" style="font-size:15px;letter-spacing:1px;">${numVal}</div>
+            <div class="room-num-val" style="font-size:15px;letter-spacing:1px;">${room.numVal}</div>
           </div>
           <div class="room-divider"></div>
           <div class="room-info">
