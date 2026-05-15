@@ -802,13 +802,66 @@
     showView('main');
   }
 
+  
   // ===== 送ったカード一覧 =====
-  async function renderSentRooms(rooms) {
-    const el = document.getElementById('list-sent');
-    if (!rooms || rooms.length === 0) {
-      el.innerHTML = `<div class="empty-state"><div class="empty-icon">🏮</div><div class="empty-text">まだカードを作っていません<br>最初の感謝の部屋を作りましょう</div></div>`;
-      return;
+async function renderSentRooms(rooms) {
+  const el = document.getElementById('list-sent');
+  if (!rooms || rooms.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🏮</div><div class="empty-text">まだカードを作っていません<br>最初の感謝の部屋を作りましょう</div></div>`;
+    return;
+  }
+
+  const items = await Promise.all(rooms.map(async room => {
+    const { count: replyCount } = await db
+      .from('room_posts')
+      .select('*', { count: 'exact', head: true })
+      .eq('room_id', room.room_id)
+      .eq('post_type', 'reply');
+    const { count: draftCount } = await db
+      .from('room_posts')
+      .select('*', { count: 'exact', head: true })
+      .eq('room_id', room.room_id)
+      .eq('post_type', 'draft');
+    return { ...room, replyCount: replyCount || 0, draftCount: draftCount || 0 };
+  }));
+
+  el.innerHTML = items.map(room => {
+    const isConfirmed = room.is_confirmed === true;
+    const hasReply    = room.replyCount > 0;
+    const hasDraft    = room.draftCount > 0;
+    const urlParam    = room.short_id || room.room_id;
+    const numVal = `No.${String(room.user_card_no||'?').padStart(3,'0')}  #${room.global_no||'?'}`;
+
+    let badgesHtml = '';
+    if (!isConfirmed && !hasDraft) {
+      badgesHtml += `<span class="status-badge badge-unused">未 使 用</span>`;
+    } else if (!isConfirmed && hasDraft) {
+      badgesHtml += `<span class="status-badge badge-draft">書 き か け</span>`;
+    } else if (isConfirmed && !hasReply) {
+      badgesHtml += `<span class="status-badge badge-published">発 送 済 み</span>`;
+    } else if (isConfirmed && hasReply) {
+      badgesHtml += `<span class="status-badge badge-published">発 送 済 み</span>`;
+      badgesHtml += `<span class="status-badge badge-replied">✓ 返 信 あ り</span>`;
     }
+
+    const replyLabel = hasReply ? `返信 <span>${room.replyCount}</span> 件` : `返信はまだありません`;
+
+    return `
+      <a class="room-item" href="card.html?room=${urlParam}">
+        <div class="room-num-badge">
+          <div class="room-num-val" style="font-size:15px;letter-spacing:1px;">${numVal}</div>
+        </div>
+        <div class="room-divider"></div>
+        <div class="room-info">
+          <div class="room-info-label">感 謝 の 部 屋</div>
+          <div class="room-info-date">${formatDate(room.created_at)}</div>
+          <div class="room-info-sub">${replyLabel}</div>
+        </div>
+        <div class="room-badges">${badgesHtml}</div>
+        <div class="room-arrow">→</div>
+      </a>`;
+  }).join('');
+}
 
     const items = await Promise.all(rooms.map(async room => {
       const { count: replyCount } = await db
