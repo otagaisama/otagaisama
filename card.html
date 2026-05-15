@@ -1295,15 +1295,32 @@ async function loadReadonlyContent() {
 async function loadDraftContent() {
   const { data } = await db
     .from('room_posts')
-    .select('content, image_url')
+    .select('id, content, image_url')
     .eq('room_id', currentRoomUuid)
     .eq('post_type', 'draft')
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
 
-  if (data?.content) {
+  if (!data) return;
+
+  // draftPostIdをセット（次回saveAsDraftでupdateできるように）
+  if (data.id) draftPostId = data.id;
+
+  if (data.content) {
     document.getElementById('post-text').value = data.content;
+  }
+
+  // 保存済み画像があればプレビュー表示
+  if (data.image_url) {
+    const preview = document.getElementById('image-preview');
+    if (preview) {
+      preview.src = data.image_url;
+      preview.style.display = 'block';
+      // selectedFileはnullのまま（再アップロード不要）
+      // 確定送信時にimage_urlを再利用するフラグをセット
+      window._draftImageUrl = data.image_url;
+    }
   }
 }
 
@@ -1413,6 +1430,7 @@ async function submitPost() {
     const userId = session?.user?.id || null;
     let imageUrl = null;
     if (selectedFile) {
+      // 新規ファイル選択があればアップロード
       const compressed = await compressImage(selectedFile);
       const fileName = `${currentRoomId}/${Date.now()}.jpg`;
       const { error: uploadError } = await db.storage.from('room-images').upload(fileName, compressed, { contentType: 'image/jpeg' });
@@ -1420,6 +1438,9 @@ async function submitPost() {
         const { data: urlData } = db.storage.from('room-images').getPublicUrl(fileName);
         imageUrl = urlData.publicUrl;
       }
+    } else if (window._draftImageUrl) {
+      // draft保存済み画像をそのまま使う
+      imageUrl = window._draftImageUrl;
     }
     // 既存draftを削除
     if (draftPostId) {
