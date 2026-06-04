@@ -299,8 +299,7 @@ async function loadCard() {
     document.getElementById('from-label-text').textContent = `${senderName} さんからのカード`;
     document.getElementById('card-sender-name').textContent = senderName;
 
-    const seq = `No.${String(room.user_card_no||'?').padStart(3,'0')}  #${room.global_no||'?'}`;
-    document.getElementById('card-number').textContent = seq;
+    document.getElementById('card-number').textContent = `#${room.global_no || '—'}`;
 
     const d = new Date(room.created_at);
     document.getElementById('card-date').textContent =
