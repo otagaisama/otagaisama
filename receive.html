@@ -361,11 +361,14 @@ async function loadCard() {
     btn.textContent = '送信中…';
 
     try {
+      const meta = currentUser.user_metadata || {};
+      const myPenName = meta.pen_name || meta.name || currentUser.email?.split('@')[0] || '匿名';
       const { error } = await supabase.from('room_posts').insert({
         room_id: roomData.room_id,
         user_id: currentUser.id,
         content: text,
-        post_type: 'reply'
+        post_type: 'reply',
+        pen_name: myPenName
       });
       if (error) throw error;
       hasReplied = true;
