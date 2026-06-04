@@ -1130,7 +1130,7 @@ async function showResult(roomId, shortId, dbId, userCardNo, globalNo) {
 
   const receiveUrl = `${window.location.origin}${window.location.pathname.replace('card.html','receive.html')}?room=${shortId}`;
 
-  document.getElementById('result-number').textContent = `No.${String(userCardNo).padStart(3,'0')}  #${globalNo}`;
+  document.getElementById('result-number').textContent = `#${globalNo}`;
   document.getElementById('result-url').textContent = receiveUrl;
 
   document.getElementById('qrcode').innerHTML = '';
@@ -1186,7 +1186,7 @@ async function openRoom(roomId) {
 
     if (room) {
       currentShortId    = room.short_id;
-      currentRoomNumber = `No.${String(room.user_card_no || '?').padStart(3,'0')}  #${room.global_no || '?'}`;
+      currentRoomNumber = `#${room.global_no || '?'}`;
       currentRoomDbId   = room.id;        // 数値PK（roomsのUPDATE用）
       currentRoomUuid   = room.room_id;   // UUID（room_postsのroom_id用）
       isConfirmed       = room.is_confirmed === true;
@@ -1227,14 +1227,16 @@ async function updateRoomUI() {
   }
 
   if (isConfirmed) {
-    // 確定済み：バナー表示、フォームを読み取り専用に切り替え
-    confirmedBanner.style.display = 'flex';
+    // 確定済み：フォームを読み取り専用に切り替え
+    confirmedBanner.style.display = 'none';
     statusLabel.textContent = '確 定 済 み';
     statusLabel.classList.add('confirmed');
     formButtons.style.display = 'none';
     if (formNote) formNote.style.display = 'none';
     document.getElementById('post-text').style.display = 'none';
-    document.querySelector('.image-upload').style.display = 'none';
+    const _msgLabel = document.getElementById('post-text').previousElementSibling;
+    if (_msgLabel) _msgLabel.style.display = 'none';
+    document.querySelector('.image-upload').closest('.form-group').style.display = 'none';
 
     // 保存済みコンテンツを読み取り専用で表示
     await loadReadonlyContent();
