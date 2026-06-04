@@ -894,7 +894,7 @@ async function renderSentRooms(rooms) {
     const hasReply    = room.replyCount > 0;
     const hasDraft    = room.draftCount > 0;
     const urlParam    = room.short_id || room.room_id;
-    const numVal = `No.${String(room.user_card_no||'?').padStart(3,'0')}  #${room.global_no||'?'}`;
+    const numVal = `#${room.global_no||'?'}`;
 
     let badgesHtml = '';
     if (!isConfirmed && !hasDraft) {
