@@ -936,20 +936,15 @@ async function renderSentRooms(rooms) {
       return;
     }
     const items = await Promise.all(roomIds.map(async roomId => {
-      const { data: roomData } = await db
-        .from('rooms')
-        .select('id, short_id, user_card_no, global_no, created_at')
-        .eq('room_id', roomId)
-        .maybeSingle();
+      const { data: roomData } = await db.rpc('get_card', { p_key: roomId });
       const roomPosts = posts.filter(p => p.room_id === roomId);
       const lastDate = roomPosts.length > 0
         ? roomPosts.sort((a,b) => new Date(b.created_at) - new Date(a.created_at))[0].created_at
         : null;
-      // URLはshort_idがあればそちらを優先
       const urlParam = roomData?.short_id || roomId;
-      const numVal = `No.${String(roomData?.user_card_no||'?').padStart(3,'0')}  #${roomData?.global_no||'?'}`;
-      const globalNo = '';
-      return { urlParam, numVal, globalNo, postCount: roomPosts.length, lastDate };
+      const senderName = (roomData?.pen_name || '匿名').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const numVal = `#${roomData?.global_no || '?'}`;
+      return { urlParam, senderName, numVal, postCount: roomPosts.length, lastDate };
     }));
 
     el.innerHTML = items.map(room => `
