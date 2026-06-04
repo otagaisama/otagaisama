@@ -1254,7 +1254,7 @@ async function updateRoomUI() {
 async function loadReadonlyContent() {
   const { data: posts } = await db
     .from('room_posts')
-    .select('content, image_url, post_type, created_at')
+    .select('content, image_url, post_type, created_at, pen_name')
     .eq('room_id', currentRoomUuid)
     .in('post_type', ['message', 'reply'])
     .order('created_at', { ascending: true });
