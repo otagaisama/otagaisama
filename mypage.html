@@ -716,9 +716,9 @@
 
     <!-- ポイント＆統計 -->
     <div class="stats-card">
-      <div class="stats-card-label">Point &amp; Stats — 心の記録</div>
+      <div class="stats-card-label">心の記録</div>
       <div class="stats-grid">
-        <div class="stat-item highlight">
+        <div class="stat-item highlight" style="display:none;">
           <div class="stat-item-label">合計ポイント</div>
           <div class="stat-value" id="totalPoints">—</div>
           <div class="stat-unit">pt</div>
@@ -742,17 +742,16 @@
           <div class="stat-value" id="betaDays">—</div>
           <div class="stat-unit">日目</div>
         </div>
-        <div class="stat-item" style="display:flex;align-items:center;justify-content:center;">
+        <!-- TODO: 月別集計ページ stats.html を作る（未実装）。ポイントは出さず、送った/もらった枚数の月別だけ -->
+　　　　 <!--
           <div style="text-align:center;">
             <div class="stat-item-label" style="margin-bottom:6px;">詳細集計</div>
             <a href="stats.html" style="font-family:'Zen Kaku Gothic New',sans-serif;font-size:10px;letter-spacing:2px;color:var(--blue);text-decoration:underline;text-underline-offset:3px;">月・年別を見る →</a>
           </div>
         </div>
       </div>
-      <div class="stats-note">
-        ポイントは換金機能開始時に遡って付与されます<br>
-        感謝を送る＝1pt・受け取る＝2pt（β版記録中）
-      </div>
+       --> 
+      
     </div>
 
     <!-- アクションボタン -->
