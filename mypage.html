@@ -1039,7 +1039,7 @@ async function renderSentRooms(rooms) {
         if (!val || val.length < 6) {
           msg.textContent = '6文字以上で入力してください';
           msg.className = 'msg-inline msg-error';
-          return;S
+          return;
         }
         try {
           const { error } = await db.auth.updateUser({ password: val });
