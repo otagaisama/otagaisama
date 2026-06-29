@@ -818,6 +818,10 @@
     if (!session) { showView('unauth'); return; }
     currentUser = session.user;
     await loadPage();
+  document.getElementById('logoutBtn')?.addEventListener('click', async () => {
+    try { await db.auth.signOut({ scope: 'local' }); } catch(e){}
+    location.href = 'index.html';
+  });
   };
 
   async function loadPage() {
