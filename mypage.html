@@ -1013,6 +1013,45 @@ async function renderSentRooms(rooms) {
       msg.textContent = '保存に失敗しました';
       msg.className = 'msg-inline msg-error';
     }
+    async function saveEmail() {
+        const val = document.getElementById('inputEmail').value.trim();
+        const msg = document.getElementById('emailMsg');
+        if (!val || !val.includes('@')) {
+          msg.textContent = '正しいメールアドレスを入力してください';
+          msg.className = 'msg-inline msg-error';
+          return;
+        }
+        try {
+          const { error } = await db.auth.updateUser({ email: val });
+          if (error) throw error;
+          msg.textContent = '確認メールを新しいアドレスに送りました。リンクを開くと変更が完了します';
+          msg.className = 'msg-inline msg-success';
+          document.getElementById('inputEmail').value = '';
+        } catch (e) {
+          msg.textContent = '変更に失敗しました：' + (e.message || '');
+          msg.className = 'msg-inline msg-error';
+        }
+      }
+
+      async function savePassword() {
+        const val = document.getElementById('inputPassword').value;
+        const msg = document.getElementById('passwordMsg');
+        if (!val || val.length < 6) {
+          msg.textContent = '6文字以上で入力してください';
+          msg.className = 'msg-inline msg-error';
+          return;
+        }
+        try {
+          const { error } = await db.auth.updateUser({ password: val });
+          if (error) throw error;
+          msg.textContent = 'パスワードを変更しました';
+          msg.className = 'msg-inline msg-success';
+          document.getElementById('inputPassword').value = '';
+        } catch (e) {
+          msg.textContent = '変更に失敗しました：' + (e.message || '');
+          msg.className = 'msg-inline msg-error';
+        }
+      }
   }
 
   function showView(name) {
