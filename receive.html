@@ -269,6 +269,12 @@ async function loadCard() {
       if (error) { showError('読み込みエラーが発生しました。'); console.error(error); return; }
       if (!data) { showError('カードが見つかりませんでした。<br>URLをご確認ください。'); return; }
 
+      // 自分のカード → 書く画面（card.html）へ誘導
+      if (data.is_owner) {
+        location.href = 'card.html?room=' + encodeURIComponent(roomId);
+        return;
+      }
+
       // 未確定 → 準備中
       if (!data.is_confirmed) {
         document.getElementById('loading').style.display = 'none';
