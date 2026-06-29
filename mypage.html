@@ -711,6 +711,25 @@
           <button class="btn-cancel" onclick="toggleEdit()">キャンセル</button>
         </div>
         <div class="msg-inline" id="profileMsg"></div>
+        <div class="gold-line" style="margin:14px 0;"></div>
+        <div class="form-group">
+          <label>メールアドレス変更</label>
+          <input type="email" class="form-input" id="inputEmail" placeholder="新しいメールアドレス">
+        </div>
+        <div class="edit-actions">
+          <button class="btn-save" onclick="saveEmail()">メールを変更</button>
+        </div>
+        <div class="msg-inline" id="emailMsg"></div>
+
+        <div class="gold-line" style="margin:14px 0;"></div>
+        <div class="form-group">
+          <label>パスワード変更（6文字以上）</label>
+          <input type="password" class="form-input" id="inputPassword" placeholder="新しいパスワード">
+        </div>
+        <div class="edit-actions">
+          <button class="btn-save" onclick="savePassword()">パスワードを変更</button>
+        </div>
+        <div class="msg-inline" id="passwordMsg"></div>
       </div>
     </div>
 
