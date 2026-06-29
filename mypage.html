@@ -993,27 +993,26 @@ async function renderSentRooms(rooms) {
   }
 
   async function savePenname() {
-    const val = document.getElementById('inputPenname').value.trim();
-    const msg = document.getElementById('profileMsg');
-    if (!val || val.length < 2) {
-      msg.textContent = '2文字以上で入力してください';
-      msg.className = 'msg-inline msg-error';
-      return;
-    }
-    try {
-      await db.auth.updateUser({ data: { pen_name: val } });
-      try {
-        await db.from('profiles').upsert({ id: currentUser.id, username: val, updated_at: new Date().toISOString() }, { onConflict: 'id' });
-      } catch {}
-      document.getElementById('profile-name').textContent = val;
-      msg.textContent = '保存しました';
-      msg.className = 'msg-inline msg-success';
-      setTimeout(() => toggleEdit(), 1200);
-    } catch {
-      msg.textContent = '保存に失敗しました';
-      msg.className = 'msg-inline msg-error';
-    }
-    async function saveEmail() {
+        const val = document.getElementById('inputPenname').value.trim();
+        const msg = document.getElementById('profileMsg');
+        if (!val || val.length < 2) {
+          msg.textContent = '2文字以上で入力してください';
+          msg.className = 'msg-inline msg-error';
+          return;
+        }
+        try {
+          await db.auth.updateUser({ data: { pen_name: val } });
+          document.getElementById('profile-name').textContent = val;
+          msg.textContent = '保存しました';
+          msg.className = 'msg-inline msg-success';
+          setTimeout(() => toggleEdit(), 1200);
+        } catch (e) {
+          msg.textContent = '保存に失敗しました';
+          msg.className = 'msg-inline msg-error';
+        }
+      }
+
+      async function saveEmail() {
         const val = document.getElementById('inputEmail').value.trim();
         const msg = document.getElementById('emailMsg');
         if (!val || !val.includes('@')) {
@@ -1052,8 +1051,6 @@ async function renderSentRooms(rooms) {
           msg.className = 'msg-inline msg-error';
         }
       }
-  }
-
   function showView(name) {
     document.getElementById('view-loading').style.display = 'none';
     document.getElementById('view-unauth').style.display = 'none';
