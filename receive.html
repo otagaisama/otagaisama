@@ -116,14 +116,22 @@
     .kc-a { top: 5%; left: 4.5%; width: 52%; align-items: flex-start; }
     .kc-b { bottom: 5%; right: 4.5%; width: 52%; align-items: flex-end; text-align: right; }
     .kc-msg { font-size: clamp(15px, 4.2vw, 24px); }
-    .kc-msg.kc-invite { opacity: 0.55; font-weight: 400; font-size: clamp(11px, 2.6vw, 14px); letter-spacing: 0.1em; }
+    .kc-msg.kc-invite { opacity: 0.8; font-weight: 400; font-size: clamp(11px, 2.6vw, 14px); letter-spacing: 0.1em; text-shadow: 0 1px 4px rgba(0,0,0,0.6); }
     .kc-sign { display: inline-block; height: clamp(30px, 7vw, 44px); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
     .kc-meta { display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--ink-light); font-family: 'Zen Kaku Gothic New', sans-serif; letter-spacing: 0.08em; }
-    .kc-corner { position: absolute; bottom: 4.5%; left: 4.5%; color: #fff; font-family: 'Zen Kaku Gothic New', sans-serif; font-size: clamp(9px, 2vw, 12px); letter-spacing: 0.08em; font-weight: 500; opacity: 0.9;
-      text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 1px 4px rgba(0,0,0,0.4); }
-    .btn-ack { display: block; width: 100%; margin-top: 12px; padding: 13px; background: transparent; border: 1px solid var(--border); border-radius: 10px; color: var(--ink-light); font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 12px; letter-spacing: 0.12em; cursor: pointer; transition: border-color 0.2s; }
-    .btn-ack:hover { border-color: var(--gold); color: var(--ink); }
+    .kc-corner { position: absolute; bottom: 4.5%; left: 4.5%; color: #fff; font-family: 'Zen Kaku Gothic New', sans-serif; font-size: clamp(9px, 2vw, 12px); letter-spacing: 0.08em; font-weight: 600; opacity: 0.95;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.7), 0 0 8px rgba(0,0,0,0.35); }
+    .btn-ack { display: block; width: 100%; padding: 15px; background: var(--white); border: 1.5px solid var(--gold); border-radius: 10px; color: var(--ink); font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 14px; letter-spacing: 0.12em; cursor: pointer; transition: background 0.2s; }
+    .btn-ack:hover { background: rgba(201,168,76,0.10); }
     .btn-ack:disabled { opacity: 0.5; cursor: not-allowed; }
+    .ack-note { text-align: center; font-size: 11px; color: var(--ink-light); font-family: 'Zen Kaku Gothic New', sans-serif; margin: 8px 0 0; letter-spacing: 0.06em; }
+    .reply-divider { text-align: center; font-size: 11px; color: var(--ink-light); font-family: 'Zen Kaku Gothic New', sans-serif; letter-spacing: 0.2em; margin: 20px 0 14px; }
+    .reply-label { padding: 12px 16px 0; font-size: 11px; letter-spacing: 0.1em; color: var(--ink-light); font-family: 'Zen Kaku Gothic New', sans-serif; }
+    .reuse-section { margin-top: 24px; padding: 18px; background: var(--white); border: 1px dashed var(--border); border-radius: 10px; text-align: center; }
+    .reuse-text { font-size: 12px; color: var(--ink-light); font-family: 'Zen Kaku Gothic New', sans-serif; line-height: 2; letter-spacing: 0.06em; margin-bottom: 14px; }
+    .reuse-text strong { color: var(--ink); font-weight: 500; }
+    .reuse-buttons { display: flex; gap: 10px; }
+    .btn-reuse { flex: 1; padding: 11px 8px; background: transparent; border: 1px solid var(--border); border-radius: 8px; color: var(--ink-light); font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 11px; letter-spacing: 0.06em; cursor: pointer; opacity: 0.75; }
     .kc-biko { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; margin-top: 14px; font-family: 'Noto Serif JP', serif; font-size: 14px; line-height: 2; color: var(--ink); white-space: pre-wrap; display: none; }
     .kc-biko-label { font-size: 10px; letter-spacing: 0.2em; color: var(--ink-light); font-family: 'Zen Kaku Gothic New', sans-serif; margin-bottom: 6px; }
     .kc-complete { display: none; text-align: center; margin-top: 20px; font-size: 12px; letter-spacing: 0.2em; color: var(--ink-light); font-family: 'Zen Kaku Gothic New', sans-serif; }
@@ -142,8 +150,8 @@
 
 <header class="header">
   <div>
-    <div class="header-logo">お互い様</div>
-    <div class="header-sub">感謝のキャッチボール</div>
+    <div class="header-logo">お互い様プロジェクト</div>
+    <div class="header-sub">心のキャッチボール</div>
   </div>
 </header>
 
@@ -204,26 +212,35 @@
     </div>
 
     <div class="kc-biko" id="kc-biko-a">
-      <div class="kc-biko-label">そえがき</div>
+      <div class="kc-biko-label" id="kc-biko-a-label">そえがき</div>
       <div id="kc-biko-a-text"></div>
     </div>
     <div class="kc-biko" id="kc-biko-b">
-      <div class="kc-biko-label">返信のそえがき</div>
+      <div class="kc-biko-label" id="kc-biko-b-label">そえがき</div>
       <div id="kc-biko-b-text"></div>
     </div>
     <div class="kc-complete" id="kc-complete">— このカードは完結しました —</div>
 
     <div class="sponsor-section">
-      <div class="sponsor-label">— スポンサー —</div>
       <div class="sponsor-banner" onclick="showToast('スポンサーページへ移動します（準備中）')">
-        <div class="sponsor-banner-text">このカードのスポンサー</div>
+        <div class="sponsor-banner-text">このQR名刺カードの制作協賛会社</div>
         <div class="sponsor-banner-name">株式会社〇〇〇〇</div>
         <div class="sponsor-banner-tag">#地域応援 #お互い様サポーター</div>
       </div>
     </div>
 
+    <div class="reuse-section">
+      <div class="reuse-text">
+        このQR名刺カードは、再利用可能です。<br>
+        現在の所有者：<strong id="reuse-owner">—</strong>
+      </div>
+      <div class="reuse-buttons">
+        <button class="btn-reuse" onclick="showToast('この機能は準備中です')">いつか使用するかも（準備中）</button>
+        <button class="btn-reuse" onclick="showToast('この機能は準備中です')">汚れ等で破棄する（準備中）</button>
+      </div>
+    </div>
+
     <div class="receive-section">
-      <div class="section-title">— このカードを受け取る —</div>
 
       <div class="login-prompt" id="login-prompt">
         <div class="login-prompt-msg">
@@ -235,17 +252,21 @@
 
       <div class="reply-form" id="reply-form">
         <div id="reply-input-area">
+          <button class="btn-ack" id="btn-ack" onclick="sendAck()">🙏 受け取ったよ</button>
+          <div class="ack-note">ワンタップで「受け取りました 🙏」がカードに乗り、完結します</div>
+          <div class="reply-divider">— または、ことばで返す —</div>
           <div class="reply-card">
             <div class="reply-card-header">返信カードを書く（送信後は編集できません）</div>
-            <input type="text" class="reply-cardtext" id="reply-cardtext" maxlength="25" placeholder="カードに乗せる一言（25字まで）" oninput="updateCount()">
+            <div class="reply-label">そえがき（任意・カードの下に添えられます）</div>
+            <textarea class="reply-textarea" id="reply-textarea" placeholder="長い想いはこちらへ…"></textarea>
+            <div class="reply-label">カードに乗せる一言（25字まで・写真の上に乗ります）</div>
+            <input type="text" class="reply-cardtext" id="reply-cardtext" maxlength="25" placeholder="ありがとう、など" oninput="updateCount()">
             <div class="reply-count"><span id="char-count">0</span> / 25</div>
-            <textarea class="reply-textarea" id="reply-textarea" placeholder="そえがき（任意）。長い想いはこちらへ…"></textarea>
             <div class="reply-footer">
               <div class="reply-notice">1回のみ送信可</div>
               <button class="btn-send" id="btn-send" onclick="sendReply()">送る</button>
             </div>
           </div>
-          <button class="btn-ack" id="btn-ack" onclick="sendAck()">🙏 「受け取ったよ」だけ伝える</button>
         </div>
       </div>
     </div>
@@ -365,8 +386,10 @@ async function loadCard() {
       bMsg.classList.remove('kc-invite');
       bSign.innerHTML = signHanko(rep.pen_name);
       document.getElementById('kc-complete').style.display = 'block';
-      if (rep.content) {
-        document.getElementById('kc-biko-b-text').textContent = rep.content;
+      const repBiko = (rep.content || '').trim();
+      if (repBiko) {
+        document.getElementById('kc-biko-b-label').textContent = `${rep.pen_name || '匿名'} のそえがき`;
+        document.getElementById('kc-biko-b-text').textContent = repBiko;
         document.getElementById('kc-biko-b').style.display = 'block';
       }
     } else {
@@ -381,10 +404,15 @@ async function loadCard() {
     document.getElementById('kc-corner').textContent = `No.${room.global_no || '—'} ・ ${dateStr}`;
 
     // Aのそえがき（あれば）
-    if (room.content) {
-      document.getElementById('kc-biko-a-text').textContent = room.content;
+    const aBiko = (room.content || '').trim();
+    if (aBiko) {
+      document.getElementById('kc-biko-a-label').textContent = `${room.pen_name || '匿名'} のそえがき`;
+      document.getElementById('kc-biko-a-text').textContent = aBiko;
       document.getElementById('kc-biko-a').style.display = 'block';
     }
+
+    // 再利用セクション：現在の所有者
+    document.getElementById('reuse-owner').textContent = room.pen_name || '匿名';
   }
 
   async function checkReplied() {
