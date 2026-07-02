@@ -105,6 +105,31 @@
     .reply-preview-header { padding: 12px 16px; background: rgba(201,168,76,0.08); border-bottom: 1px solid var(--border); font-size: 12px; color: var(--gold); font-family: 'Zen Kaku Gothic New', sans-serif; display: flex; align-items: center; gap: 6px; }
     .reply-preview-body { padding: 16px; font-size: 15px; line-height: 1.9; color: var(--ink); white-space: pre-wrap; }
 
+    /* ===== 心のカード（1枚絵） ===== */
+    .kokoro-card { position: relative; width: 100%; aspect-ratio: 8/5; border-radius: 10px; overflow: hidden; background: var(--ink); box-shadow: 0 6px 24px rgba(44,36,22,0.18); }
+    .kokoro-card .kc-bg { position: absolute; inset: 0; background: linear-gradient(135deg, var(--gold-light), var(--gold)); background-size: cover; background-position: center; }
+    .kokoro-card .kc-bg.has-photo { filter: blur(22px) brightness(0.92); transform: scale(1.12); }
+    .kokoro-card .kc-photo { position: absolute; inset: 0; background-size: contain; background-position: center; background-repeat: no-repeat; }
+    .kc-zone { position: absolute; font-family: 'Noto Serif JP', serif; display: flex; flex-direction: column; gap: 6px; }
+    .kc-outlined { color: #fff; font-weight: 700; line-height: 1.6; overflow-wrap: anywhere;
+      text-shadow: -1.5px -1.5px 0 #000, 1.5px -1.5px 0 #000, -1.5px 1.5px 0 #000, 1.5px 1.5px 0 #000, -1.5px 0 0 #000, 1.5px 0 0 #000, 0 -1.5px 0 #000, 0 1.5px 0 #000, 0 2px 6px rgba(0,0,0,0.45); }
+    .kc-a { top: 5%; left: 4.5%; width: 52%; align-items: flex-start; }
+    .kc-b { bottom: 5%; right: 4.5%; width: 52%; align-items: flex-end; text-align: right; }
+    .kc-msg { font-size: clamp(15px, 4.2vw, 24px); }
+    .kc-msg.kc-invite { opacity: 0.55; font-weight: 400; font-size: clamp(11px, 2.6vw, 14px); letter-spacing: 0.1em; }
+    .kc-sign { display: inline-block; height: clamp(30px, 7vw, 44px); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+    .kc-meta { display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--ink-light); font-family: 'Zen Kaku Gothic New', sans-serif; letter-spacing: 0.08em; }
+    .kc-corner { position: absolute; bottom: 4.5%; left: 4.5%; color: #fff; font-family: 'Zen Kaku Gothic New', sans-serif; font-size: clamp(9px, 2vw, 12px); letter-spacing: 0.08em; font-weight: 500; opacity: 0.9;
+      text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 1px 4px rgba(0,0,0,0.4); }
+    .btn-ack { display: block; width: 100%; margin-top: 12px; padding: 13px; background: transparent; border: 1px solid var(--border); border-radius: 10px; color: var(--ink-light); font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 12px; letter-spacing: 0.12em; cursor: pointer; transition: border-color 0.2s; }
+    .btn-ack:hover { border-color: var(--gold); color: var(--ink); }
+    .btn-ack:disabled { opacity: 0.5; cursor: not-allowed; }
+    .kc-biko { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; margin-top: 14px; font-family: 'Noto Serif JP', serif; font-size: 14px; line-height: 2; color: var(--ink); white-space: pre-wrap; display: none; }
+    .kc-biko-label { font-size: 10px; letter-spacing: 0.2em; color: var(--ink-light); font-family: 'Zen Kaku Gothic New', sans-serif; margin-bottom: 6px; }
+    .kc-complete { display: none; text-align: center; margin-top: 20px; font-size: 12px; letter-spacing: 0.2em; color: var(--ink-light); font-family: 'Zen Kaku Gothic New', sans-serif; }
+    .reply-cardtext { width: 100%; padding: 12px 16px; border: none; border-bottom: 1px solid var(--border); background: transparent; font-family: 'Noto Serif JP', serif; font-size: 16px; color: var(--ink); outline: none; }
+    .reply-cardtext::placeholder { color: var(--border); }
+
     .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--ink); color: var(--gold); padding: 12px 24px; border-radius: 24px; font-size: 13px; font-family: 'Zen Kaku Gothic New', sans-serif; letter-spacing: 0.06em; opacity: 0; transition: all 0.3s ease; z-index: 100; white-space: nowrap; }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
@@ -164,26 +189,29 @@
   <!-- カード本体 -->
   <div id="card-section">
 
-    <div class="from-label">
-      <div class="from-label-inner">
-        <span>✉</span>
-        <span id="from-label-text">〇〇さん からのカード</span>
+    <div class="kokoro-card" id="kokoro-card">
+      <div class="kc-bg" id="kc-bg"></div>
+      <div class="kc-photo" id="kc-photo"></div>
+      <div class="kc-zone kc-a">
+        <div class="kc-msg kc-outlined" id="kc-a-msg"></div>
+        <span id="kc-a-sign"></span>
       </div>
+      <div class="kc-zone kc-b">
+        <span id="kc-b-sign"></span>
+        <div class="kc-msg kc-outlined" id="kc-b-msg"></div>
+      </div>
+      <div class="kc-corner" id="kc-corner"></div>
     </div>
 
-    <div class="main-card">
-      <div class="card-header">
-        <div class="card-number" id="card-number">No. ????</div>
-        <div class="card-date" id="card-date">----/--/--</div>
-      </div>
-      <div class="card-body">
-        <div class="card-message" id="card-message">（メッセージを読み込み中）</div>
-      </div>
-      <div class="card-footer">
-        <div class="card-sender">送り主：<strong id="card-sender-name">---</strong></div>
-        <div class="card-label">感謝カード</div>
-      </div>
+    <div class="kc-biko" id="kc-biko-a">
+      <div class="kc-biko-label">そえがき</div>
+      <div id="kc-biko-a-text"></div>
     </div>
+    <div class="kc-biko" id="kc-biko-b">
+      <div class="kc-biko-label">返信のそえがき</div>
+      <div id="kc-biko-b-text"></div>
+    </div>
+    <div class="kc-complete" id="kc-complete">— このカードは完結しました —</div>
 
     <div class="sponsor-section">
       <div class="sponsor-label">— スポンサー —</div>
@@ -206,24 +234,18 @@
       </div>
 
       <div class="reply-form" id="reply-form">
-        <div class="replied-banner" id="replied-banner">
-          <div class="replied-icon">🙏</div>
-          <div class="replied-msg">返信カードを送りました。<br><small>返信は1回のみ・編集はできません</small></div>
-        </div>
-        <div class="reply-preview" id="reply-preview">
-          <div class="reply-preview-header"><span>✓</span><span>あなたの返信カード</span></div>
-          <div class="reply-preview-body" id="reply-preview-body"></div>
-        </div>
         <div id="reply-input-area">
           <div class="reply-card">
             <div class="reply-card-header">返信カードを書く（送信後は編集できません）</div>
-            <textarea class="reply-textarea" id="reply-textarea" placeholder="感謝の気持ちや一言を書いてください…" maxlength="300" oninput="updateCount()"></textarea>
-            <div class="reply-count"><span id="char-count">0</span> / 300</div>
+            <input type="text" class="reply-cardtext" id="reply-cardtext" maxlength="25" placeholder="カードに乗せる一言（25字まで）" oninput="updateCount()">
+            <div class="reply-count"><span id="char-count">0</span> / 25</div>
+            <textarea class="reply-textarea" id="reply-textarea" placeholder="そえがき（任意）。長い想いはこちらへ…"></textarea>
             <div class="reply-footer">
               <div class="reply-notice">1回のみ送信可</div>
               <button class="btn-send" id="btn-send" onclick="sendReply()">送る</button>
             </div>
           </div>
+          <button class="btn-ack" id="btn-ack" onclick="sendAck()">🙏 「受け取ったよ」だけ伝える</button>
         </div>
       </div>
     </div>
@@ -283,11 +305,13 @@ async function loadCard() {
       }
 
       roomData = data; // room_id を含む（返信用）
-      renderCard(data, { content: data.content, image_url: data.image_url });
+      renderCard(data);
 
-      if (currentUser) {
+      if (data.reply) {
+        // 1部屋1ターン完結：返信が入ったカードは完成形のみ表示
+      } else if (currentUser) {
         await checkReplied();
-        showReplyForm();
+        if (!hasReplied) showReplyForm();
       } else {
         document.getElementById('login-prompt').style.display = 'block';
       }
@@ -297,50 +321,82 @@ async function loadCard() {
     }
   }
 
-  function renderCard(room, post) {
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // ペンネームから署名判子（SVG）を生成
+  function signHanko(name) {
+    const t = esc(String(name || '匿名').slice(0, 2));
+    const fs = [...String(name || '匿名').slice(0, 2)].length > 1 ? 34 : 46;
+    return `<svg class="kc-sign" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">` +
+      `<circle cx="50" cy="50" r="45" fill="rgba(155,35,53,0.88)"/>` +
+      `<circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/>` +
+      `<text x="50" y="52" text-anchor="middle" dominant-baseline="central" font-family="Noto Serif JP,serif" font-size="${fs}" font-weight="700" fill="#fff">${t}</text></svg>`;
+  }
+
+  function renderCard(room) {
     document.getElementById('loading').style.display = 'none';
     document.getElementById('card-section').style.display = 'block';
 
-    const senderName = room.pen_name || '匿名';
-    document.getElementById('from-label-text').textContent = `${senderName} さんからのカード`;
-    document.getElementById('card-sender-name').textContent = senderName;
+    // 背景：画像があればブラー全面埋め＋contain、なければ地の色
+    const bg = document.getElementById('kc-bg');
+    const photo = document.getElementById('kc-photo');
+    if (room.image_url) {
+      bg.classList.add('has-photo');
+      bg.style.backgroundImage = `url("${room.image_url}")`;
+      photo.style.backgroundImage = `url("${room.image_url}")`;
+    } else {
+      bg.classList.remove('has-photo');
+      bg.style.backgroundImage = '';
+      photo.style.backgroundImage = '';
+    }
 
-    document.getElementById('card-number').textContent = `#${room.global_no || '—'}`;
+    // 左上：Aの一言＋署名判子
+    document.getElementById('kc-a-msg').textContent = room.card_text || '';
+    document.getElementById('kc-a-sign').innerHTML = signHanko(room.pen_name);
 
+    // 右下：Bの一言＋署名判子（未返信なら招待の空欄）
+    const bMsg = document.getElementById('kc-b-msg');
+    const bSign = document.getElementById('kc-b-sign');
+    const rep = room.reply;
+    if (rep) {
+      bMsg.textContent = rep.card_text || '';
+      bMsg.classList.remove('kc-invite');
+      bSign.innerHTML = signHanko(rep.pen_name);
+      document.getElementById('kc-complete').style.display = 'block';
+      if (rep.content) {
+        document.getElementById('kc-biko-b-text').textContent = rep.content;
+        document.getElementById('kc-biko-b').style.display = 'block';
+      }
+    } else {
+      bMsg.textContent = '（ここに返事が入ります）';
+      bMsg.classList.add('kc-invite');
+      bSign.innerHTML = '';
+    }
+
+    // カード内左下：No.（global_no）と日付
     const d = new Date(room.created_at);
-    document.getElementById('card-date').textContent =
-      `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+    const dateStr = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+    document.getElementById('kc-corner').textContent = `No.${room.global_no || '—'} ・ ${dateStr}`;
 
-    document.getElementById('card-message').textContent = post?.content || '（メッセージなし）';
-
-    // 画像表示
-    const cardBody = document.querySelector('.card-body');
-    const existingImg = cardBody.querySelector('.card-image-wrap');
-    if (existingImg) existingImg.remove();
-
-    if (post?.image_url) {
-      const wrap = document.createElement('div');
-      wrap.className = 'card-image-wrap';
-      const img = document.createElement('img');
-      img.src = post.image_url;
-      img.alt = '添付画像';
-      img.onerror = () => { wrap.style.display = 'none'; };
-      wrap.appendChild(img);
-      cardBody.appendChild(wrap);
+    // Aのそえがき（あれば）
+    if (room.content) {
+      document.getElementById('kc-biko-a-text').textContent = room.content;
+      document.getElementById('kc-biko-a').style.display = 'block';
     }
   }
 
   async function checkReplied() {
     const { data: replies } = await supabase
       .from('room_posts')
-      .select('*')
+      .select('id')
       .eq('room_id', roomData.room_id)
       .eq('user_id', currentUser.id)
       .eq('post_type', 'reply');
 
     if (replies && replies.length > 0) {
       hasReplied = true;
-      showRepliedState(replies[0].content);
     }
   }
 
@@ -349,17 +405,12 @@ async function loadCard() {
     document.getElementById('reply-form').style.display = 'block';
   }
 
-  function showRepliedState(content) {
-    document.getElementById('reply-input-area').style.display = 'none';
-    document.getElementById('replied-banner').style.display = 'block';
-    document.getElementById('reply-preview').style.display = 'block';
-    document.getElementById('reply-preview-body').textContent = content;
-  }
-
   window.sendReply = async function() {
     if (hasReplied) return;
+    const cardText = document.getElementById('reply-cardtext').value.trim();
     const text = document.getElementById('reply-textarea').value.trim();
-    if (!text) { showToast('メッセージを入力してください'); return; }
+    if (!cardText) { showToast('カードに乗せる一言を入力してください'); return; }
+    if ([...cardText].length > 25) { showToast('一言は25字までです'); return; }
 
     const btn = document.getElementById('btn-send');
     btn.disabled = true;
@@ -371,13 +422,16 @@ async function loadCard() {
       const { error } = await supabase.from('room_posts').insert({
         room_id: roomData.room_id,
         user_id: currentUser.id,
-        content: text,
+        content: text || null,
+        card_text: cardText,
         post_type: 'reply',
         pen_name: myPenName
       });
       if (error) throw error;
       hasReplied = true;
-      showRepliedState(text);
+      roomData.reply = { card_text: cardText, content: text || null, pen_name: myPenName, created_at: new Date().toISOString() };
+      renderCard(roomData);
+      document.getElementById('reply-form').style.display = 'none';
       showToast('🙏 返信カードを送りました');
     } catch (e) {
       console.error(e);
@@ -391,8 +445,14 @@ async function loadCard() {
     location.href = `auth.html?return=${encodeURIComponent(location.href)}`;
   };
 
+  window.sendAck = function() {
+    if (hasReplied) return;
+    document.getElementById('reply-cardtext').value = '受け取りました 🙏';
+    window.sendReply();
+  };
+
   window.updateCount = function() {
-    document.getElementById('char-count').textContent = document.getElementById('reply-textarea').value.length;
+    document.getElementById('char-count').textContent = [...document.getElementById('reply-cardtext').value].length;
   };
 
   function showError(msg) {
