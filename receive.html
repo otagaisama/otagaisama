@@ -132,7 +132,8 @@
     .reuse-text strong { color: var(--ink); font-weight: 500; }
     .reuse-buttons { display: flex; gap: 10px; }
     .btn-reuse { flex: 1; padding: 11px 8px; background: transparent; border: 1px solid var(--border); border-radius: 8px; color: var(--ink-light); font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 11px; letter-spacing: 0.06em; cursor: pointer; opacity: 0.75; }
-    .kc-biko { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; margin-top: 14px; font-family: 'Noto Serif JP', serif; font-size: 14px; line-height: 2; color: var(--ink); white-space: pre-wrap; display: none; }
+    .kc-biko { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; margin-top: 14px; font-family: 'Noto Serif JP', serif; font-size: 14px; line-height: 2; color: var(--ink); display: none; }
+    .kc-biko-text { white-space: pre-wrap; }
     .kc-biko-label { font-size: 10px; letter-spacing: 0.2em; color: var(--ink-light); font-family: 'Zen Kaku Gothic New', sans-serif; margin-bottom: 6px; }
     .kc-complete { display: none; text-align: center; margin-top: 20px; font-size: 12px; letter-spacing: 0.2em; color: var(--ink-light); font-family: 'Zen Kaku Gothic New', sans-serif; }
     .reply-cardtext { width: 100%; padding: 12px 16px; border: none; border-bottom: 1px solid var(--border); background: transparent; font-family: 'Noto Serif JP', serif; font-size: 16px; color: var(--ink); outline: none; }
@@ -213,13 +214,14 @@
 
     <div class="kc-biko" id="kc-biko-a">
       <div class="kc-biko-label" id="kc-biko-a-label">そえがき</div>
-      <div id="kc-biko-a-text"></div>
+      <div class="kc-biko-text" id="kc-biko-a-text"></div>
     </div>
     <div class="kc-biko" id="kc-biko-b">
       <div class="kc-biko-label" id="kc-biko-b-label">そえがき</div>
-      <div id="kc-biko-b-text"></div>
+      <div class="kc-biko-text" id="kc-biko-b-text"></div>
     </div>
     <div class="kc-complete" id="kc-complete">— このカードは完結しました —</div>
+    <div class="kc-complete" id="kc-mypage-note">このカードは、マイページに取り込まれました</div>
 
     <div class="sponsor-section">
       <div class="sponsor-banner" onclick="showToast('スポンサーページへ移動します（準備中）')">
@@ -229,7 +231,7 @@
       </div>
     </div>
 
-    <div class="reuse-section">
+    <div class="reuse-section" id="reuse-section" style="display:none;">
       <div class="reuse-text">
         このQR名刺カードは、再利用可能です。<br>
         現在の所有者：<strong id="reuse-owner">—</strong>
@@ -330,6 +332,11 @@ async function loadCard() {
 
       if (data.reply) {
         // 1部屋1ターン完結：返信が入ったカードは完成形のみ表示
+        document.getElementById('login-prompt').style.display = 'none';
+        if (currentUser) {
+          await checkReplied();
+          if (hasReplied) document.getElementById('kc-mypage-note').style.display = 'block';
+        }
       } else if (currentUser) {
         await checkReplied();
         if (!hasReplied) showReplyForm();
@@ -411,8 +418,13 @@ async function loadCard() {
       document.getElementById('kc-biko-a').style.display = 'block';
     }
 
-    // 再利用セクション：現在の所有者
-    document.getElementById('reuse-owner').textContent = room.pen_name || '匿名';
+    // 再利用セクション：QR名刺（short_idあり）の時だけ表示。自力URL部屋には出さない
+    if (room.short_id) {
+      document.getElementById('reuse-owner').textContent = room.pen_name || '匿名';
+      document.getElementById('reuse-section').style.display = 'block';
+    } else {
+      document.getElementById('reuse-section').style.display = 'none';
+    }
   }
 
   async function checkReplied() {
@@ -460,6 +472,7 @@ async function loadCard() {
       roomData.reply = { card_text: cardText, content: text || null, pen_name: myPenName, created_at: new Date().toISOString() };
       renderCard(roomData);
       document.getElementById('reply-form').style.display = 'none';
+      document.getElementById('kc-mypage-note').style.display = 'block';
       showToast('🙏 返信カードを送りました');
     } catch (e) {
       console.error(e);
