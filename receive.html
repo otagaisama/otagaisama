@@ -418,13 +418,10 @@ async function loadCard() {
       document.getElementById('kc-biko-a').style.display = 'block';
     }
 
-    // 再利用セクション：QR名刺（short_idあり）の時だけ表示。自力URL部屋には出さない
-    if (room.short_id) {
-      document.getElementById('reuse-owner').textContent = room.pen_name || '匿名';
-      document.getElementById('reuse-section').style.display = 'block';
-    } else {
-      document.getElementById('reuse-section').style.display = 'none';
-    }
+    // 再利用セクション：当面はQR名刺前提で常時表示
+    // TODO: 名刺/自力URLの出し分け（判定方法は要検証：short_id? bundle紐付け?）
+    document.getElementById('reuse-owner').textContent = room.pen_name || '匿名';
+    document.getElementById('reuse-section').style.display = 'block';
   }
 
   async function checkReplied() {
