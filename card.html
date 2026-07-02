@@ -394,6 +394,27 @@
   textarea:focus { outline: none; border-color: var(--gold); }
   textarea:disabled { cursor: not-allowed; opacity: 0.7; }
 
+  .card-text-input {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: 1px;
+    font-family: 'Noto Serif JP', serif;
+    font-size: 16px;
+    color: var(--ink);
+    background: var(--paper);
+    transition: border-color 0.2s;
+  }
+  .card-text-input:focus { outline: none; border-color: var(--gold); }
+  .card-text-input:disabled { cursor: not-allowed; opacity: 0.7; }
+  .char-note {
+    text-align: right;
+    font-size: 11px;
+    color: var(--gray);
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    margin-top: 4px;
+  }
+
   .image-upload {
     border: 1px dashed var(--border);
     border-radius: 1px;
@@ -981,8 +1002,8 @@
         <span class="status-label" id="status-label">下 書 き 中</span>
       </div>
       <div class="form-group">
-        <label>メッセージ</label>
-        <textarea id="post-text" placeholder="心を言葉にしてください。確定まではメモとして使用可能。"></textarea>
+        <label>そえがき・メモ</label>
+        <textarea id="post-text" placeholder="確定まではメモとして使用可能。確定後は「そえがき」としてカードの下に添えられます。"></textarea>
       </div>
       <div class="form-group">
         <label>画像（任意）</label>
@@ -991,6 +1012,11 @@
           <div class="image-upload-text">タップして画像を選ぶ</div>
           <img id="image-preview" class="image-preview" alt="preview">
         </div>
+      </div>
+      <div class="form-group">
+        <label>カードに乗せる一言（25字まで）</label>
+        <input type="text" class="card-text-input" id="card-text" maxlength="25" placeholder="写真の上に乗る短い言葉">
+        <div class="char-note"><span id="card-text-count">0</span> / 25</div>
       </div>
       <div class="form-buttons">
         <button class="btn-save" id="btn-save" onclick="saveAsDraft()">一 時 保 存</button>
@@ -1237,6 +1263,8 @@ async function updateRoomUI() {
     const _msgLabel = document.getElementById('post-text').previousElementSibling;
     if (_msgLabel) _msgLabel.style.display = 'none';
     document.querySelector('.image-upload').closest('.form-group').style.display = 'none';
+    const cardTextGroup = document.getElementById('card-text').closest('.form-group');
+    if (cardTextGroup) cardTextGroup.style.display = 'none';
 
     // 保存済みコンテンツを読み取り専用で表示
     await loadReadonlyContent();
@@ -1256,7 +1284,7 @@ async function updateRoomUI() {
 async function loadReadonlyContent() {
   const { data: posts } = await db
     .from('room_posts')
-    .select('content, image_url, post_type, created_at, pen_name')
+    .select('content, card_text, image_url, post_type, created_at, pen_name')
     .eq('room_id', currentRoomUuid)
     .in('post_type', ['message', 'reply'])
     .order('created_at', { ascending: true });
@@ -1270,8 +1298,9 @@ async function loadReadonlyContent() {
 
   if (myPost) {
     html += '<div class="post-readonly">';
-    if (myPost.content) html += `<div class="post-readonly-text">${escapeHtml(myPost.content)}</div>`;
+    if (myPost.card_text) html += `<div class="post-readonly-text" style="font-size:17px;">${escapeHtml(myPost.card_text)}</div>`;
     if (myPost.image_url) html += `<img class="post-readonly-image" src="${myPost.image_url}" alt="投稿画像">`;
+    if (myPost.content) html += `<div class="post-readonly-text" style="font-size:13px;color:var(--gray);">${escapeHtml(myPost.content)}</div>`;
     html += '</div>';
   }
 
@@ -1281,7 +1310,8 @@ async function loadReadonlyContent() {
     replies.forEach(r => {
       html += '<div class="reply-readonly-item">';
       if (r.pen_name) html += `<div style="font-family:'Zen Kaku Gothic New',sans-serif;font-size:11px;letter-spacing:2px;color:var(--gold);margin-bottom:6px;">${escapeHtml(r.pen_name)} さんから</div>`;
-      if (r.content) html += `<div class="reply-readonly-text">${escapeHtml(r.content)}</div>`;
+      if (r.card_text) html += `<div class="reply-readonly-text">${escapeHtml(r.card_text)}</div>`;
+      if (r.content) html += `<div class="reply-readonly-text" style="font-size:12px;color:var(--gray);">${escapeHtml(r.content)}</div>`;
       if (r.image_url) html += `<img class="post-readonly-image" src="${r.image_url}" alt="返信画像">`;
       html += '</div>';
     });
@@ -1298,7 +1328,7 @@ async function loadReadonlyContent() {
 async function loadDraftContent() {
   const { data } = await db
     .from('room_posts')
-    .select('id, content, image_url')
+    .select('id, content, card_text, image_url')
     .eq('room_id', currentRoomUuid)
     .eq('post_type', 'draft')
     .order('created_at', { ascending: false })
@@ -1312,6 +1342,11 @@ async function loadDraftContent() {
 
   if (data.content) {
     document.getElementById('post-text').value = data.content;
+  }
+
+  if (data.card_text) {
+    document.getElementById('card-text').value = data.card_text;
+    updateCardTextCount();
   }
 
   // 保存済み画像があればプレビュー表示
@@ -1363,20 +1398,32 @@ let autoSaveTimer = null;
 
 function setupAutoSave() {
   const textarea = document.getElementById('post-text');
-  if (!textarea) return;
-  textarea.addEventListener('input', () => {
+  const cardText = document.getElementById('card-text');
+  const schedule = () => {
     clearTimeout(autoSaveTimer);
     autoSaveTimer = setTimeout(() => saveAsDraft(true), 3000);
+  };
+  if (textarea) textarea.addEventListener('input', schedule);
+  if (cardText) cardText.addEventListener('input', () => {
+    updateCardTextCount();
+    schedule();
   });
+}
+
+function updateCardTextCount() {
+  const el = document.getElementById('card-text');
+  const cnt = document.getElementById('card-text-count');
+  if (el && cnt) cnt.textContent = [...el.value].length;
 }
 
 // ===== 一時保存 =====
 async function saveAsDraft(auto = false) {
   
   const text = document.getElementById('post-text').value.trim();
+  const cardText = document.getElementById('card-text').value.trim();
   const btn = document.getElementById('btn-save');
   const msg = document.getElementById('post-msg');
-  if (!text && !selectedFile) {
+  if (!text && !cardText && !selectedFile) {
     if (!auto) { msg.textContent = '内容を入力してください'; msg.className = 'msg msg-error'; }
     return;
   }
@@ -1403,13 +1450,14 @@ async function saveAsDraft(auto = false) {
     
     if (draftPostId) {
       // image_urlはnullなら既存値を維持（nullで上書きしない）
-      const updateData = { content: text || null };
+      const updateData = { content: text || null, card_text: cardText || null };
       if (imageUrl !== null) updateData.image_url = imageUrl;
       await db.from('room_posts').update(updateData).eq('id', draftPostId);
     } else {
       const { data } = await db.from('room_posts').insert([{
         room_id: currentRoomUuid, user_id: userId,
-        content: text || null, image_url: imageUrl, post_type: 'draft',
+        content: text || null, card_text: cardText || null,
+        image_url: imageUrl, post_type: 'draft',
       }]).select('id').single();
       if (data) draftPostId = data.id;
     }
@@ -1428,10 +1476,11 @@ async function saveAsDraft(auto = false) {
 async function submitPost() {
   if (isConfirmed) return;
   const text = document.getElementById('post-text').value.trim();
+  const cardText = document.getElementById('card-text').value.trim();
   const btn  = document.getElementById('btn-post');
   const msg  = document.getElementById('post-msg');
-  if (!text && !selectedFile) {
-    msg.textContent = 'メッセージか画像を入れてください';
+  if (!cardText && !selectedFile && !window._draftImageUrl) {
+    msg.textContent = 'カードに乗せる一言か画像を入れてください';
     msg.className = 'msg msg-error';
     return;
   }
@@ -1463,7 +1512,8 @@ async function submitPost() {
     // messageとしてinsert
     const { error: insertError } = await db.from('room_posts').insert([{
       room_id: currentRoomUuid, user_id: userId,
-      content: text || null, image_url: imageUrl, post_type: 'message',
+      content: text || null, card_text: cardText || null,
+      image_url: imageUrl, post_type: 'message',
     }]);
     if (insertError) throw insertError;
     // is_confirmed=trueに同時更新（rooms.idで）
@@ -1472,6 +1522,8 @@ async function submitPost() {
 
     isConfirmed = true;
     document.getElementById('post-text').value = '';
+    document.getElementById('card-text').value = '';
+    updateCardTextCount();
     document.getElementById('post-image').value = '';
     document.getElementById('image-preview').style.display = 'none';
     selectedFile = null;
