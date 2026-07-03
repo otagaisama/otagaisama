@@ -241,8 +241,8 @@
         現在の所有者：<strong id="reuse-owner">—</strong>
       </div>
       <div class="reuse-buttons">
-        <button class="btn-reuse" onclick="showToast('この機能は準備中です')">いつか使用するかも（準備中）</button>
-        <button class="btn-reuse" onclick="showToast('この機能は準備中です')">汚れ等で破棄する（準備中）</button>
+        <button class="btn-reuse" onclick="reuseCard()">いつか使用するかも</button>
+        <button class="btn-reuse" onclick="discardCard()">汚れ等で破棄する</button>
       </div>
     </div>
 
@@ -423,8 +423,10 @@ async function loadCard() {
     }
 
     // 再利用セクション：当面はQR名刺前提で常時表示
-    // TODO: 名刺/自力URLの出し分け（判定方法は要検証：short_id? bundle紐付け?）
-    document.getElementById('reuse-owner').textContent = room.pen_name || '匿名';
+    // TODO: 名刺/自力URLの出し分け（bundles紐付けの有無で判定予定）
+    // 所有者＝返信確定で移動済み。返信があれば返信者が現所有者
+    const ownerName = room.reply ? (room.reply.pen_name || '匿名') : (room.pen_name || '匿名');
+    document.getElementById('reuse-owner').textContent = ownerName;
     document.getElementById('reuse-section').style.display = 'block';
   }
 
@@ -487,9 +489,55 @@ async function loadCard() {
     location.href = `auth.html?return=${encodeURIComponent(location.href)}`;
   };
 
+  // RPCエラー → やさしい文言
+  function claimErrorMsg(code) {
+    return {
+      login_required: '再利用にはログインが必要です',
+      not_found: 'カードが見つかりませんでした',
+      no_short_id: 'このカードは再利用の対象外です',
+      not_confirmed: 'カードが確定してから操作できます',
+      not_replier: 'このカードを受け取った（返信した）方のみ操作できます'
+    }[code] || 'エラーが発生しました';
+  }
+
+  // いつか使用するかも：新しい部屋を作ってこのカードを引き継ぐ
+  window.reuseCard = async function() {
+    if (!currentUser) { showToast('再利用にはログインが必要です'); return; }
+    if (!confirm('このカードを自分の新しいカードとして使いますか？\n（今のカードはマイページに残ります）')) return;
+    try {
+      const { data, error } = await supabase.rpc('claim_room', { p_key: roomId });
+      if (error) throw error;
+      if (!data.ok) { showToast(claimErrorMsg(data.error)); return; }
+      showToast('あなたの新しいカードになりました');
+      setTimeout(() => { location.href = 'card.html?room=' + encodeURIComponent(data.new_room); }, 800);
+    } catch (e) {
+      console.error(e);
+      showToast('エラーが発生しました');
+    }
+  };
+
+  // 汚れ等で破棄する：short_id無効化（理由は任意アンケート）
+  window.discardCard = async function() {
+    if (!currentUser) { showToast('破棄にはログインが必要です'); return; }
+    if (!confirm('このカードを破棄しますか？\n（QRは使えなくなります。カードの記録はマイページに残ります）')) return;
+    const reason = prompt('よければ理由を教えてください（任意・空欄OK）', '') ;
+    try {
+      const { data, error } = await supabase.rpc('discard_card', { p_key: roomId, p_reason: reason || null });
+      if (error) throw error;
+      if (!data.ok) { showToast(claimErrorMsg(data.error)); return; }
+      document.getElementById('reuse-section').style.display = 'none';
+      showToast('カードを破棄しました。おつかれさま 🙏');
+    } catch (e) {
+      console.error(e);
+      showToast('エラーが発生しました');
+    }
+  };
+
   window.sendAck = function() {
     if (hasReplied) return;
-    document.getElementById('reply-cardtext').value = '受け取りました 🙏';
+    // 入力済みの一言があればそれを優先（上書きで消さない）
+    const el = document.getElementById('reply-cardtext');
+    if (!el.value.trim()) el.value = '受け取りました 🙏';
     window.sendReply();
   };
 
