@@ -415,6 +415,25 @@
     margin-top: 4px;
   }
 
+  /* ===== 心のカード（1枚絵・確定後表示） ===== */
+  .kokoro-card { position: relative; width: 100%; aspect-ratio: 8/5; border-radius: 10px; overflow: hidden; background: var(--ink); box-shadow: 0 6px 24px rgba(44,36,22,0.18); margin-top: 16px; }
+  .kokoro-card .kc-bg { position: absolute; inset: 0; background: linear-gradient(135deg, #e6d9a8, var(--gold)); background-size: cover; background-position: center; }
+  .kokoro-card .kc-bg.has-photo { filter: blur(22px) brightness(0.92); transform: scale(1.12); }
+  .kokoro-card .kc-photo { position: absolute; inset: 0; background-size: contain; background-position: center; background-repeat: no-repeat; }
+  .kc-zone { position: absolute; font-family: 'Noto Serif JP', serif; display: flex; flex-direction: column; gap: 6px; }
+  .kc-outlined { color: #fff; font-weight: 700; line-height: 1.6; overflow-wrap: anywhere;
+    text-shadow: -1.5px -1.5px 0 #000, 1.5px -1.5px 0 #000, -1.5px 1.5px 0 #000, 1.5px 1.5px 0 #000, -1.5px 0 0 #000, 1.5px 0 0 #000, 0 -1.5px 0 #000, 0 1.5px 0 #000, 0 2px 6px rgba(0,0,0,0.45); }
+  .kc-a { top: 5%; left: 4.5%; width: 52%; align-items: flex-start; }
+  .kc-b { bottom: 5%; right: 4.5%; width: 52%; align-items: flex-end; text-align: right; }
+  .kc-msg { font-size: clamp(15px, 4.2vw, 24px); }
+  .kc-msg.kc-invite { opacity: 0.8; font-weight: 400; font-size: clamp(11px, 2.6vw, 14px); letter-spacing: 0.1em; text-shadow: 0 1px 4px rgba(0,0,0,0.6); }
+  .kc-sign { display: inline-block; height: clamp(30px, 7vw, 44px); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+  .kc-corner { position: absolute; bottom: 4.5%; left: 4.5%; color: #fff; font-family: 'Zen Kaku Gothic New', sans-serif; font-size: clamp(9px, 2vw, 12px); letter-spacing: 0.08em; font-weight: 600; opacity: 0.95; text-shadow: 0 1px 3px rgba(0,0,0,0.7), 0 0 8px rgba(0,0,0,0.35); }
+  .kc-biko { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; margin-top: 14px; font-family: 'Noto Serif JP', serif; font-size: 14px; line-height: 2; color: var(--ink); }
+  .kc-biko-label { font-size: 10px; letter-spacing: 0.2em; color: var(--gray); font-family: 'Zen Kaku Gothic New', sans-serif; margin-bottom: 6px; }
+  .kc-biko-text { white-space: pre-wrap; }
+  .kc-complete { text-align: center; margin-top: 18px; font-size: 12px; letter-spacing: 0.2em; color: var(--gray); font-family: 'Zen Kaku Gothic New', sans-serif; }
+
   .image-upload {
     border: 1px dashed var(--border);
     border-radius: 1px;
@@ -1281,6 +1300,17 @@ async function updateRoomUI() {
 }
 
 // ===== 確定後：読み取り専用コンテンツ表示 =====
+// ===== ペンネームから署名判子（SVG）を生成 =====
+function signHanko(name) {
+  const raw = String(name || '匿名').slice(0, 2);
+  const t = escapeHtml(raw);
+  const fs = [...raw].length > 1 ? 34 : 46;
+  return `<svg class="kc-sign" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">` +
+    `<circle cx="50" cy="50" r="45" fill="rgba(155,35,53,0.88)"/>` +
+    `<circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/>` +
+    `<text x="50" y="52" text-anchor="middle" dominant-baseline="central" font-family="Noto Serif JP,serif" font-size="${fs}" font-weight="700" fill="#fff">${t}</text></svg>`;
+}
+
 async function loadReadonlyContent() {
   const { data: posts } = await db
     .from('room_posts')
@@ -1291,35 +1321,50 @@ async function loadReadonlyContent() {
 
   if (!posts || posts.length === 0) return;
 
-  const myPost  = posts.find(p => p.post_type === 'message');
-  const replies = posts.filter(p => p.post_type === 'reply');
+  const myPost = posts.find(p => p.post_type === 'message');
+  const reply  = posts.find(p => p.post_type === 'reply');
+  if (!myPost) return;
 
-  let html = '';
+  // Aのペンネーム（自分のカードを見ている前提）
+  const { data: { session } } = await db.auth.getSession();
+  const meta = session?.user?.user_metadata || {};
+  const aPen = meta.pen_name || meta.name || '匿名';
 
-  if (myPost) {
-    html += '<div class="post-readonly">';
-    if (myPost.card_text) html += `<div class="post-readonly-text" style="font-size:17px;">${escapeHtml(myPost.card_text)}</div>`;
-    if (myPost.image_url) html += `<img class="post-readonly-image" src="${myPost.image_url}" alt="投稿画像">`;
-    if (myPost.content) html += `<div class="post-readonly-text" style="font-size:13px;color:var(--gray);">${escapeHtml(myPost.content)}</div>`;
-    html += '</div>';
+  const d = new Date(myPost.created_at);
+  const dateStr = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+  const noStr = `No.${String(currentRoomNumber || '').replace('#','') || '—'}`;
+
+  const imgUrl = myPost.image_url ? escapeHtml(myPost.image_url) : null;
+
+  let html = '<div class="kokoro-card">';
+  html += imgUrl
+    ? `<div class="kc-bg has-photo" style="background-image:url('${imgUrl}')"></div><div class="kc-photo" style="background-image:url('${imgUrl}')"></div>`
+    : `<div class="kc-bg"></div><div class="kc-photo"></div>`;
+  html += `<div class="kc-zone kc-a"><div class="kc-msg kc-outlined">${escapeHtml(myPost.card_text || '')}</div>${signHanko(aPen)}</div>`;
+  if (reply) {
+    html += `<div class="kc-zone kc-b">${signHanko(reply.pen_name)}<div class="kc-msg kc-outlined">${escapeHtml(reply.card_text || '')}</div></div>`;
   }
+  // 未返信時は右下に何も出さない（招待の空欄はB側＝receive.htmlだけの表現。来なくても責めない）
+  html += `<div class="kc-corner">${noStr} ・ ${dateStr}</div>`;
+  html += '</div>';
 
-  if (replies.length > 0) {
-    html += '<div class="reply-readonly-section">';
-    html += '<div class="reply-readonly-label">— 届いた返信 —</div>';
-    replies.forEach(r => {
-      html += '<div class="reply-readonly-item">';
-      if (r.pen_name) html += `<div style="font-family:'Zen Kaku Gothic New',sans-serif;font-size:11px;letter-spacing:2px;color:var(--gold);margin-bottom:6px;">${escapeHtml(r.pen_name)} さんから</div>`;
-      if (r.card_text) html += `<div class="reply-readonly-text">${escapeHtml(r.card_text)}</div>`;
-      if (r.content) html += `<div class="reply-readonly-text" style="font-size:12px;color:var(--gray);">${escapeHtml(r.content)}</div>`;
-      if (r.image_url) html += `<img class="post-readonly-image" src="${r.image_url}" alt="返信画像">`;
-      html += '</div>';
-    });
-    html += '</div>';
+  const aBiko = (myPost.content || '').trim();
+  if (aBiko) {
+    html += `<div class="kc-biko"><div class="kc-biko-label">${escapeHtml(aPen)} のそえがき</div><div class="kc-biko-text">${escapeHtml(aBiko)}</div></div>`;
+  }
+  const rBiko = reply ? (reply.content || '').trim() : '';
+  if (rBiko) {
+    html += `<div class="kc-biko"><div class="kc-biko-label">${escapeHtml(reply.pen_name || '匿名')} のそえがき</div><div class="kc-biko-text">${escapeHtml(rBiko)}</div></div>`;
+  }
+  if (reply) {
+    html += `<div class="kc-complete">— このカードは完結しました —</div>`;
   }
 
   const textarea = document.getElementById('post-text');
+  const existing = document.getElementById('readonly-kokoro');
+  if (existing) existing.remove();
   const div = document.createElement('div');
+  div.id = 'readonly-kokoro';
   div.innerHTML = html;
   textarea.parentNode.insertBefore(div, textarea.nextSibling);
 }
