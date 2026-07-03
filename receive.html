@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>感謝カードを受け取る｜お互い様</title>
+  <meta name="description" content="あなたに感謝カードが届いています。開いて受け取ってください。">
+  <meta property="og:title" content="感謝カードが届いています｜お互い様プロジェクト">
+  <meta property="og:description" content="心のキャッチボール。開いてカードを受け取ってください。">
+  <meta property="og:type" content="website">
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;500;700&family=Zen+Kaku+Gothic+New:wght@300;400;500&display=swap" rel="stylesheet" />
   <style>
@@ -246,7 +250,7 @@
 
       <div class="login-prompt" id="login-prompt">
         <div class="login-prompt-msg">
-          受け取りを記録するには<br>会員登録（無料）が必要です。<br>
+          返信には無料登録・ログインが必要です。<br>
           <small style="font-size:12px;color:var(--border);">登録後、このページに自動で戻ります。</small>
         </div>
         <button class="btn-register" onclick="goToAuth()">登録して受け取る</button>
@@ -259,11 +263,11 @@
           <div class="reply-divider">— または、ことばで返す —</div>
           <div class="reply-card">
             <div class="reply-card-header">返信カードを書く（送信後は編集できません）</div>
-            <div class="reply-label">そえがき（任意・カードの下に添えられます）</div>
-            <textarea class="reply-textarea" id="reply-textarea" placeholder="長い想いはこちらへ…"></textarea>
             <div class="reply-label">カードに乗せる一言（25字まで・写真の上に乗ります）</div>
             <input type="text" class="reply-cardtext" id="reply-cardtext" maxlength="25" placeholder="ありがとう、など" oninput="updateCount()">
             <div class="reply-count"><span id="char-count">0</span> / 25</div>
+            <div class="reply-label">そえがき（任意・カードの下に添えられます）</div>
+            <textarea class="reply-textarea" id="reply-textarea" placeholder="長い想いはこちらへ…"></textarea>
             <div class="reply-footer">
               <div class="reply-notice">1回のみ送信可</div>
               <button class="btn-send" id="btn-send" onclick="sendReply()">送る</button>
