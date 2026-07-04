@@ -143,6 +143,18 @@
     .reply-cardtext { width: 100%; padding: 12px 16px; border: none; border-bottom: 1px solid var(--border); background: transparent; font-family: 'Noto Serif JP', serif; font-size: 16px; color: var(--ink); outline: none; }
     .reply-cardtext::placeholder { color: var(--border); }
 
+    /* ===== 白紙カード確認画面・供養済み ===== */
+    #blank-state { display: none; text-align: center; padding: 48px 20px; }
+    .blank-icon { font-size: 52px; margin-bottom: 24px; }
+    .blank-title { font-family: 'Noto Serif JP', serif; font-size: 18px; letter-spacing: 4px; color: var(--ink); margin-bottom: 16px; }
+    .blank-msg { font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 13px; color: var(--ink-light); line-height: 2.4; letter-spacing: 1px; margin-bottom: 32px; }
+    .btn-blank-claim { display: block; width: 100%; max-width: 320px; margin: 0 auto 12px; background: var(--ink); color: var(--gold); border: none; border-radius: 8px; padding: 15px; font-size: 15px; font-family: 'Noto Serif JP', serif; letter-spacing: 0.1em; cursor: pointer; transition: opacity 0.2s; }
+    .btn-blank-claim:hover { opacity: 0.85; }
+    .btn-blank-claim:disabled { opacity: 0.5; cursor: not-allowed; }
+    .blank-note { font-size: 11px; color: var(--ink-light); font-family: 'Zen Kaku Gothic New', sans-serif; letter-spacing: 0.06em; }
+    #closed-state { display: none; text-align: center; padding: 60px 20px; }
+    .closed-banner { display: none; text-align: center; margin-top: 20px; padding: 16px; background: var(--white); border: 1px solid var(--border); border-radius: 10px; font-size: 12px; letter-spacing: 0.15em; color: var(--ink-light); font-family: 'Zen Kaku Gothic New', sans-serif; line-height: 2; }
+
     .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--ink); color: var(--gold); padding: 12px 24px; border-radius: 24px; font-size: 13px; font-family: 'Zen Kaku Gothic New', sans-serif; letter-spacing: 0.06em; opacity: 0; transition: all 0.3s ease; z-index: 100; white-space: nowrap; }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
@@ -199,6 +211,31 @@
     <a href="index.html" style="font-family:'Zen Kaku Gothic New',sans-serif;font-size:11px;letter-spacing:3px;color:var(--ink-light);text-decoration:underline;text-underline-offset:4px;">← トップページへ戻る</a>
   </div>
 
+  <!-- 白紙カード：確認画面（スキャン即claim禁止。明示ボタンでのみ所有権移転） -->
+  <div id="blank-state">
+    <div class="blank-icon">🎴</div>
+    <div class="blank-title">このカードはまだ白紙です</div>
+    <div class="preparing-line"></div>
+    <div class="blank-msg" id="blank-msg">
+      まだ誰のものでもない、まっさらなカードです。<br>
+      あなたのカードにしますか？
+    </div>
+    <button class="btn-blank-claim" id="btn-blank-claim" onclick="claimBlank()">このカードを自分のものにする</button>
+    <div class="blank-note" id="blank-note">ボタンを押すまで、所有は移りません</div>
+  </div>
+
+  <!-- 供養済みカード（未確定のまま供養されたもの） -->
+  <div id="closed-state">
+    <div class="preparing-icon">🕊️</div>
+    <div class="preparing-title">供養済みのカードです</div>
+    <div class="preparing-line"></div>
+    <div class="preparing-msg">
+      このカードは役目を終えて<br>
+      供養されました。<br><br>
+      ありがとう。
+    </div>
+  </div>
+
   <!-- カード本体 -->
   <div id="card-section">
 
@@ -226,6 +263,7 @@
     </div>
     <div class="kc-complete" id="kc-complete">— このカードは完結しました —</div>
     <div class="kc-complete" id="kc-mypage-note">このカードは、マイページに取り込まれました</div>
+    <div class="closed-banner" id="closed-banner">— このカードは供養されました。ありがとう —</div>
 
     <div class="sponsor-section">
       <div class="sponsor-banner" onclick="showToast('スポンサーページへ移動します（準備中）')">
@@ -317,6 +355,36 @@ async function loadCard() {
       const { data, error } = await supabase.rpc('get_card', { p_key: roomId });
       if (error) { showError('読み込みエラーが発生しました。'); console.error(error); return; }
       if (!data) { showError('カードが見つかりませんでした。<br>URLをご確認ください。'); return; }
+
+      // 供養済み（閉じたカード）：凍結view。読めるが返信・再利用は不可
+      if (data.card_status === 'closed') {
+        if (data.is_confirmed) {
+          roomData = data;
+          renderCard(data);
+          document.getElementById('login-prompt').style.display = 'none';
+          document.getElementById('reply-form').style.display = 'none';
+          document.getElementById('reuse-section').style.display = 'none';
+          document.getElementById('closed-banner').style.display = 'block';
+        } else {
+          document.getElementById('loading').style.display = 'none';
+          document.getElementById('closed-state').style.display = 'block';
+        }
+        return;
+      }
+
+      // 白紙カード → 確認画面（明示ボタンを押すまでclaimしない）
+      if (data.is_blank) {
+        document.getElementById('loading').style.display = 'none';
+        if (data.bundle_expired) {
+          document.getElementById('blank-msg').innerHTML = 'このカードは配布期限が切れています。<br>新しくお使いいただくことはできません。';
+          document.getElementById('btn-blank-claim').style.display = 'none';
+          document.getElementById('blank-note').style.display = 'none';
+        } else if (!currentUser) {
+          document.getElementById('btn-blank-claim').textContent = '登録・ログインして自分のカードにする';
+        }
+        document.getElementById('blank-state').style.display = 'block';
+        return;
+      }
 
       // 自分のカード → 書く画面（card.html）へ誘導
       if (data.is_owner) {
@@ -427,7 +495,8 @@ async function loadCard() {
     // 所有者＝返信確定で移動済み。返信があれば返信者が現所有者
     const ownerName = room.reply ? (room.reply.pen_name || '匿名') : (room.pen_name || '匿名');
     document.getElementById('reuse-owner').textContent = ownerName;
-    document.getElementById('reuse-section').style.display = 'block';
+    // 物理カード（short_id）が付いている間だけ表示。バトンが新部屋へ移動済みなら非表示
+    document.getElementById('reuse-section').style.display = room.short_id ? 'block' : 'none';
   }
 
   async function checkReplied() {
@@ -460,23 +529,30 @@ async function loadCard() {
     btn.textContent = '送信中…';
 
     try {
-      const meta = currentUser.user_metadata || {};
-      const myPenName = meta.pen_name || meta.name || currentUser.email?.split('@')[0] || '匿名';
-      const { error } = await supabase.from('room_posts').insert({
-        room_id: roomData.room_id,
-        user_id: currentUser.id,
-        content: text || null,
-        card_text: cardText,
-        post_type: 'reply',
-        pen_name: myPenName
+      // 返信＝claim：返信の書き込みとバトンの世代交代を1RPCで行う
+      const { data, error } = await supabase.rpc('reply_and_claim', {
+        p_key: roomId,
+        p_card_text: cardText,
+        p_content: text || null
       });
       if (error) throw error;
+      if (!data.ok) {
+        showToast(claimErrorMsg(data.error));
+        btn.disabled = false;
+        btn.textContent = '送る';
+        return;
+      }
       hasReplied = true;
+      const myPenName = data.pen_name || '匿名';
       roomData.reply = { card_text: cardText, content: text || null, pen_name: myPenName, created_at: new Date().toISOString() };
+      if (data.new_room) roomData.short_id = null; // バトンは新しい部屋へ移動済み
       renderCard(roomData);
       document.getElementById('reply-form').style.display = 'none';
       document.getElementById('kc-mypage-note').style.display = 'block';
       showToast('🙏 返信カードを送りました');
+      if (data.new_room) {
+        setTimeout(() => showClaimDone(data.new_room, 'reply'), 800);
+      }
     } catch (e) {
       console.error(e);
       btn.disabled = false;
@@ -496,7 +572,13 @@ async function loadCard() {
       not_found: 'カードが見つかりませんでした',
       no_short_id: 'このカードは再利用の対象外です',
       not_confirmed: 'カードが確定してから操作できます',
-      not_replier: 'このカードを受け取った（返信した）方のみ操作できます'
+      not_replier: 'このカードを受け取った（返信した）方のみ操作できます',
+      own_card: '自分のカードには返信できません',
+      already_replied: 'このカードには既に返信が届いています',
+      bad_card_text: '一言は1〜25字で入力してください',
+      card_closed: 'このカードは供養済みです',
+      already_claimed: 'このカードは既にどなたかのものです',
+      expired: 'このカードは配布期限が切れています'
     }[code] || 'エラーが発生しました';
   }
 
@@ -515,14 +597,34 @@ async function loadCard() {
     }
   };
 
+  // 白紙カードclaim（経路A：確認画面の明示ボタンからのみ）
+  window.claimBlank = async function() {
+    if (!currentUser) { goToAuth(); return; }
+    const btn = document.getElementById('btn-blank-claim');
+    btn.disabled = true;
+    try {
+      const { data, error } = await supabase.rpc('claim_blank_card', { p_key: roomId });
+      if (error) throw error;
+      if (!data.ok) { showToast(claimErrorMsg(data.error)); btn.disabled = false; return; }
+      showClaimDone(data.short_id || data.room, 'blank');
+    } catch (e) {
+      console.error(e);
+      showToast('エラーが発生しました');
+      btn.disabled = false;
+    }
+  };
+
   // claim完了の説明モーダル（即遷移せずワンクッション）
-  function showClaimDone(newRoom) {
+  function showClaimDone(newRoom, mode) {
+    const title = mode === 'reply'
+      ? '返信とともに、このカードのバトンはあなたに渡りました'
+      : 'このカードはあなたのものになりました';
     const ov = document.createElement('div');
     ov.style.cssText = 'position:fixed;inset:0;background:rgba(44,36,22,0.55);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;';
     ov.innerHTML = `
       <div style="background:#fffdf8;border-radius:14px;max-width:340px;width:100%;padding:28px 22px;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,0.25);">
         <div style="font-size:34px;margin-bottom:10px;">🎴</div>
-        <div style="font-weight:700;font-size:16px;margin-bottom:10px;">このカードはあなたのものになりました</div>
+        <div style="font-weight:700;font-size:16px;margin-bottom:10px;">${title}</div>
         <div style="font-size:13px;line-height:1.8;color:#6b5f4a;margin-bottom:20px;">
           今度はあなたが<strong>送る側</strong>です。<br>
           マイページのストックにも入っています。
