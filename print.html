@@ -518,15 +518,7 @@
         .limit(1);
       const maxCardNo = existing?.[0]?.user_card_no || 0;
 
-      // global_no の最大値を取得
-      const { data: globalMax } = await db
-        .from('rooms')
-        .select('global_no')
-        .order('global_no', { ascending: false })
-        .limit(1);
-      let globalNo = globalMax?.[0]?.global_no || 0;
-
-      // 10部屋分のデータを作成
+      // 10部屋分のデータを作成（global_noはDBのシーケンスが自動採番）
       const newRooms = [];
       for (let i = 0; i < 10; i++) {
         const shortId = generateShortId();
@@ -536,7 +528,6 @@
           is_confirmed: false,
           short_id: shortId,
           user_card_no: maxCardNo + i + 1,
-          global_no: globalNo + i + 1,
           recipient_memo: null,
           access_notified: false,
         });
