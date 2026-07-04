@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>カードの束を受け取る｜お互い様</title>
+  <meta name="description" content="カードの束（ロット）をまとめて受け取ります。">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;500;700&family=Zen+Kaku+Gothic+New:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --cream: #f5f0e8;
+      --ink: #2c2416;
+      --ink-light: #6b5f4e;
+      --gold: #c9a84c;
+      --gold-light: #e8d5a3;
+      --red: #9b2335;
+      --white: #fefcf8;
+      --border: #d4c9b0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--cream);
+      color: var(--ink);
+      font-family: 'Noto Serif JP', serif;
+      min-height: 100vh;
+      background-image:
+        radial-gradient(ellipse at 20% 20%, rgba(201,168,76,0.06) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 80%, rgba(155,35,53,0.04) 0%, transparent 60%);
+    }
+    .header { background: var(--ink); padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; }
+    .header-logo { color: var(--gold); font-size: 15px; letter-spacing: 0.12em; }
+    .header-sub { color: rgba(201,168,76,0.5); font-size: 11px; font-family: 'Zen Kaku Gothic New', sans-serif; }
+    .container { max-width: 520px; margin: 0 auto; padding: 24px 16px 80px; }
+
+    .loading-state { text-align: center; padding: 60px 20px; color: var(--ink-light); font-size: 14px; }
+    .loading-dot { display: inline-block; width: 6px; height: 6px; background: var(--gold); border-radius: 50%; margin: 0 3px; animation: blink 1.2s ease-in-out infinite; }
+    .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes blink { 0%,80%,100% { opacity: 0.2; transform: scale(1); } 40% { opacity: 1; transform: scale(1.3); } }
+
+    .state-view { display: none; text-align: center; padding: 48px 20px; }
+    .state-icon { font-size: 52px; margin-bottom: 24px; }
+    .state-title { font-family: 'Noto Serif JP', serif; font-size: 18px; letter-spacing: 4px; color: var(--ink); margin-bottom: 16px; }
+    .state-line { width: 40px; height: 1px; background: var(--border); margin: 0 auto 24px; }
+    .state-msg { font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 13px; color: var(--ink-light); line-height: 2.4; letter-spacing: 1px; }
+
+    .info-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 24px 20px; margin-bottom: 20px; position: relative; overflow: hidden; }
+    .info-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--gold), var(--gold-light), var(--gold)); }
+    .info-row { display: flex; justify-content: space-between; align-items: baseline; padding: 8px 0; border-bottom: 1px dashed var(--border); font-family: 'Zen Kaku Gothic New', sans-serif; }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { font-size: 12px; color: var(--ink-light); letter-spacing: 0.08em; }
+    .info-value { font-size: 15px; color: var(--ink); font-weight: 500; }
+
+    .btn-main { display: block; width: 100%; background: var(--ink); color: var(--gold); border: none; border-radius: 8px; padding: 15px; font-size: 15px; font-family: 'Noto Serif JP', serif; letter-spacing: 0.1em; cursor: pointer; transition: opacity 0.2s; margin-bottom: 12px; }
+    .btn-main:hover { opacity: 0.85; }
+    .btn-main:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-note { text-align: center; font-size: 11px; color: var(--ink-light); font-family: 'Zen Kaku Gothic New', sans-serif; letter-spacing: 0.06em; }
+
+    .result-headline { text-align: center; font-size: 16px; letter-spacing: 0.08em; margin: 8px 0 20px; line-height: 2; }
+    .result-headline strong { color: var(--red); }
+
+    .skipped-section { margin-top: 24px; }
+    .skipped-title { font-size: 13px; color: var(--ink-light); letter-spacing: 0.1em; margin-bottom: 12px; text-align: center; font-family: 'Zen Kaku Gothic New', sans-serif; }
+    .skipped-item { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+    .skipped-no { font-size: 15px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+    .skipped-q { font-size: 12px; color: var(--ink-light); font-family: 'Zen Kaku Gothic New', sans-serif; line-height: 1.9; margin-bottom: 12px; }
+    .skipped-buttons { display: flex; gap: 10px; }
+    .btn-sub { flex: 1; padding: 11px 8px; border-radius: 8px; font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 12px; letter-spacing: 0.04em; cursor: pointer; }
+    .btn-sub.danger { background: transparent; border: 1px solid var(--red); color: var(--red); }
+    .btn-sub.plain { background: transparent; border: 1px solid var(--border); color: var(--ink-light); }
+    .btn-sub:disabled { opacity: 0.4; cursor: not-allowed; }
+    .skipped-done { font-size: 12px; color: var(--ink-light); font-family: 'Zen Kaku Gothic New', sans-serif; line-height: 1.8; padding: 4px 0; }
+    .skipped-done.ok { color: #3a6b3a; }
+
+    .go-mypage { display: block; text-align: center; margin-top: 28px; font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 12px; letter-spacing: 2px; color: var(--ink-light); text-decoration: underline; text-underline-offset: 4px; }
+
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--ink); color: var(--gold); padding: 12px 24px; border-radius: 24px; font-size: 13px; font-family: 'Zen Kaku Gothic New', sans-serif; letter-spacing: 0.06em; opacity: 0; transition: all 0.3s ease; z-index: 100; white-space: nowrap; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .page-footer { text-align: center; margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--border); }
+    .footer-logo { font-size: 13px; color: var(--ink-light); letter-spacing: 0.12em; margin-bottom: 6px; }
+    .footer-sub { font-size: 11px; color: var(--border); font-family: 'Zen Kaku Gothic New', sans-serif; }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div>
+    <div class="header-logo">お互い様プロジェクト</div>
+    <div class="header-sub">心のキャッチボール</div>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="loading-state" id="loading">
+    <div style="margin-bottom:16px;">
+      <span class="loading-dot"></span><span class="loading-dot"></span><span class="loading-dot"></span>
+    </div>
+    <div>束の情報を読み込んでいます</div>
+  </div>
+
+  <!-- トークンなし -->
+  <div class="state-view" id="no-token">
+    <div class="state-icon">📦</div>
+    <div class="state-title">束を受け取るには</div>
+    <div class="state-line"></div>
+    <div class="state-msg">
+      カードの束に付いている<br>
+      親QRコードをスキャンして<br>
+      このページを開いてください
+    </div>
+  </div>
+
+  <!-- エラー -->
+  <div class="state-view" id="error-view">
+    <div class="state-icon">📭</div>
+    <div class="state-title">受け取れませんでした</div>
+    <div class="state-line"></div>
+    <div class="state-msg" id="error-msg"></div>
+  </div>
+
+  <!-- 束の情報＋一括claim -->
+  <div class="state-view" id="info-view" style="text-align:left;">
+    <div class="state-title" style="text-align:center;">カードの束</div>
+    <div class="state-line"></div>
+    <div class="info-card">
+      <div class="info-row"><span class="info-label">ロット</span><span class="info-value" id="info-lot">—</span></div>
+      <div class="info-row"><span class="info-label">総枚数</span><span class="info-value" id="info-total">—</span></div>
+      <div class="info-row"><span class="info-label">受け取れる枚数</span><span class="info-value" id="info-remaining">—</span></div>
+      <div class="info-row"><span class="info-label">配布期限</span><span class="info-value" id="info-expires">—</span></div>
+    </div>
+    <button class="btn-main" id="btn-claim" onclick="doClaim()">この束をまとめて自分のものにする</button>
+    <div class="btn-note" id="claim-note">この操作は一度きりです。手元に現物の束がある方だけ押してください。</div>
+  </div>
+
+  <!-- claim結果＋現物確認 -->
+  <div class="state-view" id="result-view" style="text-align:left;">
+    <div class="state-title" style="text-align:center;" id="result-title">受け取りました</div>
+    <div class="state-line"></div>
+    <div class="result-headline" id="result-headline"></div>
+
+    <div class="skipped-section" id="skipped-section" style="display:none;">
+      <div class="skipped-title">— claim済みだった番号の確認 —</div>
+      <div id="skipped-list"></div>
+    </div>
+
+    <a class="go-mypage" href="mypage.html">マイページで受け取ったカードを見る →</a>
+  </div>
+
+  <div class="page-footer">
+    <div class="footer-logo">お互い様プロジェクト</div>
+    <div class="footer-sub">心の価値を、かたちに。</div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+  const SUPABASE_URL = 'https://damussuizcfzqkfkpwwm.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhbXVzc3VpemNmenFrZmtwd3dtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0NTcwOTIsImV4cCI6MjA5MTAzMzA5Mn0.Xp93BfRowa9gG7ZMRQxyyKiYXgWRN4Gk5xLxaGTiUIo';
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const params = new URLSearchParams(location.search);
+  const token = params.get('b') || params.get('token');
+
+  let currentUser = null;
+  let lotName = '';
+
+  function show(id) {
+    ['loading','no-token','error-view','info-view','result-view'].forEach(v => {
+      document.getElementById(v).style.display = (v === id) ? 'block' : 'none';
+    });
+  }
+
+  function padNo(n) {
+    return 'No.' + String(n ?? '?').padStart(3, '0');
+  }
+
+  function reasonMsg(code) {
+    return {
+      login_required: '受け取りにはログインが必要です',
+      not_found: 'この束は見つかりませんでした。<br>QRコードをご確認ください。',
+      expired: 'この束は配布期限が切れています。',
+      nothing_to_claim: 'この束に受け取れるカードは残っていません。',
+      limit_exceeded: '手持ちの未使用カードが多いため、<br>これ以上受け取れません。',
+      already_claimed: 'この束は既に受け取り済みです。'
+    }[code] || 'エラーが発生しました。';
+  }
+
+  async function init() {
+    if (!token) { show('no-token'); return; }
+
+    const { data: { session } } = await supabase.auth.getSession();
+    currentUser = session?.user || null;
+
+    try {
+      const { data, error } = await supabase.rpc('get_bundle_info', { p_parent_token: token });
+      if (error) throw error;
+      if (!data.ok) {
+        document.getElementById('error-msg').innerHTML = reasonMsg(data.reason);
+        show('error-view');
+        return;
+      }
+      lotName = data.lot_id || '—';
+      document.getElementById('info-lot').textContent = lotName;
+      document.getElementById('info-total').textContent = `${data.total} 枚`;
+      document.getElementById('info-remaining').textContent = `${data.remaining} 枚`;
+      document.getElementById('info-expires').textContent = data.expires_at
+        ? new Date(data.expires_at).toLocaleDateString('ja-JP') + ' まで'
+        : 'なし';
+
+      if (!currentUser) {
+        const btn = document.getElementById('btn-claim');
+        btn.textContent = '登録・ログインして受け取る';
+        btn.onclick = () => {
+          location.href = `auth.html?return=${encodeURIComponent(location.href)}`;
+        };
+      }
+      show('info-view');
+    } catch (e) {
+      console.error(e);
+      document.getElementById('error-msg').innerHTML = '読み込みエラーが発生しました。';
+      show('error-view');
+    }
+  }
+
+  window.doClaim = async function() {
+    if (!currentUser) return;
+    if (!confirm(`この束（${lotName}）の未claim分をまとめてあなたのカードにします。よろしいですか？\n（この操作は一度きりです）`)) return;
+
+    const btn = document.getElementById('btn-claim');
+    btn.disabled = true;
+    btn.textContent = '受け取り中…';
+
+    try {
+      const { data, error } = await supabase.rpc('claim_bundle', { p_parent_token: token });
+      if (error) throw error;
+
+      if (!data.ok) {
+        // 撒き手本人の再スキャン：現物確認UIだけ再表示できる
+        if (data.reason === 'already_claimed' && data.by_me) {
+          renderResult({
+            rescan: true,
+            total: null,
+            claimed: null,
+            skipped: data.others || []
+          });
+          return;
+        }
+        showToast(stripTags(reasonMsg(data.reason)));
+        btn.disabled = false;
+        btn.textContent = 'この束をまとめて自分のものにする';
+        return;
+      }
+
+      renderResult({ rescan: false, total: data.total, claimed: data.claimed, skipped: data.skipped || [] });
+    } catch (e) {
+      console.error(e);
+      showToast('エラーが発生しました');
+      btn.disabled = false;
+      btn.textContent = 'この束をまとめて自分のものにする';
+    }
+  };
+
+  function stripTags(s) { return String(s).replace(/<[^>]*>/g, ''); }
+
+  function renderResult({ rescan, total, claimed, skipped }) {
+    const headline = document.getElementById('result-headline');
+    if (rescan) {
+      document.getElementById('result-title').textContent = '受け取り済みの束です';
+      headline.innerHTML = skipped.length
+        ? 'この束には、あなた以外の方がclaim済みの番号があります。'
+        : 'この束のカードは、すべてあなたのものです。';
+    } else {
+      const skippedNos = skipped.map(s => padNo(s.position)).join('、');
+      headline.innerHTML = `${total}枚中 <strong>${claimed}枚</strong> claimしました。` +
+        (skipped.length ? `<br>${skippedNos} はclaim済みです。` : '');
+    }
+
+    if (skipped.length) {
+      const list = document.getElementById('skipped-list');
+      list.innerHTML = '';
+      skipped.forEach(s => {
+        const item = document.createElement('div');
+        item.className = 'skipped-item';
+        item.innerHTML = `
+          <div class="skipped-no">${padNo(s.position)}</div>
+          <div class="skipped-q">束の中に ${padNo(s.position)} の現物はありますか？<br>
+            <small>現物がある＝異常混入（テスト・検品・印刷事故）の可能性。ない＝正規の持ち主が保有中です。</small></div>
+          <div class="skipped-buttons">
+            <button class="btn-sub danger">現物がある → 白紙に戻して再claim</button>
+            <button class="btn-sub plain">ない → 何もしない</button>
+          </div>`;
+        const [btnReset, btnNone] = item.querySelectorAll('button');
+        btnReset.onclick = () => resetCard(s, item);
+        btnNone.onclick = () => {
+          item.querySelector('.skipped-buttons').remove();
+          const done = document.createElement('div');
+          done.className = 'skipped-done';
+          done.textContent = '正規の持ち主が保有中です。何もしません。';
+          item.appendChild(done);
+        };
+        list.appendChild(item);
+      });
+      document.getElementById('skipped-section').style.display = 'block';
+    }
+    show('result-view');
+  }
+
+  // 現物確認による上書き（二段確認・不可逆）
+  async function resetCard(s, itemEl) {
+    const no = padNo(s.position);
+    if (!confirm(`${no} は既に誰かのカードとして登録されています。\n手元に現物がある場合のみ、白紙に戻して自分のものにできます。\n\n本当に現物はありますか？`)) return;
+    if (!confirm(`【最終確認】\nこの操作は取り消せません。\n${no} を白紙に戻して、あなたのカードにします。\nよろしいですか？`)) return;
+
+    const btns = itemEl.querySelectorAll('button');
+    btns.forEach(b => b.disabled = true);
+
+    try {
+      const { data, error } = await supabase.rpc('reset_blank_and_claim', { p_short_id: s.short_id });
+      if (error) throw error;
+      if (!data.ok) {
+        showToast({
+          not_bundle_claimer: 'この束を受け取った方のみ操作できます',
+          already_yours: 'このカードは既にあなたのものです',
+          card_closed: 'このカードは供養済みです',
+          not_found: 'カードが見つかりませんでした'
+        }[data.error] || 'エラーが発生しました');
+        btns.forEach(b => b.disabled = false);
+        return;
+      }
+      itemEl.querySelector('.skipped-buttons').remove();
+      const done = document.createElement('div');
+      done.className = 'skipped-done ok';
+      done.textContent = `${no} を白紙に戻し、あなたのカードにしました。`;
+      itemEl.appendChild(done);
+      showToast(`🎴 ${no} を再claimしました`);
+    } catch (e) {
+      console.error(e);
+      showToast('エラーが発生しました');
+      btns.forEach(b => b.disabled = false);
+    }
+  }
+
+  window.showToast = function(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  };
+
+  supabase.auth.onAuthStateChange((event) => {
+    if (event === 'SIGNED_IN') init();
+  });
+
+  init();
+</script>
+</body>
+</html>
