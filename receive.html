@@ -131,11 +131,6 @@
     .ack-note { text-align: center; font-size: 11px; color: var(--ink-light); font-family: 'Zen Kaku Gothic New', sans-serif; margin: 8px 0 0; letter-spacing: 0.06em; }
     .reply-divider { text-align: center; font-size: 11px; color: var(--ink-light); font-family: 'Zen Kaku Gothic New', sans-serif; letter-spacing: 0.2em; margin: 20px 0 14px; }
     .reply-label { padding: 12px 16px 0; font-size: 11px; letter-spacing: 0.1em; color: var(--ink-light); font-family: 'Zen Kaku Gothic New', sans-serif; }
-    .reuse-section { margin-top: 24px; padding: 18px; background: var(--white); border: 1px dashed var(--border); border-radius: 10px; text-align: center; }
-    .reuse-text { font-size: 12px; color: var(--ink-light); font-family: 'Zen Kaku Gothic New', sans-serif; line-height: 2; letter-spacing: 0.06em; margin-bottom: 14px; }
-    .reuse-text strong { color: var(--ink); font-weight: 500; }
-    .reuse-buttons { display: flex; gap: 10px; }
-    .btn-reuse { flex: 1; padding: 11px 8px; background: transparent; border: 1px solid var(--border); border-radius: 8px; color: var(--ink-light); font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 11px; letter-spacing: 0.06em; cursor: pointer; opacity: 0.75; }
     .kc-biko { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; margin-top: 14px; font-family: 'Noto Serif JP', serif; font-size: 14px; line-height: 2; color: var(--ink); display: none; }
     .kc-biko-text { white-space: pre-wrap; }
     .kc-biko-label { font-size: 10px; letter-spacing: 0.2em; color: var(--ink-light); font-family: 'Zen Kaku Gothic New', sans-serif; margin-bottom: 6px; }
@@ -227,11 +222,11 @@
   <!-- 供養済みカード（未確定のまま供養されたもの） -->
   <div id="closed-state">
     <div class="preparing-icon">🕊️</div>
-    <div class="preparing-title">供養済みのカードです</div>
+    <div class="preparing-title">お役目を終えたカードです</div>
     <div class="preparing-line"></div>
     <div class="preparing-msg">
-      このカードは役目を終えて<br>
-      供養されました。<br><br>
+      このカードは<br>
+      お役目を終えました。<br><br>
       ありがとう。
     </div>
   </div>
@@ -263,24 +258,13 @@
     </div>
     <div class="kc-complete" id="kc-complete">— このカードは完結しました —</div>
     <div class="kc-complete" id="kc-mypage-note">このカードは、マイページに取り込まれました</div>
-    <div class="closed-banner" id="closed-banner">— このカードは供養されました。ありがとう —</div>
+    <div class="closed-banner" id="closed-banner">— このカードはお役目を終えました。ありがとう —</div>
 
     <div class="sponsor-section">
       <div class="sponsor-banner" onclick="showToast('スポンサーページへ移動します（準備中）')">
         <div class="sponsor-banner-text">このQR名刺カードの制作協賛会社</div>
         <div class="sponsor-banner-name">株式会社〇〇〇〇</div>
         <div class="sponsor-banner-tag">#地域応援 #お互い様サポーター</div>
-      </div>
-    </div>
-
-    <div class="reuse-section" id="reuse-section" style="display:none;">
-      <div class="reuse-text">
-        このQR名刺カードは、再利用可能です。<br>
-        現在の所有者：<strong id="reuse-owner">—</strong>
-      </div>
-      <div class="reuse-buttons">
-        <button class="btn-reuse" onclick="reuseCard()">いつか使用するかも</button>
-        <button class="btn-reuse" onclick="discardCard()">汚れ等で破棄する</button>
       </div>
     </div>
 
@@ -363,7 +347,6 @@ async function loadCard() {
           renderCard(data);
           document.getElementById('login-prompt').style.display = 'none';
           document.getElementById('reply-form').style.display = 'none';
-          document.getElementById('reuse-section').style.display = 'none';
           document.getElementById('closed-banner').style.display = 'block';
         } else {
           document.getElementById('loading').style.display = 'none';
@@ -492,11 +475,7 @@ async function loadCard() {
 
     // 再利用セクション：当面はQR名刺前提で常時表示
     // TODO: 名刺/自力URLの出し分け（bundles紐付けの有無で判定予定）
-    // 所有者＝返信確定で移動済み。返信があれば返信者が現所有者
-    const ownerName = room.reply ? (room.reply.pen_name || '匿名') : (room.pen_name || '匿名');
-    document.getElementById('reuse-owner').textContent = ownerName;
-    // 物理カード（short_id）が付いている間だけ表示。バトンが新部屋へ移動済みなら非表示
-    document.getElementById('reuse-section').style.display = room.short_id ? 'block' : 'none';
+    // 再利用/供養UIはマイページへ移設（取り込みは返信＝claimで自動化済み）
   }
 
   async function checkReplied() {
@@ -576,27 +555,13 @@ async function loadCard() {
       own_card: '自分のカードには返信できません',
       already_replied: 'このカードには既に返信が届いています',
       bad_card_text: '一言は1〜25字で入力してください',
-      card_closed: 'このカードは供養済みです',
+      card_closed: 'このカードはお役目を終えています',
       already_claimed: 'このカードは既にどなたかのものです',
       expired: 'このカードは配布期限が切れています'
     }[code] || 'エラーが発生しました';
   }
 
   // いつか使用するかも：新しい部屋を作ってこのカードを引き継ぐ
-  window.reuseCard = async function() {
-    if (!currentUser) { showToast('再利用にはログインが必要です'); return; }
-    if (!confirm('このカードを自分の新しいカードとして使いますか？\n（今のカードはマイページに残ります）')) return;
-    try {
-      const { data, error } = await supabase.rpc('claim_room', { p_key: roomId });
-      if (error) throw error;
-      if (!data.ok) { showToast(claimErrorMsg(data.error)); return; }
-      showClaimDone(data.new_room);
-    } catch (e) {
-      console.error(e);
-      showToast('エラーが発生しました');
-    }
-  };
-
   // 白紙カードclaim（経路A：確認画面の明示ボタンからのみ）
   window.claimBlank = async function() {
     if (!currentUser) { goToAuth(); return; }
@@ -640,23 +605,6 @@ async function loadCard() {
       location.href = 'mypage.html';
     };
   }
-
-  // 汚れ等で破棄する：short_id無効化（理由は任意アンケート）
-  window.discardCard = async function() {
-    if (!currentUser) { showToast('破棄にはログインが必要です'); return; }
-    if (!confirm('このカードを破棄しますか？\n（QRは使えなくなります。カードの記録はマイページに残ります）')) return;
-    const reason = prompt('よければ理由を教えてください（任意・空欄OK）', '') ;
-    try {
-      const { data, error } = await supabase.rpc('discard_card', { p_key: roomId, p_reason: reason || null });
-      if (error) throw error;
-      if (!data.ok) { showToast(claimErrorMsg(data.error)); return; }
-      document.getElementById('reuse-section').style.display = 'none';
-      showToast('カードを破棄しました。おつかれさま 🙏');
-    } catch (e) {
-      console.error(e);
-      showToast('エラーが発生しました');
-    }
-  };
 
   window.sendAck = function() {
     if (hasReplied) return;
