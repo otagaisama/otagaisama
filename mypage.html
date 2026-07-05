@@ -489,6 +489,9 @@
   .badge-url { background: #f4f0f7; border: 1px solid #c2b3d0; color: #6f5a85; }
   .btn-del { margin-top: 6px; padding: 4px 10px; background: transparent; border: 1px solid var(--border); border-radius: 6px; color: #a05252; font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 10px; letter-spacing: 0.1em; cursor: pointer; opacity: 0.8; }
   .btn-del:hover { opacity: 1; }
+  .btn-retire-sm { margin-top: 6px; padding: 4px 10px; background: transparent; border: 1px solid var(--border); border-radius: 6px; color: #8a7c60; font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 10px; letter-spacing: 0.1em; cursor: pointer; opacity: 0.8; }
+  .btn-retire-sm:hover { opacity: 1; }
+  .badge-retired { background: #f5f0e8; border: 1px solid #cbbfa8; color: #8a7c60; }
   .pager { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 18px; font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 12px; color: var(--gray); }
   .pager button { padding: 7px 16px; background: transparent; border: 1px solid var(--border); border-radius: 8px; color: var(--ink); font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 12px; letter-spacing: 0.06em; cursor: pointer; }
   .pager button:disabled { opacity: 0.35; cursor: not-allowed; }
@@ -959,9 +962,20 @@
         badgesHtml += `<span class="status-badge badge-replied">✓ 返 信 あ り</span>`;
       }
 
+      const isClosed = !!room.closed_at;
+
+      // お役目終了済みのQRカードには札を付ける
+      if (isQr && isClosed) {
+        badgesHtml += `<span class="status-badge badge-retired">お 役 目 済</span>`;
+      }
+
       // URL部屋（物理カードなし）の未確定分だけ削除可能
       if (!isQr && !isConfirmed) {
         badgesHtml += `<button class="btn-del" onclick="deleteRoom(event, '${room.room_id}', '${numVal}')">削 除</button>`;
+      }
+      // QRカード（現物あり・未終了）にはお役目終了ボタン
+      if (isQr && !isClosed && room.short_id) {
+        badgesHtml += `<button class="btn-retire-sm" onclick="retireCardList(event, '${room.short_id}', '${numVal}')">お役目終了</button>`;
       }
 
       const replyLabel = hasReply ? `返信 <span>${room.replyCount}</span> 件` : `返信はまだありません`;
@@ -1017,6 +1031,32 @@
         return;
       }
       sentRoomsAll = sentRoomsAll.filter(r => r.room_id !== roomKey);
+      await renderSentPage();
+    } catch (e) {
+      console.error(e);
+      alert('エラーが発生しました');
+    }
+  };
+
+  // ===== QR名刺のお役目を終える（一覧から） =====
+  window.retireCardList = async function(ev, shortId, numVal) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    if (!confirm(`${numVal} のQR名刺のお役目を終えますか？\n（QRは使えなくなります。カードの記録は残ります）`)) return;
+    const reason = prompt('よければ理由を教えてください（任意・空欄OK）', '');
+    try {
+      const { data, error } = await db.rpc('discard_card', { p_key: shortId, p_reason: reason || null });
+      if (error) throw error;
+      if (!data.ok) {
+        alert({
+          not_owner: 'このカードの現在の持ち主のみ操作できます',
+          card_closed: 'このカードは既にお役目を終えています',
+          not_found: 'カードが見つかりませんでした'
+        }[data.error] || 'エラーが発生しました');
+        return;
+      }
+      const target = sentRoomsAll.find(r => r.short_id === shortId);
+      if (target) target.closed_at = new Date().toISOString();
       await renderSentPage();
     } catch (e) {
       console.error(e);
