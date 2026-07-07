@@ -1008,7 +1008,7 @@
         <div class="room-badge-label">Room</div>
         <div class="room-badge-number" id="room-display-number">—</div>
       </div>
-      <div class="share-btns">
+      <div class="share-btns" id="room-share-btns" style="display:none;">
         <button class="share-btn" onclick="showQrModal()">QR 表 示</button>
         <button class="share-btn" onclick="copyUrl()">URL コ ピ ー</button>
       </div>
@@ -1286,8 +1286,10 @@ async function updateRoomUI() {
 
   const retireSection = document.getElementById('retire-section');
   const closedBanner  = document.getElementById('closed-banner-card');
+  const shareBtnsEl   = document.getElementById('room-share-btns');
   if (retireSection) retireSection.style.display = 'none';
   if (closedBanner)  closedBanner.style.display = 'none';
+  if (shareBtnsEl)   shareBtnsEl.style.display = 'none';
 
   // お役目終了済み：閲覧のみ
   if (isClosed) {
@@ -1363,6 +1365,15 @@ async function loadReadonlyContent() {
 
   const myPost = posts.find(p => p.post_type === 'message');
   const reply  = posts.find(p => p.post_type === 'reply');
+
+  // 共有UI（QR表示/URLコピー）の表示判定
+  // QR型：常時非表示（遠隔claimの元栓。物理カードで渡す）
+  // URL型：確定済み〜返信前の窓だけ表示（返信・クローズで非表示、再送はこの窓内のみ）
+  const shareBtnsEl = document.getElementById('room-share-btns');
+  if (shareBtnsEl && currentRoomType !== 'qr' && isOwner && isConfirmed && !isClosed && !reply) {
+    shareBtnsEl.style.display = 'flex';
+  }
+
   if (!myPost) return;
 
   // Aのペンネーム（自分のカードを見ている前提）
