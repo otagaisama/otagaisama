@@ -309,7 +309,7 @@
     listEl.innerHTML = '<div style="font-size:12px;color:var(--gray);">読み込み中…</div>';
 
     const { data, error } = await db.from('bundles')
-      .select('id, lot_id, parent_token, expires_at, created_at, rooms(id, global_no, short_id, lot_id, owner_user_id, is_confirmed, closed_at)')
+      .select('id, lot_id, parent_token, expires_at, created_at, rooms(id, global_no, short_id, owner_user_id, is_confirmed, closed_at)')
       .order('created_at', { ascending: false });
 
     if (error) { listEl.innerHTML = `<div style="color:var(--red);font-size:12px;">読み込みエラー：${error.message}</div>`; return; }
@@ -332,7 +332,6 @@
         return `<tr>
           <td>#${r.global_no ?? '?'}</td>
           <td class="mono">${r.short_id || '—'}</td>
-          <td>${r.lot_id || '—'}</td>
           <td>${tag}${r.is_confirmed ? ' <span class="tag claimed">確定済</span>' : ''}</td>
         </tr>`;
       }).join('');
@@ -349,12 +348,12 @@
           <button class="btn ghost sm" onclick="copyText('${b.parent_token}')">トークン</button>
           <button class="btn ghost sm" onclick="copyText('${CLAIM_BASE}${b.parent_token}')">親QR URL</button>
           <button class="btn ghost sm" onclick="document.getElementById('${rid}').classList.toggle('hidden')">カード一覧</button>
-          <button class="btn ghost sm" onclick="assignLot('${b.id}')">lot一括変更</button>
+          <button class="btn ghost sm" onclick="assignLot('${b.id}')">lot変更</button>
           <button class="btn danger sm" onclick="closeAll('${b.id}', '${(b.lot_id || '').replace(/'/g, '')}')">一括クローズ</button>
         </div>
         <div id="${rid}" class="hidden">
           <table class="rooms-table">
-            <tr><th>No.</th><th>short_id</th><th>lot</th><th>状態</th></tr>
+            <tr><th>No.</th><th>short_id</th><th>状態</th></tr>
             ${roomRows}
           </table>
         </div>
@@ -364,9 +363,9 @@
 
   // ===== ③ 一括編集（最小限） =====
   async function assignLot(bundleId) {
-    const newLot = prompt('この束の全カードに割り当てるlot_idを入力：');
+    const newLot = prompt('この束に割り当てるlot_idを入力：');
     if (!newLot) return;
-    const { error } = await db.from('rooms').update({ lot_id: newLot }).eq('bundle_id', bundleId);
+    const { error } = await db.from('bundles').update({ lot_id: newLot }).eq('id', bundleId);
     if (error) { alert('エラー：' + error.message); return; }
     toast('lotを更新しました');
     await loadBundles();
