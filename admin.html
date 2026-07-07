@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light only">
+<meta name="robots" content="noindex, nofollow">
+<title>管理 — お互い様プロジェクト</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&family=Zen+Kaku+Gothic+New:wght@300;400;500&family=Shippori+Mincho:wght@400;500;700&display=swap');
+
+  :root {
+    color-scheme: light only;
+    --ink: #1a1208;
+    --paper: #f5f0e8;
+    --gold: #b8860b;
+    --gray: #6b6355;
+    --border: #c8b99a;
+    --cream: #faf6ee;
+    --red: #8b1a1a;
+    --blue: #5a8ba8;
+    --green: #3a6b3a;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { background: #f5f0e8 !important; }
+  body {
+    background: #f5f0e8 !important;
+    color: #1a1208 !important;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    min-height: 100vh;
+  }
+
+  .top-bar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    padding: 14px 20px; display: flex; align-items: center;
+    background: rgba(245,240,232,0.92);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+  }
+  .back-link {
+    font-size: 12px; letter-spacing: 2px; color: var(--gold);
+    text-decoration: none; display: flex; align-items: center; gap: 6px;
+  }
+  .top-bar-title {
+    flex: 1; text-align: center;
+    font-family: 'Shippori Mincho', serif;
+    font-size: 13px; letter-spacing: 5px; color: var(--ink);
+  }
+  .top-bar-right { width: 80px; }
+
+  .container { max-width: 760px; margin: 0 auto; padding: 84px 16px 60px; }
+
+  .section {
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 18px;
+    margin-bottom: 22px;
+  }
+  .section h2 {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 15px; letter-spacing: 3px;
+    color: var(--ink); margin-bottom: 14px;
+    padding-bottom: 8px; border-bottom: 1px solid var(--border);
+  }
+
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 11px; letter-spacing: 1px; color: var(--gray); margin-bottom: 4px; }
+  .field input {
+    width: 100%; padding: 9px 10px;
+    border: 1px solid var(--border); border-radius: 6px;
+    background: #fff; color: var(--ink);
+    font-family: inherit; font-size: 14px;
+  }
+  .field-row { display: flex; gap: 10px; }
+  .field-row .field { flex: 1; }
+
+  .btn {
+    display: inline-block; padding: 10px 18px;
+    border: 1px solid var(--gold); border-radius: 6px;
+    background: var(--gold); color: #fff;
+    font-family: inherit; font-size: 13px; letter-spacing: 1px;
+    cursor: pointer; transition: opacity .2s;
+  }
+  .btn:hover { opacity: .85; }
+  .btn:disabled { opacity: .4; cursor: default; }
+  .btn.ghost { background: transparent; color: var(--gold); }
+  .btn.danger { background: transparent; color: var(--red); border-color: var(--red); }
+  .btn.sm { padding: 5px 10px; font-size: 11px; }
+
+  .result-box {
+    margin-top: 14px; padding: 12px;
+    border: 1px dashed var(--gold); border-radius: 8px;
+    background: #fffdf8; font-size: 12px; word-break: break-all;
+  }
+  .result-box .row { margin-bottom: 8px; }
+  .result-box .label { color: var(--gray); font-size: 10px; letter-spacing: 1px; }
+  .mono { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; }
+
+  .bundle-card {
+    border: 1px solid var(--border); border-radius: 8px;
+    background: #fff; padding: 12px; margin-bottom: 12px;
+  }
+  .bundle-head { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; font-size: 12px; }
+  .bundle-head .lot { font-family: 'Shippori Mincho', serif; font-size: 14px; font-weight: 700; }
+  .bundle-head .meta { color: var(--gray); font-size: 11px; }
+  .bundle-actions { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .rooms-table { width: 100%; margin-top: 10px; border-collapse: collapse; font-size: 11px; }
+  .rooms-table th, .rooms-table td { padding: 4px 6px; border-bottom: 1px solid #eee4d2; text-align: left; }
+  .rooms-table th { color: var(--gray); font-weight: 400; letter-spacing: 1px; }
+  .tag { display: inline-block; padding: 1px 7px; border-radius: 9px; font-size: 10px; letter-spacing: 1px; }
+  .tag.blank { background: #eee; color: var(--gray); }
+  .tag.claimed { background: #e4eef4; color: var(--blue); }
+  .tag.closed { background: #f4e4e4; color: var(--red); }
+
+  #status-msg { font-size: 12px; color: var(--gray); min-height: 18px; margin-top: 8px; }
+  #gate-msg { text-align: center; padding: 120px 20px; color: var(--gray); font-size: 13px; letter-spacing: 2px; }
+  .hidden { display: none; }
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--ink); color: var(--paper);
+    padding: 8px 18px; border-radius: 20px; font-size: 12px;
+    opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 200;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <a href="mypage.html" class="back-link">← マイページ</a>
+  <div class="top-bar-title">管理</div>
+  <div class="top-bar-right"></div>
+</div>
+
+<div id="gate-msg">確認中…</div>
+
+<div class="container hidden" id="main">
+
+  <!-- ① 束発行 -->
+  <div class="section">
+    <h2>束発行</h2>
+    <div class="field">
+      <label>ロットID（lot_id）</label>
+      <input type="text" id="in-lot" placeholder="例：Lot.0001 / test-0707">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>枚数 / 束</label>
+        <input type="number" id="in-count" value="100" min="1" max="1000">
+      </div>
+      <div class="field">
+        <label>セット数（束の数）</label>
+        <input type="number" id="in-sets" value="1" min="1" max="20">
+      </div>
+      <div class="field">
+        <label>有効期限（空欄＝なし）</label>
+        <input type="date" id="in-expires">
+      </div>
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <button class="btn" id="btn-issue">発行する</button>
+      <button class="btn ghost" id="btn-repeat">前回と同じ設定で発行</button>
+    </div>
+    <div id="status-msg"></div>
+    <div id="issue-results"></div>
+  </div>
+
+  <!-- ② 発行済み一覧 -->
+  <div class="section">
+    <h2>発行済み一覧</h2>
+    <button class="btn ghost sm" id="btn-reload">再読み込み</button>
+    <div id="bundle-list" style="margin-top:12px;"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const SUPABASE_URL = 'https://damussuizcfzqkfkpwwm.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhbXVzc3VpemNmenFrZmtwd3dtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0NTcwOTIsImV4cCI6MjA5MTAzMzA5Mn0.Xp93BfRowa9gG7ZMRQxyyKiYXgWRN4Gk5xLxaGTiUIo';
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const CLAIM_BASE = 'https://otagaisama.github.io/otagaisama/claim.html?b=';
+  const LS_KEY = 'admin_last_bundle_params';
+  let currentUser = null;
+
+  // ===== 門番（見た目のみ。実効性はRLS側） =====
+  window.onload = async () => {
+    const { data: { session } } = await db.auth.getSession();
+    if (!session) { location.replace('index.html'); return; }
+    currentUser = session.user;
+    let role = null;
+    try {
+      const { data } = await db.from('profiles').select('role').eq('id', currentUser.id).maybeSingle();
+      role = data?.role;
+    } catch(e) {}
+    if (role !== 'operator') { location.replace('index.html'); return; }
+
+    document.getElementById('gate-msg').classList.add('hidden');
+    document.getElementById('main').classList.remove('hidden');
+
+    // 前回パラメータをフォームに反映
+    const last = loadLast();
+    if (last) {
+      document.getElementById('in-lot').value = last.lot;
+      document.getElementById('in-count').value = last.count;
+      document.getElementById('in-sets').value = last.sets;
+      document.getElementById('in-expires').value = last.expires || '';
+    }
+
+    document.getElementById('btn-issue').addEventListener('click', () => issue(false));
+    document.getElementById('btn-repeat').addEventListener('click', () => issue(true));
+    document.getElementById('btn-reload').addEventListener('click', loadBundles);
+
+    await loadBundles();
+  };
+
+  function loadLast() {
+    try { return JSON.parse(localStorage.getItem(LS_KEY)); } catch { return null; }
+  }
+
+  function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1800);
+  }
+
+  async function copyText(txt) {
+    try { await navigator.clipboard.writeText(txt); toast('コピーしました'); }
+    catch { prompt('コピーしてください：', txt); }
+  }
+
+  // ===== ① 束発行 =====
+  async function issue(useLast) {
+    let p;
+    if (useLast) {
+      p = loadLast();
+      if (!p) { toast('前回の記録がありません'); return; }
+      if (!confirm(`前回と同じ設定で発行します。\n\nlot: ${p.lot}\n枚数: ${p.count} × ${p.sets}束\n期限: ${p.expires || 'なし'}\n\nよろしいですか？`)) return;
+    } else {
+      p = {
+        lot: document.getElementById('in-lot').value.trim(),
+        count: parseInt(document.getElementById('in-count').value, 10),
+        sets: parseInt(document.getElementById('in-sets').value, 10),
+        expires: document.getElementById('in-expires').value || null
+      };
+      if (!p.lot) { toast('lot_idを入力してください'); return; }
+      if (!(p.count >= 1) || !(p.sets >= 1)) { toast('枚数・セット数が不正です'); return; }
+      if (!confirm(`発行します。\n\nlot: ${p.lot}\n枚数: ${p.count} × ${p.sets}束（計${p.count * p.sets}枚）\n期限: ${p.expires || 'なし'}\n\nよろしいですか？`)) return;
+    }
+
+    const btn1 = document.getElementById('btn-issue');
+    const btn2 = document.getElementById('btn-repeat');
+    btn1.disabled = btn2.disabled = true;
+    const status = document.getElementById('status-msg');
+    const resultsEl = document.getElementById('issue-results');
+    resultsEl.innerHTML = '';
+
+    const expiresTs = p.expires ? new Date(p.expires + 'T23:59:59+09:00').toISOString() : null;
+    const results = [];
+
+    for (let i = 1; i <= p.sets; i++) {
+      status.textContent = `発行中… ${i} / ${p.sets}`;
+      const { data: bundleId, error } = await db.rpc('create_bundle', {
+        p_lot_id: p.lot,
+        p_expires_at: expiresTs,
+        p_count: p.count
+      });
+      if (error) {
+        status.textContent = `エラー（${i}束目）：${error.message}`;
+        btn1.disabled = btn2.disabled = false;
+        renderIssueResults(results, resultsEl);
+        return;
+      }
+      // 親トークンを取得
+      const { data: b } = await db.from('bundles').select('parent_token').eq('id', bundleId).maybeSingle();
+      results.push({ bundleId, token: b?.parent_token || '(取得失敗)' });
+    }
+
+    localStorage.setItem(LS_KEY, JSON.stringify(p));
+    status.textContent = `完了：${p.sets}束 × ${p.count}枚 発行しました`;
+    renderIssueResults(results, resultsEl);
+    btn1.disabled = btn2.disabled = false;
+    await loadBundles();
+  }
+
+  function renderIssueResults(results, el) {
+    if (!results.length) return;
+    el.innerHTML = results.map((r, idx) => `
+      <div class="result-box">
+        <div class="row"><span class="label">束 ${idx + 1} — bundle_id</span><br><span class="mono">${r.bundleId}</span></div>
+        <div class="row"><span class="label">親QRトークン</span><br><span class="mono">${r.token}</span></div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button class="btn ghost sm" onclick="copyText('${r.token}')">トークンをコピー</button>
+          <button class="btn ghost sm" onclick="copyText('${CLAIM_BASE}${r.token}')">親QR用URLをコピー</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ===== ② 発行済み一覧 =====
+  async function loadBundles() {
+    const listEl = document.getElementById('bundle-list');
+    listEl.innerHTML = '<div style="font-size:12px;color:var(--gray);">読み込み中…</div>';
+
+    const { data, error } = await db.from('bundles')
+      .select('id, lot_id, parent_token, expires_at, created_at, rooms(id, global_no, short_id, lot_id, owner_user_id, is_confirmed, closed_at)')
+      .order('created_at', { ascending: false });
+
+    if (error) { listEl.innerHTML = `<div style="color:var(--red);font-size:12px;">読み込みエラー：${error.message}</div>`; return; }
+    if (!data || !data.length) { listEl.innerHTML = '<div style="font-size:12px;color:var(--gray);">発行済みの束はありません</div>'; return; }
+
+    listEl.innerHTML = data.map(b => {
+      const rooms = (b.rooms || []).sort((a, c) => (a.global_no || 0) - (c.global_no || 0));
+      const total = rooms.length;
+      const claimed = rooms.filter(r => r.owner_user_id).length;
+      const closed = rooms.filter(r => r.closed_at).length;
+      const created = b.created_at ? b.created_at.slice(0, 10) : '?';
+      const expires = b.expires_at ? b.expires_at.slice(0, 10) : 'なし';
+      const rid = 'rooms-' + b.id;
+
+      const roomRows = rooms.map(r => {
+        let tag;
+        if (r.closed_at) tag = '<span class="tag closed">クローズ</span>';
+        else if (r.owner_user_id) tag = '<span class="tag claimed">claim済</span>';
+        else tag = '<span class="tag blank">未claim</span>';
+        return `<tr>
+          <td>#${r.global_no ?? '?'}</td>
+          <td class="mono">${r.short_id || '—'}</td>
+          <td>${r.lot_id || '—'}</td>
+          <td>${tag}${r.is_confirmed ? ' <span class="tag claimed">確定済</span>' : ''}</td>
+        </tr>`;
+      }).join('');
+
+      return `
+      <div class="bundle-card">
+        <div class="bundle-head">
+          <span class="lot">${b.lot_id || '(lotなし)'}</span>
+          <span class="meta">発行 ${created}</span>
+          <span class="meta">期限 ${expires}</span>
+          <span class="meta">${total}枚 / claim ${claimed} / クローズ ${closed}</span>
+        </div>
+        <div class="bundle-actions">
+          <button class="btn ghost sm" onclick="copyText('${b.parent_token}')">トークン</button>
+          <button class="btn ghost sm" onclick="copyText('${CLAIM_BASE}${b.parent_token}')">親QR URL</button>
+          <button class="btn ghost sm" onclick="document.getElementById('${rid}').classList.toggle('hidden')">カード一覧</button>
+          <button class="btn ghost sm" onclick="assignLot('${b.id}')">lot一括変更</button>
+          <button class="btn danger sm" onclick="closeAll('${b.id}', '${(b.lot_id || '').replace(/'/g, '')}')">一括クローズ</button>
+        </div>
+        <div id="${rid}" class="hidden">
+          <table class="rooms-table">
+            <tr><th>No.</th><th>short_id</th><th>lot</th><th>状態</th></tr>
+            ${roomRows}
+          </table>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // ===== ③ 一括編集（最小限） =====
+  async function assignLot(bundleId) {
+    const newLot = prompt('この束の全カードに割り当てるlot_idを入力：');
+    if (!newLot) return;
+    const { error } = await db.from('rooms').update({ lot_id: newLot }).eq('bundle_id', bundleId);
+    if (error) { alert('エラー：' + error.message); return; }
+    toast('lotを更新しました');
+    await loadBundles();
+  }
+
+  async function closeAll(bundleId, lotName) {
+    if (!confirm(`束「${lotName}」の未クローズカードを全てクローズします。\n元に戻せません。よろしいですか？`)) return;
+    if (!confirm('本当にクローズしますか？（2段階確認）')) return;
+    const { error } = await db.from('rooms')
+      .update({ closed_at: new Date().toISOString() })
+      .eq('bundle_id', bundleId)
+      .is('closed_at', null);
+    if (error) { alert('エラー：' + error.message); return; }
+    toast('一括クローズしました');
+    await loadBundles();
+  }
+</script>
+</body>
+</html>
