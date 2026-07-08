@@ -74,7 +74,7 @@
     color: var(--ink);
     letter-spacing: 5px;
   }
-  .top-bar-right { width: 80px; display: flex; justify-content: flex-end; }
+  .top-bar-right { display: flex; justify-content: flex-end; }
 
   .container {
     position: relative;
@@ -629,7 +629,7 @@
 <div class="top-bar">
   <a href="index.html" class="back-link">← 表紙へ</a>
   <div class="top-bar-title">お 互 い 様</div>
-  <div class="top-bar-right"><button id="logoutBtn" style="background:none;border:none;color:#fff;font-size:13px;cursor:pointer;opacity:.85;">ログアウト</button></div>
+  <div class="top-bar-right" style="display:flex;gap:14px;align-items:center;"><a href="admin.html" id="adminLink" style="display:none;color:#fff;font-size:13px;text-decoration:none;opacity:.85;">管理</a><button id="logoutBtn" style="background:none;border:none;color:#fff;font-size:13px;cursor:pointer;opacity:.85;">ログアウト</button></div>
 </div>
 
 <div class="container">
@@ -856,8 +856,12 @@
   async function loadPage() {
     let penname = '';
     try {
-      const { data } = await db.from('profiles').select('username').eq('id', currentUser.id).maybeSingle();
+      const { data } = await db.from('profiles').select('username, role').eq('id', currentUser.id).maybeSingle();
       if (data?.username) penname = data.username;
+      if (data?.role === 'operator') {
+        const al = document.getElementById('adminLink');
+        if (al) al.style.display = 'inline';
+      }
     } catch {}
     if (!penname) {
       const meta = currentUser.user_metadata || {};
