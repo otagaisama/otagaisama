@@ -317,7 +317,7 @@
 
     listEl.innerHTML = data.map(b => {
       const rooms = (b.rooms || []).sort((a, c) => (a.global_no || 0) - (c.global_no || 0));
-      const total = rooms.length;
+ 　   const total = rooms.filter(r => r.short_id).length;
       const claimed = rooms.filter(r => r.owner_user_id).length;
       const closed = rooms.filter(r => r.closed_at).length;
       const created = b.created_at ? b.created_at.slice(0, 10) : '?';
@@ -342,7 +342,7 @@
           <span class="lot">${b.lot_id || '(lotなし)'}</span>
           <span class="meta">発行 ${created}</span>
           <span class="meta">期限 ${expires}</span>
-          <span class="meta">${total}枚 / claim ${claimed} / クローズ ${closed}</span>
+          <span class="meta">有効 ${total}枚 / claim ${claimed} / クローズ ${closed}</span>
         </div>
         <div class="bundle-actions">
           <button class="btn ghost sm" onclick="copyText('${b.parent_token}')">トークン</button>
