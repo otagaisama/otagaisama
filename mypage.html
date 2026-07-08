@@ -879,8 +879,7 @@
     const { data: sentRooms } = await db
       .from('rooms').select('*')
       .eq('user_id', currentUser.id)
-      .order('created_at', { ascending: false });
-
+    　.order('global_no', { ascending: true });
     // もらったカード（自分が返信したroom_posts）
     const { data: receivedPosts } = await db
       .from('room_posts').select('room_id, created_at')
