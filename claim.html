@@ -355,7 +355,10 @@
   };
 
   supabase.auth.onAuthStateChange((event) => {
-    if (event === 'SIGNED_IN') init();
+    // 未ログイン状態からの初回サインインのみ再初期化する。
+    // タブ復帰やトークン更新による SIGNED_IN 再発火では、
+    // 表示中の結果画面を巻き戻さないよう init() を呼ばない。
+    if (event === 'SIGNED_IN' && !currentUser) init();
   });
 
   init();
