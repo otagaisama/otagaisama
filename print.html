@@ -321,7 +321,7 @@
       ・使用済みのカードは黒く塗られて印刷されません<br>
       ・同じシートを刷り直すと、未使用カードは同じQRがもう1枚できます。前に刷った紙が残っている場合はご注意ください
     </div>
-    <button class="btn-open" style="display:block;margin:0 auto 10px;" onclick="window.print()">この画面からそのまま印刷する</button>
+    <button class="btn-open" style="display:block;margin:0 auto 10px;" onclick="printDirect()">この画面からそのまま印刷する</button>
     <button class="btn-open" style="display:block;margin:0 auto;" onclick="showList()">← シート一覧へもどる</button>
   </div>
 </div>
@@ -565,13 +565,27 @@
       const pdf = buildPdf(currentLot);
       pdf.save(`otagaisama_${currentLot.lot}.pdf`);
       const { data } = await db.rpc('mark_bundle_printed', { p_lot: currentLot.lot });
-      if (data && data.ok) currentLot.printedAt = data.printed_at;
+      if (data && data.ok) { currentLot.printedAt = data.printed_at; renderList(); }
     } catch (e) {
       console.error(e);
       alert('PDFの作成に失敗しました。ページを再読み込みしてお試しください。');
     } finally {
       btn.disabled = false;
     }
+  };
+
+  window.printDirect = async function() {
+    if (!currentLot) return;
+    if (currentLot.printedAt) {
+      const ok = confirm(
+        `このシートは ${fmtDate(currentLot.printedAt)} に印刷済みです。\n` +
+        `刷り直すと、同じQRのカードが2枚になります。\n続けますか？`
+      );
+      if (!ok) return;
+    }
+    window.print();
+    const { data } = await db.rpc('mark_bundle_printed', { p_lot: currentLot.lot });
+    if (data && data.ok) { currentLot.printedAt = data.printed_at; renderList(); }
   };
 
   function buildPdf(l) {
