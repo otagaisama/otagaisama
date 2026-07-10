@@ -495,6 +495,7 @@
 .badge-unused { background: #f0f0f0; border: 1px solid #ccc; color: #999; }
   .badge-qr  { background: #eef4f7; border: 1px solid #a9c4d0; color: #4a7285; }
   .badge-url { background: #f4f0f7; border: 1px solid #c2b3d0; color: #6f5a85; }
+  .badge-home { background: #f7f2e4; border: 1px solid #cbb56a; color: #8a6d1b; }
   .btn-del { margin-top: 6px; padding: 4px 10px; background: transparent; border: 1px solid var(--border); border-radius: 6px; color: #a05252; font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 10px; letter-spacing: 0.1em; cursor: pointer; opacity: 0.8; }
   .btn-del:hover { opacity: 1; }
   .btn-retire-sm { margin-top: 6px; padding: 4px 10px; background: transparent; border: 1px solid var(--border); border-radius: 6px; color: #8a7c60; font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 10px; letter-spacing: 0.1em; cursor: pointer; opacity: 0.8; }
@@ -803,6 +804,11 @@
         <span class="action-btn-text">Q R 名 刺 を も ら っ た 方 へ</span>
         <span class="action-btn-arrow">→</span>
       </a>
+      <a href="print.html" class="action-btn action-btn-secondary">
+        <span class="action-btn-icon">🖨️</span>
+        <span class="action-btn-text">じ ぶ ん の Q R カ ー ド を 印 刷</span>
+        <span class="action-btn-arrow">→</span>
+      </a>
     </div>
 
     <div class="gold-line"></div>
@@ -959,10 +965,13 @@
         ? `<div class="room-lot-no">${room.lot_no}</div>`
         : '';
 
-      // 由来バッジ（QR / URL）
-      let badgesHtml = isQr
-        ? `<span class="status-badge badge-qr">Q R</span>`
-        : `<span class="status-badge badge-url">U R L</span>`;
+      // 由来バッジ（じぶん印刷 / QR / URL）
+      const isHome = isQr && (room.lot_no || '').startsWith('H');
+      let badgesHtml = isHome
+        ? `<span class="status-badge badge-home">じ ぶ ん 印 刷</span>`
+        : isQr
+          ? `<span class="status-badge badge-qr">Q R</span>`
+          : `<span class="status-badge badge-url">U R L</span>`;
 
       // 状態バッジ
       if (!isConfirmed && !hasDraft) {
