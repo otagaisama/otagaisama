@@ -104,6 +104,11 @@
     font-size: 11px; color: var(--gray); line-height: 1.7;
   }
   .sheet-meta .expired { color: var(--red); }
+  .badge-printed {
+    display: inline-block; font-size: 11px; padding: 2px 8px;
+    border-radius: 10px; margin-left: 8px; vertical-align: middle;
+    background: #ede7db; color: #8a7d5c; border: 1px solid #d5c9a8;
+  }
   .btn-open {
     padding: 9px 16px; background: transparent;
     border: 1px solid var(--border); border-radius: 8px;
@@ -370,6 +375,13 @@
       return { lot, rooms, createdAt, expiresAt, unused };
     }).sort((a, b) => b.lot.localeCompare(a.lot));
 
+    // 印刷済み日時をbundlesから取得してlotsに付与
+    try {
+      const { data: prints } = await db.rpc('get_my_bundle_prints');
+      const pmap = new Map((prints || []).map(p => [p.lot_id, p.printed_at]));
+      lots.forEach(l => { l.printedAt = pmap.get(l.lot) || null; });
+    } catch (e) { console.error(e); }
+
     renderList();
     showList();
   }
@@ -390,7 +402,7 @@
       const expired = l.expiresAt && l.expiresAt < new Date();
       return `
       <div class="sheet-item">
-        <div class="sheet-lot">${l.lot}</div>
+        <div class="sheet-lot">${l.lot}${l.printedAt ? `<span class="badge-printed">印刷済み ${fmtDate(l.printedAt)}</span>` : ''}</div>
         <div class="sheet-meta">
           作成 ${fmtDate(l.createdAt)} ／ 期限 <span class="${expired ? 'expired' : ''}">${fmtDate(l.expiresAt)}${expired ? '（期限切れ）' : ''}</span><br>
           未使用 ${l.unused} / ${l.rooms.length} 枚
@@ -538,13 +550,22 @@
   const PSHEET = { w: 210, h: 297, mx: 14, my: 11 };
   const PCARD = { w: 91, h: 55 };
 
-  window.downloadPdf = function() {
+  window.downloadPdf = async function() {
     if (!currentLot) return;
+    if (currentLot.printedAt) {
+      const ok = confirm(
+        `このシートは ${fmtDate(currentLot.printedAt)} に印刷済みです。\n` +
+        `刷り直すと、同じQRのカードが2枚になります。\n続けますか？`
+      );
+      if (!ok) return;
+    }
     const btn = document.getElementById('btn-pdf');
     btn.disabled = true;
     try {
       const pdf = buildPdf(currentLot);
       pdf.save(`otagaisama_${currentLot.lot}.pdf`);
+      const { data } = await db.rpc('mark_bundle_printed', { p_lot: currentLot.lot });
+      if (data && data.ok) currentLot.printedAt = data.printed_at;
     } catch (e) {
       console.error(e);
       alert('PDFの作成に失敗しました。ページを再読み込みしてお試しください。');
