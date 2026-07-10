@@ -427,6 +427,14 @@
     color: var(--ink);
     line-height: 1;
   }
+  .room-lot-no {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 9px;
+    color: var(--gold);
+    letter-spacing: 0.5px;
+    margin-top: 3px;
+    white-space: nowrap;
+  }
   .room-num-global {
     font-family: 'Zen Kaku Gothic New', sans-serif;
     font-size: 9px;
@@ -947,6 +955,9 @@
       const isQr        = room.room_type === 'qr';
       const urlParam    = room.short_id || room.room_id;
       const numVal = `#${room.global_no||'?'}`;
+      const lotHtml = room.lot_no
+        ? `<div class="room-lot-no">${room.lot_no}</div>`
+        : '';
 
       // 由来バッジ（QR / URL）
       let badgesHtml = isQr
@@ -987,6 +998,7 @@
         <a class="room-item" href="card.html?room=${urlParam}">
           <div class="room-num-badge">
             <div class="room-num-val" style="font-size:15px;letter-spacing:1px;">${numVal}</div>
+            ${lotHtml}
           </div>
           <div class="room-divider"></div>
           <div class="room-info">
@@ -1100,13 +1112,15 @@
       const urlParam = roomData?.short_id || roomId;
       const senderName = (roomData?.pen_name || '匿名').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       const numVal = `#${roomData?.global_no || '?'}`;
-      return { urlParam, senderName, numVal, postCount: roomPosts.length, lastDate };
+      const lotNo = roomData?.lot_no || null;
+      return { urlParam, senderName, numVal, lotNo, postCount: roomPosts.length, lastDate };
     }));
 
     el.innerHTML = items.map(room => `
       <a class="room-item" href="receive.html?room=${room.urlParam}">
         <div class="room-num-badge">
           <div class="room-num-val" style="font-size:15px;letter-spacing:1px;">${room.numVal}</div>
+          ${room.lotNo ? `<div class="room-lot-no">${room.lotNo}</div>` : ''}
         </div>
         <div class="room-divider"></div>
         <div class="room-info">
