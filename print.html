@@ -231,6 +231,21 @@
     font-family: 'Zen Kaku Gothic New', sans-serif;
     font-size: 4.8pt; letter-spacing: 0.6pt; color: var(--gold);
   }
+  .card-face.used {
+    background: var(--ink);
+    flex-direction: column; align-items: center; justify-content: center;
+    gap: 2mm;
+  }
+  .used-label {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 10pt; font-weight: 700; letter-spacing: 3pt;
+    color: rgba(250, 246, 238, 0.85);
+  }
+  .used-sub {
+    font-family: 'Courier New', monospace;
+    font-size: 5.5pt; letter-spacing: 0.5pt;
+    color: rgba(250, 246, 238, 0.45);
+  }
 
   /* ============================================================
      印刷時：UIを全部消してシートだけ原寸で出す
@@ -297,7 +312,9 @@
     <div class="print-tips">
       ・押すとPDFファイルがダウンロードされます（カードの大きさはPDFの中に固定済み）<br>
       ・コンビニで刷る場合は、このPDFをネットプリントアプリに登録するだけ<br>
-      ・おうちのプリンターは、PDFを開いて「倍率100%（実際のサイズ）」で印刷してください
+      ・おうちのプリンターは、PDFを開いて「倍率100%（実際のサイズ）」で印刷してください<br>
+      ・使用済みのカードは黒く塗られて印刷されません<br>
+      ・同じシートを刷り直すと、未使用カードは同じQRがもう1枚できます。前に刷った紙が残っている場合はご注意ください
     </div>
     <button class="btn-open" style="display:block;margin:0 auto 10px;" onclick="window.print()">この画面からそのまま印刷する</button>
     <button class="btn-open" style="display:block;margin:0 auto;" onclick="showList()">← シート一覧へもどる</button>
@@ -475,6 +492,16 @@
   function buildCard(r) {
     const face = document.createElement('div');
     face.className = 'card-face';
+
+    // 使用済み（確定 or クローズ）はブラックアウト：同じQRの再配布事故を防ぐ
+    if (r.is_confirmed || r.closed_at) {
+      face.classList.add('used');
+      face.innerHTML = `
+        <div class="used-label">使 用 済 み</div>
+        <div class="used-sub">${r.short_id || ''}　${r.lot_no || ''}</div>`;
+      return face;
+    }
+
     face.innerHTML = `
       <div class="cf-frame"></div>
       <div class="cf-left">
@@ -559,6 +586,24 @@
   }
 
   function drawPdfCard(pdf, r, x, y) {
+    // 使用済み（確定 or クローズ）はブラックアウト
+    if (r.is_confirmed || r.closed_at) {
+      pdf.setFillColor(...PC.ink);
+      pdf.rect(x + 0.3, y + 0.3, PCARD.w - 0.6, PCARD.h - 0.6, 'F');
+      pdf.setFont('Shippori', 'bold');
+      pdf.setFontSize(10);
+      pdf.setCharSpace(2.5);
+      pdf.setTextColor(235, 228, 214);
+      pdf.text('使用済み', x + PCARD.w / 2, y + PCARD.h / 2, { align: 'center' });
+      pdf.setFont('courier', 'normal');
+      pdf.setFontSize(5.5);
+      pdf.setCharSpace(0.5);
+      pdf.setTextColor(150, 143, 130);
+      pdf.text(`${r.short_id || ''}  ${r.lot_no || ''}`, x + PCARD.w / 2, y + PCARD.h / 2 + 6, { align: 'center' });
+      pdf.setCharSpace(0);
+      return;
+    }
+
     // 地：クリーム（破線を残すため0.3mm内側）
     pdf.setFillColor(...PC.cream);
     pdf.rect(x + 0.3, y + 0.3, PCARD.w - 0.6, PCARD.h - 0.6, 'F');
