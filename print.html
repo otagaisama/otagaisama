@@ -6,6 +6,8 @@
 <meta name="color-scheme" content="light only">
 <title>じぶんのQRカードを印刷 — お互い様プロジェクト</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="fonts_subset.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@300;400;500&family=Noto+Serif+JP:wght@300;400;700&display=swap');
 
@@ -291,12 +293,13 @@
       <div class="sheet-scale" id="sheet-scale"></div>
     </div>
 
-    <button class="btn-print" onclick="window.print()">こ の 10 枚 を 印 刷 す る</button>
+    <button class="btn-print" id="btn-pdf" onclick="downloadPdf()">P D F を つ く る（ 保 存 ）</button>
     <div class="print-tips">
-      ・A4・カラー印刷がおすすめです（白黒でもQRは読み取れます）<br>
-      ・印刷設定は「倍率100%（実際のサイズ）」「余白なし or 最小」を選んでください<br>
-      ・コンビニで刷る場合は、印刷画面で「PDFに保存」してからマルチコピー機へ
+      ・押すとPDFファイルがダウンロードされます（カードの大きさはPDFの中に固定済み）<br>
+      ・コンビニで刷る場合は、このPDFをネットプリントアプリに登録するだけ<br>
+      ・おうちのプリンターは、PDFを開いて「倍率100%（実際のサイズ）」で印刷してください
     </div>
+    <button class="btn-open" style="display:block;margin:0 auto 10px;" onclick="window.print()">この画面からそのまま印刷する</button>
     <button class="btn-open" style="display:block;margin:0 auto;" onclick="showList()">← シート一覧へもどる</button>
   </div>
 </div>
@@ -317,6 +320,7 @@
   let currentUser = null;
   let myRooms = [];   // 自分のH束カード全部
   let lots = [];      // [{lot, rooms:[...], createdAt, expiresAt, unused}]
+  let currentLot = null; // プレビュー中のロット（PDF生成用）
 
   window.onload = async () => {
     const { data: { session } } = await db.auth.getSession();
@@ -422,6 +426,7 @@
   window.openSheet = function(i) {
     const l = lots[i];
     if (!l) return;
+    currentLot = l;
 
     document.getElementById('list-view').classList.add('hidden');
     document.getElementById('preview-view').classList.remove('hidden');
@@ -493,6 +498,142 @@
     qr.addData(text);
     qr.make();
     return qr.createSvgTag({ cellSize: 2, margin: 0, scalable: true });
+  }
+
+  // ============================================================
+  // PDF生成（jsPDF・ベクター直描き・寸法mm焼き込み）
+  // ============================================================
+  const PC = {
+    cream: [250, 246, 238], ink: [26, 18, 8], gold: [184, 134, 11],
+    gray: [107, 99, 85], border: [200, 185, 154], red: [139, 26, 26],
+    cut: [201, 194, 180]
+  };
+  const PSHEET = { w: 210, h: 297, mx: 14, my: 11 };
+  const PCARD = { w: 91, h: 55 };
+
+  window.downloadPdf = function() {
+    if (!currentLot) return;
+    const btn = document.getElementById('btn-pdf');
+    btn.disabled = true;
+    try {
+      const pdf = buildPdf(currentLot);
+      pdf.save(`otagaisama_${currentLot.lot}.pdf`);
+    } catch (e) {
+      console.error(e);
+      alert('PDFの作成に失敗しました。ページを再読み込みしてお試しください。');
+    } finally {
+      btn.disabled = false;
+    }
+  };
+
+  function buildPdf(l) {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
+    pdf.addFileToVFS('SMR.ttf', window.FONT_SMR);
+    pdf.addFont('SMR.ttf', 'Shippori', 'normal');
+    pdf.addFileToVFS('SMB.ttf', window.FONT_SMB);
+    pdf.addFont('SMB.ttf', 'Shippori', 'bold');
+
+    // 切り取り破線（格子）
+    pdf.setDrawColor(...PC.cut);
+    pdf.setLineWidth(0.15);
+    pdf.setLineDashPattern([1.2, 1.2], 0);
+    for (let col = 0; col <= 2; col++) {
+      const x = PSHEET.mx + col * PCARD.w;
+      pdf.line(x, PSHEET.my, x, PSHEET.h - PSHEET.my);
+    }
+    for (let row = 0; row <= 5; row++) {
+      const y = PSHEET.my + row * PCARD.h;
+      pdf.line(PSHEET.mx, y, PSHEET.w - PSHEET.mx, y);
+    }
+    pdf.setLineDashPattern([], 0);
+
+    const rooms = [...l.rooms].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+    for (let i = 0; i < Math.min(rooms.length, 10); i++) {
+      const col = i % 2, row = Math.floor(i / 2);
+      if (rooms[i] && rooms[i].short_id) {
+        drawPdfCard(pdf, rooms[i], PSHEET.mx + col * PCARD.w, PSHEET.my + row * PCARD.h);
+      }
+    }
+    return pdf;
+  }
+
+  function drawPdfCard(pdf, r, x, y) {
+    // 地：クリーム（破線を残すため0.3mm内側）
+    pdf.setFillColor(...PC.cream);
+    pdf.rect(x + 0.3, y + 0.3, PCARD.w - 0.6, PCARD.h - 0.6, 'F');
+
+    // 内枠（金罫）
+    pdf.setDrawColor(...PC.border);
+    pdf.setLineWidth(0.25);
+    pdf.rect(x + 2.2, y + 2.2, PCARD.w - 4.4, PCARD.h - 4.4, 'S');
+
+    const L = x + 5.5;
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(5.4);
+    pdf.setTextColor(...PC.gold);
+    pdf.setCharSpace(0.55);
+    pdf.text('OTAGAISAMA PROJECT', L, y + 7.6);
+
+    pdf.setFont('Shippori', 'normal');
+    pdf.setFontSize(7);
+    pdf.setTextColor(...PC.ink);
+    pdf.setCharSpace(0.9);
+    pdf.text('お互い様プロジェクト', L, y + 11.4);
+
+    pdf.setFont('Shippori', 'bold');
+    pdf.setFontSize(17);
+    pdf.setCharSpace(1.8);
+    pdf.setTextColor(...PC.ink);
+    pdf.text('届けます', L, y + 21.5);
+    const w = pdf.getTextWidth('届けます');
+    pdf.setTextColor(...PC.red);
+    pdf.text('。', L + w + 1.8, y + 21.5);
+
+    pdf.setFont('Shippori', 'normal');
+    pdf.setFontSize(6.4);
+    pdf.setCharSpace(0.15);
+    pdf.setTextColor(...PC.gray);
+    const msg = ['このカードには、あなたへの', '感謝のことばが入っています。', 'QRコードを読み取ってください。'];
+    msg.forEach((line, i) => pdf.text(line, L, y + 27.5 + i * 4.1));
+
+    pdf.setFontSize(5.2);
+    pdf.setCharSpace(0.5);
+    pdf.setTextColor(...PC.gold);
+    pdf.text('心の価値を、かたちに。', L, y + PCARD.h - 5.2);
+
+    // QR：モジュール矩形の直描き＝真のベクター
+    const QRS = 19, qcx = x + PCARD.w - 15.5;
+    const qx = qcx - QRS / 2, qy = y + 9;
+    pdf.setFillColor(255, 255, 255);
+    pdf.rect(qx - 1, qy - 1, QRS + 2, QRS + 2, 'F');
+    const qr = qrcode(0, 'M');
+    qr.addData(RECEIVE_BASE + r.short_id);
+    qr.make();
+    const n = qr.getModuleCount();
+    const cell = QRS / n;
+    pdf.setFillColor(0, 0, 0);
+    for (let row = 0; row < n; row++) {
+      for (let col = 0; col < n; col++) {
+        if (qr.isDark(row, col)) {
+          pdf.rect(qx + col * cell, qy + row * cell, cell + 0.01, cell + 0.01, 'F');
+        }
+      }
+    }
+
+    pdf.setFont('courier', 'bold');
+    pdf.setFontSize(7);
+    pdf.setCharSpace(0.4);
+    pdf.setTextColor(...PC.ink);
+    pdf.text(r.short_id, qcx, qy + QRS + 4.2, { align: 'center' });
+
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(4.8);
+    pdf.setCharSpace(0.2);
+    pdf.setTextColor(...PC.gold);
+    pdf.text(r.lot_no || '', qcx, qy + QRS + 7.4, { align: 'center' });
+
+    pdf.setCharSpace(0);
   }
 </script>
 </body>
