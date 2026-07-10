@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light only">
 <title>じぶんのQRカードを印刷 — お互い様プロジェクト</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@300;400;500&family=Noto+Serif+JP:wght@300;400;700&display=swap');
 
@@ -216,8 +216,11 @@
     display: flex; flex-direction: column; align-items: center;
     justify-content: center; gap: 1.4mm;
   }
-  .cf-qr { width: 19mm; height: 19mm; }
-  .cf-qr img, .cf-qr canvas { width: 19mm !important; height: 19mm !important; display: block; }
+  .cf-qr {
+    width: 21mm; height: 21mm;
+    background: #fff; padding: 1mm;
+  }
+  .cf-qr svg { width: 19mm; height: 19mm; display: block; }
   .cf-shortid {
     font-family: 'Courier New', monospace;
     font-size: 7pt; letter-spacing: 1.2pt; color: var(--ink); font-weight: 700;
@@ -427,22 +430,21 @@
       `作成 ${fmtDate(l.createdAt)} ／ 期限 ${fmtDate(l.expiresAt)} ／ ${l.rooms.length}枚`;
 
     // 印刷実体を組む
-    const sheet = buildSheet(l);
     const layer = document.getElementById('print-layer');
     layer.innerHTML = '';
-    layer.appendChild(sheet);
+    layer.appendChild(buildSheet(l));
 
-    // 画面プレビュー＝印刷実体のクローンを縮小表示
+    // 画面プレビュー＝クローンではなく実体をもう1組生成（canvasはクローンに写らないため）
     const scaleHost = document.getElementById('sheet-scale');
     scaleHost.innerHTML = '';
-    const clone = sheet.cloneNode(true);
-    scaleHost.appendChild(clone);
+    const previewSheet = buildSheet(l);
+    scaleHost.appendChild(previewSheet);
     requestAnimationFrame(() => {
       const wrapW = document.getElementById('scale-wrap').clientWidth - 8;
-      const sheetW = clone.offsetWidth || 794; // 210mm ≒ 794px
+      const sheetW = previewSheet.offsetWidth || 794; // 210mm ≒ 794px
       const s = Math.min(1, wrapW / sheetW);
       scaleHost.style.transform = `scale(${s})`;
-      scaleHost.style.height = `${(clone.offsetHeight || 1123) * s}px`;
+      scaleHost.style.height = `${(previewSheet.offsetHeight || 1123) * s}px`;
     });
 
     window.scrollTo(0, 0);
@@ -478,17 +480,19 @@
         <div class="cf-tagline">心の価値を、かたちに。</div>
       </div>
       <div class="cf-right">
-        <div class="cf-qr"></div>
+        <div class="cf-qr">${qrSvg(RECEIVE_BASE + r.short_id)}</div>
         <div class="cf-shortid">${r.short_id}</div>
         <div class="cf-lotno">${r.lot_no || ''}</div>
       </div>`;
-    new QRCode(face.querySelector('.cf-qr'), {
-      text: RECEIVE_BASE + r.short_id,
-      width: 220, height: 220,
-      colorDark: '#000000', colorLight: '#ffffff',
-      correctLevel: QRCode.CorrectLevel.M
-    });
     return face;
+  }
+
+  // ベクターQR（SVG）：印刷でぼやけない・印刷屋PDFにもそのまま使える
+  function qrSvg(text) {
+    const qr = qrcode(0, 'M');
+    qr.addData(text);
+    qr.make();
+    return qr.createSvgTag({ cellSize: 2, margin: 0, scalable: true });
   }
 </script>
 </body>
