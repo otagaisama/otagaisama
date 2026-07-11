@@ -816,11 +816,18 @@
     <!-- タブ -->
     <div class="tab-section">
       <div class="tab-bar">
-        <button class="tab-btn active" onclick="switchTab('sent', event)">送 っ た カ ー ド</button>
-        <button class="tab-btn" onclick="switchTab('received', event)">も ら っ た カ ー ド</button>
+        <button class="tab-btn active" onclick="switchTab('holding', event)">手 持 ち</button>
+        <button class="tab-btn" onclick="switchTab('received', event)">も ら っ た</button>
+        <button class="tab-btn" onclick="switchTab('sent', event)">送 っ た ・ 完 結</button>
       </div>
 
-      <div class="tab-panel active" id="panel-sent">
+      <div class="tab-panel active" id="panel-holding">
+        <div class="room-list" id="list-holding">
+          <div class="empty-state"><div class="loading-spinner" style="margin:0 auto 16px;"></div></div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="panel-sent">
         <div class="room-list" id="list-sent">
           <div class="empty-state"><div class="loading-spinner" style="margin:0 auto 16px;"></div></div>
         </div>
@@ -889,11 +896,18 @@
     const days = Math.floor((Date.now() - new Date(currentUser.created_at)) / 86400000) + 1;
     document.getElementById('betaDays').textContent = days;
 
-    // 送ったカード（rooms）
-    const { data: sentRooms } = await db
+    // 自分に関わるカード（作成した or 保有している）を1回で取得して振り分け
+    const { data: myRooms } = await db
       .from('rooms').select('*')
-      .eq('user_id', currentUser.id)
-    　.order('global_no', { ascending: true });
+      .or(`user_id.eq.${currentUser.id},owner_user_id.eq.${currentUser.id}`)
+      .order('global_no', { ascending: true });
+
+    // 手持ち＝保有者が自分で、まだ確定していないカード（書きかけ・claimした白紙）
+    const holdingRooms = (myRooms || []).filter(r =>
+      r.owner_user_id === currentUser.id && r.is_confirmed !== true);
+    // 送った・完結＝自分が作成して確定済みのカード
+    const sentRooms = (myRooms || []).filter(r =>
+      r.user_id === currentUser.id && r.is_confirmed === true);
     // もらったカード（自分が返信したroom_posts）
     const { data: receivedPosts } = await db
       .from('room_posts').select('room_id, created_at')
@@ -909,6 +923,7 @@
     document.getElementById('count-received').textContent = receivedCount;
     document.getElementById('totalPoints').textContent = sentCount * 1 + receivedCount * 2;
 
+    renderHoldingRooms(holdingRooms);
     await renderSentRooms(sentRooms);
     await renderReceivedRooms(receivedRoomIds, receivedPosts);
 
@@ -916,6 +931,50 @@
   }
 
   
+  // ===== 手持ちカード一覧（書きかけ・claimした白紙） =====
+  let holdingRoomsAll = [];
+  let holdingPage = 0;
+
+  function renderHoldingRooms(rooms) {
+    holdingRoomsAll = rooms || [];
+    holdingPage = 0;
+    renderHoldingPage();
+  }
+
+  function renderHoldingPage() {
+    const el = document.getElementById('list-holding');
+    if (holdingRoomsAll.length === 0) {
+      el.innerHTML = `<div class="empty-state"><div class="empty-icon">🎴</div><div class="empty-text">手持ちのカードはありません<br>新しく作るか、QRカードを受け取りましょう</div></div>`;
+      return;
+    }
+
+    const maxPage = Math.ceil(holdingRoomsAll.length / PAGE_SIZE);
+    if (holdingPage < 0) holdingPage = 0;
+    if (holdingPage >= maxPage) holdingPage = maxPage - 1;
+    const slice = holdingRoomsAll.slice(holdingPage * PAGE_SIZE, (holdingPage + 1) * PAGE_SIZE);
+
+    el.innerHTML = slice.map(room => {
+      const numVal = `#${room.global_no || '?'}`;
+      const lotNo  = room.lot_no || null;
+      const isBlank = room.user_id !== currentUser.id;
+      const label  = isBlank ? '白紙のカード' : '書きかけのカード';
+      const urlParam = room.short_id || room.room_id;
+      return `
+      <a class="room-item" href="card.html?room=${urlParam}">
+        <div class="room-num-badge">
+          <div class="room-num-val" style="font-size:15px;letter-spacing:1px;">${numVal}</div>
+          ${lotNo ? `<div class="room-lot-no">${lotNo}</div>` : ''}
+        </div>
+        <div class="room-divider"></div>
+        <div class="room-info">
+          <div class="room-info-label">${label}</div>
+          <div class="room-info-date">${formatDate(room.claimed_at || room.created_at)}</div>
+        </div>
+        <div class="room-arrow">→</div>
+      </a>`;
+    }).join('') + pagerHtml('holding', holdingPage, maxPage);
+  }
+
   // ===== 送ったカード一覧（10件ごとのページング） =====
   const PAGE_SIZE = 10;
   let sentRoomsAll = [];
@@ -1034,6 +1093,7 @@
 
   window.pageMove = function(kind, dir) {
     if (kind === 'sent') { sentPage += dir; renderSentPage(); }
+    else if (kind === 'holding') { holdingPage += dir; renderHoldingPage(); }
     else { recvPage += dir; renderReceivedPage(); }
   };
 
