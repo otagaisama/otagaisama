@@ -1160,6 +1160,7 @@ async function generateRoom() {
       .insert([{
         room_id: roomId,
         user_id: userId,
+        owner_user_id: userId,
         is_confirmed: false,
         pen_name: penName,
         user_card_no: userCardNo,
