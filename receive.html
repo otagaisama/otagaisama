@@ -631,11 +631,18 @@ async function loadCard() {
     setTimeout(() => t.classList.remove('show'), 3000);
   };
 
+  let initStarted = false;
+  function initOnce() {
+    if (initStarted) return;
+    initStarted = true;
+    init();
+  }
+
   supabase.auth.onAuthStateChange((event) => {
-    if (event === 'SIGNED_IN') init();
+    if (event === 'SIGNED_IN') initOnce();
   });
 
-  init();
+  initOnce();
 </script>
 </body>
 </html>
