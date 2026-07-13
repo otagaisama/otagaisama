@@ -339,8 +339,7 @@ async function loadCard() {
       const { data, error } = await supabase.rpc('get_card', { p_key: roomId });
       if (error) { showError('読み込みエラーが発生しました。'); console.error(error); return; }
       if (!data) { showError('カードが見つかりませんでした。<br>URLをご確認ください。'); return; }
-      supabase.rpc('log_card_access', { p_short_id: roomId, p_ua: navigator.userAgent });
-
+     supabase.rpc('log_card_access', { p_short_id: roomId, p_ua: navigator.userAgent }).then(null, () => {});
       // 供養済み（閉じたカード）：凍結view。読めるが返信・再利用は不可
       if (data.card_status === 'closed') {
         if (data.is_confirmed) {
