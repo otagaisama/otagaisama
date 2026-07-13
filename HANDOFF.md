@@ -18,6 +18,7 @@
 - discard_card_backup_20260711.sql … discard_card関数の原本（DB反映済み）
 - migration_20260705_rls.sql … RLS定義の原本（DB反映済み）
 - docs/ … テーマ別の正MD
+- - docs/カード状態遷移_統合メモ_2026-07-04.md … 状態遷移の正（claim3経路・期限・供養）
 
 ## 書いたらあかんもの（要点）
 鍵・トークン・parent_token・未修正脆弱性の詳細・個人情報・short_idと人物の対応
