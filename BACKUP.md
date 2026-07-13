@@ -29,3 +29,4 @@ port: 5432 / user: postgres.damussuizcfzqkfkpwwm
 
 C:\backup を時々USBかクラウドにもコピー(PC故障対策)
 DBパスワードは dump.js 内に平文である点に注意(このPC内限定の扱い)
+
