@@ -959,6 +959,29 @@
       const isBlank = room.user_id !== currentUser.id;
       const label  = isBlank ? '白紙のカード' : '書きかけのカード';
       const urlParam = room.short_id || room.room_id;
+      const isQr   = room.room_type === 'qr';
+      const isHome = isQr && (room.lot_no || '').startsWith('H');
+
+      // 由来バッジ（じぶん印刷 / QR / URL）
+      let badgesHtml = isHome
+        ? `<span class="status-badge badge-home">じ ぶ ん 印 刷</span>`
+        : isQr
+          ? `<span class="status-badge badge-qr">Q R</span>`
+          : `<span class="status-badge badge-url">U R L</span>`;
+
+      // 状態バッジ
+      badgesHtml += isBlank
+        ? `<span class="status-badge badge-unused">未 使 用</span>`
+        : `<span class="status-badge badge-draft">書 き か け</span>`;
+
+      // 整理ボタン（所有権あり・未確定が対象）
+      // QR名刺（現物あり）＝名刺破棄／URL部屋（現物なし）＝削除
+      if (isQr && room.short_id) {
+        badgesHtml += `<button class="btn-retire-sm" onclick="discardCardHolding(event, '${room.short_id}', '${numVal}')">名 刺 破 棄</button>`;
+      } else if (!isQr) {
+        badgesHtml += `<button class="btn-del" onclick="deleteRoomHolding(event, '${room.room_id}', '${numVal}')">削 除</button>`;
+      }
+
       return `
       <a class="room-item" href="card.html?room=${urlParam}">
         <div class="room-num-badge">
@@ -969,6 +992,7 @@
         <div class="room-info">
           <div class="room-info-label">${label}</div>
           <div class="room-info-date">${formatDate(room.claimed_at || room.created_at)}</div>
+          <div class="room-badges">${badgesHtml}</div>
         </div>
         <div class="room-arrow">→</div>
       </a>`;
@@ -1051,14 +1075,9 @@
         badgesHtml += `<span class="status-badge badge-retired">お 役 目 済</span>`;
       }
 
-      // URL部屋（物理カードなし）の未確定分だけ削除可能
-      if (!isQr && !isConfirmed) {
-        badgesHtml += `<button class="btn-del" onclick="deleteRoom(event, '${room.room_id}', '${numVal}')">削 除</button>`;
-      }
-      // QRカード（現物あり・未終了）にはお役目終了ボタン
-      if (isQr && !isClosed && room.short_id) {
-        badgesHtml += `<button class="btn-retire-sm" onclick="retireCardList(event, '${room.short_id}', '${numVal}')">お役目終了</button>`;
-      }
+      // 送った・完結タブは確定済み（＝送った後）のカード。
+      // 整理（名刺破棄・削除）は手持ちタブ（未確定・所有権あり）に集約したため、
+      // このタブにはボタンを置かない。状態バッジのみ表示する。
 
       const replyLabel = hasReply ? `返信 <span>${room.replyCount}</span> 件` : `返信はまだありません`;
 
@@ -1142,6 +1161,56 @@
       const target = sentRoomsAll.find(r => r.short_id === shortId);
       if (target) target.closed_at = new Date().toISOString();
       await renderSentPage();
+    } catch (e) {
+      console.error(e);
+      alert('エラーが発生しました');
+    }
+  };
+
+  // ===== 手持ちタブ：QR名刺を破棄（未確定・所有権ありが対象） =====
+  window.discardCardHolding = async function(ev, shortId, numVal) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    if (!confirm(`${numVal} の名刺を破棄しますか？\n（このQR名刺は使えなくなります。心のカードそのものは削除されません）`)) return;
+    const reason = prompt('よければ理由を教えてください（任意・空欄OK）', '');
+    try {
+      const { data, error } = await db.rpc('discard_card', { p_key: shortId, p_reason: reason || null });
+      if (error) throw error;
+      if (!data.ok) {
+        alert({
+          not_owner: 'この名刺の現在の持ち主のみ操作できます',
+          card_closed: 'この名刺は既に破棄されています',
+          not_found: '名刺が見つかりませんでした'
+        }[data.error] || 'エラーが発生しました');
+        return;
+      }
+      holdingRoomsAll = holdingRoomsAll.filter(r => r.short_id !== shortId);
+      renderHoldingPage();
+    } catch (e) {
+      console.error(e);
+      alert('エラーが発生しました');
+    }
+  };
+
+  // ===== 手持ちタブ：書きかけ・未使用のURL部屋を削除 =====
+  window.deleteRoomHolding = async function(ev, roomKey, numVal) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    if (!confirm(`${numVal} のカードを削除しますか？\n（下書きごと消えます。この操作は取り消せません）`)) return;
+    try {
+      const { data, error } = await db.rpc('delete_room', { p_key: roomKey });
+      if (error) throw error;
+      if (!data.ok) {
+        alert({
+          not_owner: '自分のカードのみ削除できます',
+          confirmed_locked: '確定済みのカードは削除できません',
+          qr_card: 'QR名刺は削除できません。「名刺破棄」でどうぞ',
+          not_found: 'カードが見つかりませんでした'
+        }[data.error] || 'エラーが発生しました');
+        return;
+      }
+      holdingRoomsAll = holdingRoomsAll.filter(r => r.room_id !== roomKey);
+      renderHoldingPage();
     } catch (e) {
       console.error(e);
       alert('エラーが発生しました');
