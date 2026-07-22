@@ -429,11 +429,33 @@
   }
   .room-lot-no {
     font-family: 'Zen Kaku Gothic New', sans-serif;
-    font-size: 9px;
-    color: var(--gold);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
     letter-spacing: 0.5px;
-    margin-top: 3px;
+    margin-top: 4px;
+    padding: 2px 6px;
+    border: 1px solid var(--gold);
+    border-radius: 4px;
+    background: rgba(184,134,11,0.08);
     white-space: nowrap;
+    display: inline-block;
+  }
+  .sort-bar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 10px;
+  }
+  .sort-select {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 10px;
+    cursor: pointer;
   }
   .room-num-global {
     font-family: 'Zen Kaku Gothic New', sans-serif;
@@ -638,7 +660,7 @@
 <div class="top-bar">
   <a href="index.html" class="back-link">← 表紙へ</a>
   <div class="top-bar-title">お 互 い 様</div>
-  <div class="top-bar-right" style="display:flex;gap:14px;align-items:center;"><a href="admin.html" id="adminLink" style="display:none;color:#fff;font-size:13px;text-decoration:none;opacity:.85;">管理</a><button id="logoutBtn" style="background:none;border:none;color:#fff;font-size:13px;cursor:pointer;opacity:.85;">ログアウト</button></div>
+  <div class="top-bar-right" style="display:flex;gap:14px;align-items:center;"><a href="admin.html" id="adminLink" style="display:none;color:var(--ink);font-size:13px;text-decoration:none;opacity:.9;">管理</a><button id="logoutBtn" style="background:none;border:none;color:var(--ink);font-size:13px;cursor:pointer;opacity:.9;font-family:'Zen Kaku Gothic New',sans-serif;">ログアウト</button></div>
 </div>
 
 <div class="container">
@@ -716,7 +738,7 @@
       </div>
 
       <button class="btn-edit-toggle" id="editToggleBtn" onclick="toggleEdit()">
-        ペ ン ネ ー ム を 変 更 す る
+        基 本 情 報 変 更
       </button>
 
       <div class="edit-section" id="editSection">
@@ -774,22 +796,8 @@
           <div class="stat-unit">枚</div>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
-        <div class="stat-item">
-          <div class="stat-item-label">β参加日数</div>
-          <div class="stat-value" id="betaDays">—</div>
-          <div class="stat-unit">日目</div>
-        </div>
-        <!-- TODO: 月別集計ページ stats.html を作る（未実装）。ポイントは出さず、送った/もらった枚数の月別だけ -->
-　　　　 <!--
-          <div style="text-align:center;">
-            <div class="stat-item-label" style="margin-bottom:6px;">詳細集計</div>
-            <a href="stats.html" style="font-family:'Zen Kaku Gothic New',sans-serif;font-size:10px;letter-spacing:2px;color:var(--blue);text-decoration:underline;text-underline-offset:3px;">月・年別を見る →</a>
-          </div>
-        </div>
-      </div>
-       --> 
-      
+      <!-- TODO: 月別集計ページ stats.html を作る（未実装）。ポイントは出さず、送った/もらった枚数の月別だけ -->
+
     </div>
 
     <!-- アクションボタン -->
@@ -822,12 +830,28 @@
       </div>
 
       <div class="tab-panel active" id="panel-holding">
+        <div class="sort-bar">
+          <select class="sort-select" id="sort-holding" onchange="applySortHolding()">
+            <option value="num_asc">番号 昇順</option>
+            <option value="num_desc">番号 降順</option>
+            <option value="date_desc">新しい順</option>
+            <option value="date_asc">古い順</option>
+          </select>
+        </div>
         <div class="room-list" id="list-holding">
           <div class="empty-state"><div class="loading-spinner" style="margin:0 auto 16px;"></div></div>
         </div>
       </div>
 
       <div class="tab-panel" id="panel-sent">
+        <div class="sort-bar">
+          <select class="sort-select" id="sort-sent" onchange="applySortSent()">
+            <option value="num_asc">番号 昇順</option>
+            <option value="num_desc">番号 降順</option>
+            <option value="date_desc">新しい順</option>
+            <option value="date_asc">古い順</option>
+          </select>
+        </div>
         <div class="room-list" id="list-sent">
           <div class="empty-state"><div class="loading-spinner" style="margin:0 auto 16px;"></div></div>
         </div>
@@ -893,9 +917,6 @@
     document.getElementById('profile-email').textContent = currentUser.email || '';
     document.getElementById('inputPenname').value = penname;
 
-    const days = Math.floor((Date.now() - new Date(currentUser.created_at)) / 86400000) + 1;
-    document.getElementById('betaDays').textContent = days;
-
     // 自分に関わるカード（作成した or 保有している）を1回で取得して振り分け
     const { data: myRooms } = await db
       .from('rooms').select('*')
@@ -934,6 +955,30 @@
   // ===== 手持ちカード一覧（書きかけ・claimした白紙） =====
   let holdingRoomsAll = [];
   let holdingPage = 0;
+
+  // ===== 共通ソート（番号=lot_no優先→global_no / 日付=作成日 or claim日） =====
+  function sortRooms(rooms, mode) {
+    const arr = [...rooms];
+    const numKey = r => (r.global_no ?? 0);
+    const dateKey = r => new Date(r.claimed_at || r.created_at || 0).getTime();
+    if (mode === 'num_desc')      arr.sort((a,b) => numKey(b) - numKey(a));
+    else if (mode === 'date_desc') arr.sort((a,b) => dateKey(b) - dateKey(a));
+    else if (mode === 'date_asc')  arr.sort((a,b) => dateKey(a) - dateKey(b));
+    else                           arr.sort((a,b) => numKey(a) - numKey(b)); // num_asc（既定）
+    return arr;
+  }
+  window.applySortHolding = function() {
+    const mode = document.getElementById('sort-holding').value;
+    holdingRoomsAll = sortRooms(holdingRoomsAll, mode);
+    holdingPage = 0;
+    renderHoldingPage();
+  };
+  window.applySortSent = function() {
+    const mode = document.getElementById('sort-sent').value;
+    sentRoomsAll = sortRooms(sentRoomsAll, mode);
+    sentPage = 0;
+    renderSentPage();
+  };
 
   function renderHoldingRooms(rooms) {
     holdingRoomsAll = rooms || [];
