@@ -3,7 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>こころづて - 感謝の部屋</title>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#f5f0e8">
+<title>こころづて - クローク</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
@@ -937,7 +941,7 @@
   <div class="header">
     <div class="header-en">HeartCloak Project</div>
     <h1>こころづて</h1>
-    <div class="header-sub">感謝の部屋</div>
+    <div class="header-sub">クローク</div>
   </div>
 
   <!-- 作成画面 -->
@@ -946,7 +950,7 @@
       <div class="create-icon">🏮</div>
       <h2>部　屋　を　作　る</h2>
       <p>
-        ボタンを押すと、あなただけの「感謝の部屋」が生まれます。<br>
+        ボタンを押すと、あなただけの「クローク」が生まれます。<br>
         QRコード付きの番号札を受け取って、<br>
         大切な人に渡してください。
       </p>
@@ -1022,7 +1026,7 @@
 
     <div class="closed-banner-card" id="closed-banner-card" style="display:none;">
       <span>🕊️</span>
-      <span>このQR名刺はお役目を終えました。ありがとう。</span>
+      <span>この名刺はお役目を終えました。ありがとう。</span>
     </div>
 
     <!-- 投稿フォーム -->
@@ -1059,8 +1063,13 @@
     <div class="heart-message">心が届きますように。</div>
 
     <div class="retire-section" id="retire-section" style="display:none;">
-      <button class="btn-retire" onclick="retireCard()">QR名刺のお役目を終える</button>
-      <div class="retire-note">汚れ・破損などでこのカードを閉じるときに。QRは使えなくなりますが、記録は残ります。</div>
+      <button class="btn-retire" onclick="retireCard()">この名刺のお役目を終える</button>
+      <div class="retire-note">汚れ・破損などでこの名刺を閉じるときに。名刺は使えなくなりますが、記録は残ります。</div>
+    </div>
+
+    <div class="retire-section" id="delete-section" style="display:none;">
+      <button class="btn-retire" onclick="deleteRoomFromCard()">このカードを削除する</button>
+      <div class="retire-note">中身ごと消えます。この操作は取り消せません。<br>確定したカードは削除できません。</div>
     </div>
 
   
@@ -1287,9 +1296,11 @@ async function updateRoomUI() {
   const formButtons     = document.querySelector('.form-buttons');
 
   const retireSection = document.getElementById('retire-section');
+  const deleteSection = document.getElementById('delete-section');
   const closedBanner  = document.getElementById('closed-banner-card');
   const shareBtnsEl   = document.getElementById('room-share-btns');
   if (retireSection) retireSection.style.display = 'none';
+  if (deleteSection) deleteSection.style.display = 'none';
   if (closedBanner)  closedBanner.style.display = 'none';
   if (shareBtnsEl)   shareBtnsEl.style.display = 'none';
 
@@ -1340,6 +1351,12 @@ async function updateRoomUI() {
   const rs = document.getElementById('retire-section');
   if (rs && isOwner && currentRoomType === 'qr' && currentShortId) {
     rs.style.display = 'block';
+  }
+
+  // URL部屋の所有者にだけ「削除」導線を出す（未確定のみ。現物がないので完全削除できる）
+  const ds = document.getElementById('delete-section');
+  if (ds && isOwner && currentRoomType !== 'qr' && !isConfirmed) {
+    ds.style.display = 'block';
   }
 }
 
@@ -1413,13 +1430,15 @@ async function loadReadonlyContent() {
     html += `<div class="kc-complete">— このカードは完結しました —</div>`;
   }
 
-  const textarea = document.getElementById('post-text');
+  // 差し込み先はフォームの「外」。お役目終了時は post-form ごと非表示になるため、
+  // 中に入れると確定済みの内容まで巻き添えで隠れてしまう
+  const anchor = document.getElementById('post-form');
   const existing = document.getElementById('readonly-kokoro');
   if (existing) existing.remove();
   const div = document.createElement('div');
   div.id = 'readonly-kokoro';
   div.innerHTML = html;
-  textarea.parentNode.insertBefore(div, textarea.nextSibling);
+  anchor.parentNode.insertBefore(div, anchor);
 }
 
 // ===== 下書き読み込み =====
@@ -1475,7 +1494,11 @@ async function confirmCard() {
   btn.disabled = true;
   btn.textContent = '確定中...';
   try {
-    const { error } = await db.from('rooms').update({ is_confirmed: true }).eq('id', currentRoomDbId);
+    // 送り主のペンネームも入れ直す（空だと受け手側に「匿名」と出るため）
+    const { data: { session } } = await db.auth.getSession();
+    const _meta = session?.user?.user_metadata || {};
+    const penName = _meta.pen_name || _meta.name || session?.user?.email?.split('@')[0] || '匿名';
+    const { error } = await db.from('rooms').update({ is_confirmed: true, pen_name: penName }).eq('id', currentRoomDbId);
     if (error) throw error;
     isConfirmed = true;
     closeConfirmModal();
@@ -1515,9 +1538,9 @@ function updateCardTextCount() {
 }
 
 // ===== 一時保存 =====
-// ===== QR名刺のお役目を終える（カードを閉じる） =====
+// ===== この名刺のお役目を終える（カードを閉じる） =====
 async function retireCard() {
-  if (!confirm('このQR名刺のお役目を終えますか？\n（QRは使えなくなります。カードの記録は残ります）')) return;
+  if (!confirm('この名刺のお役目を終えますか？\n（名刺は使えなくなります。カードの記録は残ります）')) return;
   const reason = prompt('よければ理由を教えてください（任意・空欄OK）', '');
   try {
     const { data, error } = await db.rpc('discard_card', { p_key: currentShortId, p_reason: reason || null });
@@ -1531,6 +1554,31 @@ async function retireCard() {
       return;
     }
     alert('お役目を終えました。ありがとう 🙏');
+    location.href = 'mypage.html';
+  } catch (e) {
+    console.error(e);
+    alert('エラーが発生しました');
+  }
+}
+
+// URL部屋を削除（現物がないので完全削除。QR名刺はDB側で弾かれる）
+async function deleteRoomFromCard() {
+  const key = currentRoomUuid || currentRoomId;
+  if (!key) { alert('カードを特定できませんでした'); return; }
+  if (!confirm('このカードを削除しますか？\n（下書きごと消えます。この操作は取り消せません）')) return;
+  try {
+    const { data, error } = await db.rpc('delete_room', { p_key: key });
+    if (error) throw error;
+    if (!data || !data.ok) {
+      alert({
+        not_owner: '自分のカードのみ削除できます',
+        confirmed_locked: '確定済みのカードは削除できません',
+        qr_card: '名刺は削除できません。「お役目を終える」でどうぞ',
+        not_found: 'カードが見つかりませんでした'
+      }[data && data.error] || 'エラーが発生しました');
+      return;
+    }
+    alert('削除しました');
     location.href = 'mypage.html';
   } catch (e) {
     console.error(e);
@@ -1613,6 +1661,10 @@ async function submitPost() {
   try {
     const { data: { session } } = await db.auth.getSession();
     const userId = session?.user?.id || null;
+    // 送り主のペンネーム。rooms.pen_name が空だと受け手側に「匿名」と出るため、
+    // 確定のタイミングで必ず入れ直す（QR名刺の部屋は発行時に入っていないことがある）
+    const _meta = session?.user?.user_metadata || {};
+    const penName = _meta.pen_name || _meta.name || session?.user?.email?.split('@')[0] || '匿名';
     let imageUrl = null;
     if (selectedFile) {
       // 新規ファイル選択があればアップロード
@@ -1643,7 +1695,7 @@ async function submitPost() {
     }]);
     if (insertError) throw insertError;
     // is_confirmed=trueに同時更新（rooms.idで）
-    const { error: confirmError } = await db.from('rooms').update({ is_confirmed: true }).eq('id', currentRoomDbId);
+    const { error: confirmError } = await db.from('rooms').update({ is_confirmed: true, pen_name: penName }).eq('id', currentRoomDbId);
     if (confirmError) throw confirmError;
 
     isConfirmed = true;
