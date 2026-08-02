@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#f5f0e8">
 <meta name="color-scheme" content="light only">
 <title>マイページ — こころづて</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -659,7 +663,7 @@
 
 <div class="top-bar">
   <a href="index.html" class="back-link">← 表紙へ</a>
-  <div class="top-bar-title">お 互 い 様</div>
+  <div class="top-bar-title">こ こ ろ づ て</div>
   <div class="top-bar-right" style="display:flex;gap:14px;align-items:center;"><a href="admin.html" id="adminLink" style="display:none;color:var(--ink);font-size:13px;text-decoration:none;opacity:.9;">管理</a><button id="logoutBtn" style="background:none;border:none;color:var(--ink);font-size:13px;cursor:pointer;opacity:.9;font-family:'Zen Kaku Gothic New',sans-serif;">ログアウト</button></div>
 </div>
 
@@ -784,13 +788,13 @@
           <div class="stat-unit">pt</div>
         </div>
         <div class="stat-item">
-          <div class="stat-item-label">送った感謝</div>
+          <div class="stat-item-label">届 け た</div>
           <div class="stat-icon">🏮</div>
           <div class="stat-value" id="count-sent">—</div>
           <div class="stat-unit">枚</div>
         </div>
         <div class="stat-item">
-          <div class="stat-item-label">もらった感謝</div>
+          <div class="stat-item-label">受けとった</div>
           <div class="stat-icon">✉️</div>
           <div class="stat-value" id="count-received">—</div>
           <div class="stat-unit">枚</div>
@@ -989,7 +993,7 @@
   function renderHoldingPage() {
     const el = document.getElementById('list-holding');
     if (holdingRoomsAll.length === 0) {
-      el.innerHTML = `<div class="empty-state"><div class="empty-icon">🎴</div><div class="empty-text">手持ちのカードはありません<br>新しく作るか、QRカードを受け取りましょう</div></div>`;
+      el.innerHTML = `<div class="empty-state"><div class="empty-icon">🎴</div><div class="empty-text">手持ちのカードはありません<br>新しく作るか、名刺を受け取りましょう</div></div>`;
       return;
     }
 
@@ -1058,7 +1062,7 @@
   async function renderSentPage() {
     const el = document.getElementById('list-sent');
     if (sentRoomsAll.length === 0) {
-      el.innerHTML = `<div class="empty-state"><div class="empty-icon">🏮</div><div class="empty-text">まだカードを作っていません<br>最初の感謝の部屋を作りましょう</div></div>`;
+      el.innerHTML = `<div class="empty-state"><div class="empty-icon">🏮</div><div class="empty-text">まだカードを作っていません<br>最初のクロークをひらきましょう</div></div>`;
       return;
     }
 
@@ -1067,19 +1071,21 @@
     if (sentPage >= maxPage) sentPage = maxPage - 1;
     const slice = sentRoomsAll.slice(sentPage * PAGE_SIZE, (sentPage + 1) * PAGE_SIZE);
 
-    // 返信・下書きの件数はこのページの分だけ取得
+    // 返信・下書きの件数と、メッセージを書いた日をまとめて取得（1部屋1クエリ）
     const items = await Promise.all(slice.map(async room => {
-      const { count: replyCount } = await db
+      const { data: posts } = await db
         .from('room_posts')
-        .select('*', { count: 'exact', head: true })
-        .eq('room_id', room.room_id)
-        .eq('post_type', 'reply');
-      const { count: draftCount } = await db
-        .from('room_posts')
-        .select('*', { count: 'exact', head: true })
-        .eq('room_id', room.room_id)
-        .eq('post_type', 'draft');
-      return { ...room, replyCount: replyCount || 0, draftCount: draftCount || 0 };
+        .select('post_type, created_at')
+        .eq('room_id', room.room_id);
+      const list = posts || [];
+      const msg = list.find(p => p.post_type === 'message');
+      return {
+        ...room,
+        replyCount: list.filter(p => p.post_type === 'reply').length,
+        draftCount: list.filter(p => p.post_type === 'draft').length,
+        // 表示する日付＝心を書いた日。未確定なら発行日にフォールバック
+        writtenAt: msg ? msg.created_at : room.created_at
+      };
     }));
 
     el.innerHTML = items.map(room => {
@@ -1134,8 +1140,8 @@
           </div>
           <div class="room-divider"></div>
           <div class="room-info">
-            <div class="room-info-label">感 謝 の 部 屋</div>
-            <div class="room-info-date">${formatDate(room.created_at)}</div>
+            <div class="room-info-label">ク ロ ー ク</div>
+            <div class="room-info-date">${formatDate(room.writtenAt)}</div>
             <div class="room-info-sub">${replyLabel}</div>
           </div>
           <div class="room-badges">${badgesHtml}</div>
@@ -1173,7 +1179,7 @@
         alert({
           not_owner: '自分のカードのみ削除できます',
           confirmed_locked: '確定済みのカードは削除できません',
-          qr_card: 'QR名刺のカードは削除できません。カード画面から「お役目を終える」でどうぞ',
+          qr_card: '名刺は削除できません。カード画面から「お役目を終える」でどうぞ',
           not_found: 'カードが見つかりませんでした'
         }[data.error] || 'エラーが発生しました');
         return;
@@ -1190,7 +1196,7 @@
   window.retireCardList = async function(ev, shortId, numVal) {
     ev.preventDefault();
     ev.stopPropagation();
-    if (!confirm(`${numVal} のQR名刺のお役目を終えますか？\n（QRは使えなくなります。カードの記録は残ります）`)) return;
+    if (!confirm(`${numVal} の名刺のお役目を終えますか？\n（名刺は使えなくなります。カードの記録は残ります）`)) return;
     const reason = prompt('よければ理由を教えてください（任意・空欄OK）', '');
     try {
       const { data, error } = await db.rpc('discard_card', { p_key: shortId, p_reason: reason || null });
@@ -1216,7 +1222,7 @@
   window.discardCardHolding = async function(ev, shortId, numVal) {
     ev.preventDefault();
     ev.stopPropagation();
-    if (!confirm(`${numVal} の名刺を破棄しますか？\n（このQR名刺は使えなくなります。心のカードそのものは削除されません）`)) return;
+    if (!confirm(`${numVal} の名刺を破棄しますか？\n（この名刺は使えなくなります。心のカードそのものは削除されません）`)) return;
     const reason = prompt('よければ理由を教えてください（任意・空欄OK）', '');
     try {
       const { data, error } = await db.rpc('discard_card', { p_key: shortId, p_reason: reason || null });
@@ -1249,7 +1255,7 @@
         alert({
           not_owner: '自分のカードのみ削除できます',
           confirmed_locked: '確定済みのカードは削除できません',
-          qr_card: 'QR名刺は削除できません。「名刺破棄」でどうぞ',
+          qr_card: '名刺は削除できません。「名刺破棄」でどうぞ',
           not_found: 'カードが見つかりませんでした'
         }[data.error] || 'エラーが発生しました');
         return;
@@ -1277,7 +1283,7 @@
   async function renderReceivedPage() {
     const el = document.getElementById('list-received');
     if (recvIdsAll.length === 0) {
-      el.innerHTML = `<div class="empty-state"><div class="empty-icon">✉️</div><div class="empty-text">まだ感謝を届けていません<br>QRコードから感謝を送りましょう</div></div>`;
+      el.innerHTML = `<div class="empty-state"><div class="empty-icon">✉️</div><div class="empty-text">まだ受けとっていません<br>QRコードから受けとれます</div></div>`;
       return;
     }
 
