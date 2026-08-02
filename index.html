@@ -4,7 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light only">
-<title>お互い様プロジェクト</title>
+<title>こころづて — HeartCloak Project</title>
+<meta name="description" content="こころづて — こころを預かり届けます。HeartCloak Project（β版）">
+<meta property="og:title" content="こころづて — HeartCloak Project">
+<meta property="og:description" content="こころを預かり届けます。">
+<meta property="og:url" content="https://heartcloak.com/">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@200;300;400;700&family=Zen+Kaku+Gothic+New:wght@300;400&family=Shippori+Mincho:wght@400;500;700&family=Klee+One:wght@400;600&display=swap');
@@ -269,7 +273,7 @@
   .kuu-eye-r { animation: kuuBlink 5s ease-in-out 0.05s infinite; transform-origin:center; }
   @keyframes kuuBlink { 0%,90%,100%{transform:scaleY(1)} 95%{transform:scaleY(0.05)} }
 
-  /* ===== スポンサー弧エリア（クウ直下） ===== */
+  /* ===== 協賛弧エリア（クウ直下） ===== */
   .sponsor-mini-area {
     opacity: 0;
     animation: fadeUp 1s ease 1.6s forwards;
@@ -441,11 +445,11 @@
     </div>
   </div>
 
-  <div class="hero-en">Otagai-sama Project</div>
+  <div class="hero-en">HeartCloak Project</div>
 
   <h1 class="hero-title">
-    お 互 い 様
-    <span>プ ロ ジ ェ ク ト</span>
+    こ こ ろ づ て
+    <span>こころを預かり届けます</span>
   </h1>
 
   <div class="hero-divider"></div>
@@ -521,9 +525,9 @@
 
   </div>
 
-  <!-- スポンサー弧（クウ直下・7個・下向き） -->
+  <!-- 協賛弧（クウ直下・7個・下向き） -->
   <div class="sponsor-mini-area">
-    <div class="sponsor-mini-label">Supporters &amp; Sponsors</div>
+    <div class="sponsor-mini-label">Supporters</div>
     <div class="sponsor-mini-wrap" id="sponsorMini"></div>
   </div>
 
@@ -541,12 +545,12 @@
 </section>
 
 <footer class="footer">
-  <p>© お互い様プロジェクト — β version — all rights reserved</p>
+  <p>© HeartCloak Project — β version — all rights reserved</p>
 </footer>
 
 <script>
   // 7個の下向き半円弧
-  // idx=0,1: スポンサー募集　idx=2: ヘルプ　idx=3: ご意見スポンサー　idx=4: サポートメンバー　idx=5,6: スポンサー募集
+  // idx=0,1: 協賛募集　idx=2: ヘルプ　idx=3: ご意見協賛　idx=4: サポートメンバー　idx=5,6: 協賛募集
   const miniWrap = document.getElementById('sponsorMini');
   const total = 7;
   const R = 130;
@@ -554,13 +558,13 @@
   const cy = 0;
 
   const config = [
-    { text: 'スポンサー<br>募集中', cls: '',     special: '',               href: '#' },
-    { text: 'スポンサー<br>募集中', cls: '',     special: '',               href: '#' },
+    { text: '協賛<br>募集中', cls: '',     special: '',               href: '#' },
+    { text: '協賛<br>募集中', cls: '',     special: '',               href: '#' },
     { text: 'ヘルプ',              cls: 'blue',  special: 'side-special',   href: 'help.html' },
-    { text: 'ご意見<br>スポンサー',cls: 'gold',  special: 'center-special', href: 'contact.html' },
+    { text: 'ご意見<br>協賛',cls: 'gold',  special: 'center-special', href: 'contact.html' },
     { text: 'サポート<br>メンバー<br>募集中', cls: 'blue', special: 'side-special', href: 'support.html' },
-    { text: 'スポンサー<br>募集中', cls: '',     special: '',               href: '#' },
-    { text: 'スポンサー<br>募集中', cls: '',     special: '',               href: '#' },
+    { text: '協賛<br>募集中', cls: '',     special: '',               href: '#' },
+    { text: '協賛<br>募集中', cls: '',     special: '',               href: '#' },
   ];
 
   config.forEach((item, i) => {
