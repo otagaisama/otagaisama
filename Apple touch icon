@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#f5f0e8">
+<meta name="color-scheme" content="light only">
+<title>じぶんのQRカードを印刷 — こころづて</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="fonts_subset.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@300;400;500&family=Noto+Serif+JP:wght@300;400;700&display=swap');
+
+  :root {
+    --ink: #1a1208;
+    --paper: #f5f0e8;
+    --cream: #faf6ee;
+    --gold: #b8860b;
+    --gray: #6b6355;
+    --border: #c8b99a;
+    --red: #8b1a1a;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  /* ============================================================
+     画面UI
+  ============================================================ */
+  body {
+    background: var(--paper);
+    font-family: 'Noto Serif JP', serif;
+    color: var(--ink);
+  }
+  .screen-ui {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 36px 20px 80px;
+  }
+  .page-header { text-align: center; margin-bottom: 28px; }
+  .page-en {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 9px; letter-spacing: 5px; color: var(--gold);
+    text-transform: uppercase; margin-bottom: 8px;
+  }
+  .page-title {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 22px; font-weight: 700; letter-spacing: 6px;
+  }
+  .gold-line {
+    height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 22px 0;
+  }
+  .intro {
+    font-size: 13px; line-height: 2; color: var(--gray);
+    text-align: center; margin-bottom: 26px;
+  }
+  .back-link {
+    display: inline-block; margin-bottom: 18px;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 12px; color: var(--gray); text-decoration: none; letter-spacing: 1px;
+  }
+  .back-link:hover { color: var(--ink); }
+
+  /* 発行ボタン */
+  .btn-issue {
+    display: block; width: 100%;
+    padding: 16px; margin-bottom: 12px;
+    background: var(--ink); color: var(--cream);
+    border: 1px solid var(--ink); border-radius: 10px;
+    font-family: 'Shippori Mincho', serif;
+    font-size: 15px; letter-spacing: 4px; cursor: pointer;
+    transition: background .2s, border-color .2s;
+  }
+  .btn-issue:hover { background: var(--gold); border-color: var(--gold); }
+  .btn-issue:disabled { opacity: .5; cursor: default; }
+  .issue-note {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 11px; color: var(--gray); text-align: center;
+    line-height: 1.9; margin-bottom: 26px;
+  }
+  .msg-inline {
+    text-align: center; font-size: 13px; line-height: 1.9;
+    color: var(--red); margin: 10px 0 20px; display: none;
+  }
+
+  /* シート（束）一覧 */
+  .sheet-list-label {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 10px; letter-spacing: 3px; color: var(--gold);
+    margin-bottom: 12px;
+  }
+  .sheet-item {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--cream); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 16px; margin-bottom: 10px;
+  }
+  .sheet-lot {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 16px; font-weight: 700; letter-spacing: 1px;
+    min-width: 72px;
+  }
+  .sheet-meta {
+    flex: 1;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 11px; color: var(--gray); line-height: 1.7;
+  }
+  .sheet-meta .expired { color: var(--red); }
+  .badge-printed {
+    display: inline-block; font-size: 11px; padding: 2px 8px;
+    border-radius: 10px; margin-left: 8px; vertical-align: middle;
+    background: #ede7db; color: #8a7d5c; border: 1px solid #d5c9a8;
+  }
+  .btn-open {
+    padding: 9px 16px; background: transparent;
+    border: 1px solid var(--border); border-radius: 8px;
+    color: var(--ink); font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 12px; letter-spacing: 1px; cursor: pointer; white-space: nowrap;
+  }
+  .btn-open:hover { border-color: var(--gold); color: var(--gold); }
+  .empty-state {
+    text-align: center; padding: 36px 0; color: var(--gray);
+    font-size: 13px; line-height: 2;
+  }
+  .loading-state { text-align: center; padding: 60px 0; color: var(--gray); font-size: 13px; }
+
+  /* プレビュー画面 */
+  .preview-head { text-align: center; margin-bottom: 16px; }
+  .preview-lot {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 18px; font-weight: 700; letter-spacing: 2px;
+  }
+  .preview-sub {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 11px; color: var(--gray); margin-top: 6px; line-height: 1.8;
+  }
+  .btn-print {
+    display: block; width: 100%; max-width: 420px; margin: 18px auto 8px;
+    padding: 16px; background: var(--ink); color: var(--cream);
+    border: 1px solid var(--ink); border-radius: 10px;
+    font-family: 'Shippori Mincho', serif;
+    font-size: 15px; letter-spacing: 4px; cursor: pointer;
+  }
+  .btn-print:hover { background: var(--gold); border-color: var(--gold); }
+  .print-tips {
+    max-width: 420px; margin: 0 auto 24px;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 11px; color: var(--gray); line-height: 2;
+  }
+
+  /* 画面上のシート縮小表示 */
+  .sheet-scale-wrap {
+    width: 100%; overflow: hidden;
+    display: flex; justify-content: center;
+    background: #e8e0d0; border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px 0;
+  }
+  .sheet-scale { transform-origin: top center; }
+
+  .hidden { display: none !important; }
+
+  /* ============================================================
+     A4シート（印刷実体）— 210×297mm / 91×55mm × 2列5行
+  ============================================================ */
+  .print-sheet {
+    width: 210mm; height: 297mm;
+    background: #fff;
+    padding: 11mm 14mm;
+    display: grid;
+    grid-template-columns: 91mm 91mm;
+    grid-template-rows: repeat(5, 55mm);
+  }
+  .cut-cell {
+    width: 91mm; height: 55mm;
+    border-right: 0.15mm dashed #c9c2b4;
+    border-bottom: 0.15mm dashed #c9c2b4;
+    position: relative;
+  }
+  .cut-cell:nth-child(odd) { border-left: 0.15mm dashed #c9c2b4; }
+  .cut-cell:nth-child(-n+2) { border-top: 0.15mm dashed #c9c2b4; }
+
+  /* ---- カード面 ---- */
+  .card-face {
+    position: absolute; inset: 0;
+    background: var(--cream);
+    padding: 4.5mm 5mm;
+    display: flex; gap: 4mm;
+  }
+  .cf-frame {
+    position: absolute; inset: 2.2mm;
+    border: 0.25mm solid var(--border);
+    pointer-events: none;
+  }
+  .cf-left {
+    flex: 1; display: flex; flex-direction: column;
+    min-width: 0; padding-top: 0.8mm;
+  }
+  .cf-eyebrow {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 5.4pt; letter-spacing: 1.6pt; color: var(--gold);
+  }
+  .cf-project {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 7pt; letter-spacing: 2.5pt; color: var(--ink);
+    margin-top: 1mm;
+  }
+  .cf-display {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 17pt; font-weight: 700; letter-spacing: 5pt;
+    color: var(--ink); margin-top: 4mm;
+  }
+  .cf-display .cf-dot { color: var(--red); }
+  .cf-message {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 6.4pt; line-height: 1.9; color: var(--gray);
+    margin-top: 2.6mm;
+  }
+  .cf-tagline {
+    margin-top: auto;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 5.2pt; letter-spacing: 1.4pt; color: var(--gold);
+  }
+  .cf-right {
+    width: 22mm; flex-shrink: 0;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 1.4mm;
+  }
+  .cf-qr {
+    width: 21mm; height: 21mm;
+    background: #fff; padding: 1mm;
+  }
+  .cf-qr svg { width: 19mm; height: 19mm; display: block; }
+  .cf-shortid {
+    font-family: 'Courier New', monospace;
+    font-size: 7pt; letter-spacing: 1.2pt; color: var(--ink); font-weight: 700;
+  }
+  .cf-lotno {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 4.8pt; letter-spacing: 0.6pt; color: var(--gold);
+  }
+  .card-face.used {
+    background: var(--ink);
+    flex-direction: column; align-items: center; justify-content: center;
+    gap: 2mm;
+  }
+  .used-label {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 10pt; font-weight: 700; letter-spacing: 3pt;
+    color: rgba(250, 246, 238, 0.85);
+  }
+  .used-sub {
+    font-family: 'Courier New', monospace;
+    font-size: 5.5pt; letter-spacing: 0.5pt;
+    color: rgba(250, 246, 238, 0.45);
+  }
+
+  /* ============================================================
+     印刷時：UIを全部消してシートだけ原寸で出す
+  ============================================================ */
+  @page { size: A4 portrait; margin: 0; }
+  @media print {
+    body { background: #fff; }
+    .screen-ui { display: none !important; }
+    #print-layer { display: block !important; }
+    .print-sheet {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+  }
+  #print-layer { display: none; }
+</style>
+</head>
+<body>
+
+<!-- ===== 画面UI ===== -->
+<div class="screen-ui">
+  <a class="back-link" href="mypage.html">← マイページへもどる</a>
+
+  <div class="page-header">
+    <div class="page-en">Print Your Cards</div>
+    <div class="page-title">じぶんのQRカード</div>
+  </div>
+
+  <div class="loading-state" id="loading">読み込み中…</div>
+
+  <!-- 一覧ビュー -->
+  <div id="list-view" class="hidden">
+    <div class="intro">
+      A4用紙1枚に、あなた専用のQRカードが10枚。<br>
+      おうちのプリンターやコンビニで印刷して、<br>
+      はさみで切って、感謝を手渡せます。
+    </div>
+
+    <button class="btn-issue" id="btn-issue" onclick="issueSheet()">あたらしい10枚をつくる</button>
+    <div class="issue-note">
+      カードの使用期限は、つくった日から2ヶ月です。<br>
+      未使用のカードが9枚以下になると、次の10枚がつくれます。
+    </div>
+    <div class="msg-inline" id="issue-msg"></div>
+
+    <div class="gold-line"></div>
+
+    <div class="sheet-list-label">あ な た の シ ー ト</div>
+    <div id="sheet-list"></div>
+  </div>
+
+  <!-- プレビュービュー -->
+  <div id="preview-view" class="hidden">
+    <div class="preview-head">
+      <div class="preview-lot" id="preview-lot">—</div>
+      <div class="preview-sub" id="preview-sub"></div>
+    </div>
+
+    <div class="sheet-scale-wrap" id="scale-wrap">
+      <div class="sheet-scale" id="sheet-scale"></div>
+    </div>
+
+    <button class="btn-print" id="btn-pdf" onclick="downloadPdf()">P D F を つ く る（ 保 存 ）</button>
+    <div class="print-tips">
+      ・押すとPDFファイルがダウンロードされます（カードの大きさはPDFの中に固定済み）<br>
+      ・コンビニで刷る場合は、このPDFをネットプリントアプリに登録するだけ<br>
+      ・おうちのプリンターは、PDFを開いて「倍率100%（実際のサイズ）」で印刷してください<br>
+      ・使用済みのカードは黒く塗られて印刷されません<br>
+      ・同じシートを刷り直すと、未使用カードは同じQRがもう1枚できます。前に刷った紙が残っている場合はご注意ください
+    </div>
+    <button class="btn-open" style="display:block;margin:0 auto 10px;" onclick="printDirect()">この画面からそのまま印刷する</button>
+    <button class="btn-open" style="display:block;margin:0 auto;" onclick="showList()">← シート一覧へもどる</button>
+  </div>
+</div>
+
+<!-- ===== 印刷実体（プレビューと同じDOMを原寸で持つ） ===== -->
+<div id="print-layer"></div>
+
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+  const SUPABASE_URL = 'https://damussuizcfzqkfkpwwm.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhbXVzc3VpemNmenFrZmtwd3dtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0NTcwOTIsImV4cCI6MjA5MTAzMzA5Mn0.Xp93BfRowa9gG7ZMRQxyyKiYXgWRN4Gk5xLxaGTiUIo';
+  const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+ const RECEIVE_BASE = 'https://heartcloak.com/receive.html?room=';
+  const EXPIRE_MONTHS = 2;
+
+  let currentUser = null;
+  let myRooms = [];   // 自分のH束カード全部
+  let lots = [];      // [{lot, rooms:[...], createdAt, expiresAt, unused}]
+  let currentLot = null; // プレビュー中のロット（PDF生成用）
+
+  window.onload = async () => {
+    const { data: { session } } = await db.auth.getSession();
+    if (!session) { location.replace('index.html'); return; }
+    currentUser = session.user;
+    await loadSheets();
+  };
+
+  async function loadSheets() {
+    const { data, error } = await db
+      .from('rooms').select('*')
+      .eq('user_id', currentUser.id)
+      .like('lot_no', 'H%')
+      .order('lot_no', { ascending: true });
+    if (error) { console.error(error); }
+    myRooms = data || [];
+
+    // lot単位にまとめる
+    const map = new Map();
+    for (const r of myRooms) {
+      const lot = (r.lot_no || '').split('-')[0];
+      if (!lot) continue;
+      if (!map.has(lot)) map.set(lot, []);
+      map.get(lot).push(r);
+    }
+    lots = [...map.entries()].map(([lot, rooms]) => {
+      const createdAt = rooms.reduce((a, r) => (!a || r.created_at < a) ? r.created_at : a, null);
+      const expiresAt = createdAt ? new Date(new Date(createdAt).getTime() + EXPIRE_MONTHS * 30.5 * 86400000) : null;
+      const unused = rooms.filter(r => !r.is_confirmed && !r.closed_at).length;
+      return { lot, rooms, createdAt, expiresAt, unused };
+    }).sort((a, b) => b.lot.localeCompare(a.lot));
+
+    // 印刷済み日時をbundlesから取得してlotsに付与
+    try {
+      const { data: prints } = await db.rpc('get_my_bundle_prints');
+      const pmap = new Map((prints || []).map(p => [p.lot_id, p.printed_at]));
+      lots.forEach(l => { l.printedAt = pmap.get(l.lot) || null; });
+    } catch (e) { console.error(e); }
+
+    renderList();
+    showList();
+  }
+
+  function fmtDate(d) {
+    if (!d) return '—';
+    const dt = (d instanceof Date) ? d : new Date(d);
+    return `${dt.getFullYear()}年${dt.getMonth()+1}月${dt.getDate()}日`;
+  }
+
+  function renderList() {
+    const el = document.getElementById('sheet-list');
+    if (lots.length === 0) {
+      el.innerHTML = `<div class="empty-state">まだシートがありません。<br>「あたらしい10枚をつくる」から始めましょう。</div>`;
+      return;
+    }
+    el.innerHTML = lots.map((l, i) => {
+      const expired = l.expiresAt && l.expiresAt < new Date();
+      return `
+      <div class="sheet-item">
+        <div class="sheet-lot">${l.lot}${l.printedAt ? `<span class="badge-printed">印刷済み ${fmtDate(l.printedAt)}</span>` : ''}</div>
+        <div class="sheet-meta">
+          作成 ${fmtDate(l.createdAt)} ／ 期限 <span class="${expired ? 'expired' : ''}">${fmtDate(l.expiresAt)}${expired ? '（期限切れ）' : ''}</span><br>
+          未使用 ${l.unused} / ${l.rooms.length} 枚
+        </div>
+        <button class="btn-open" onclick="openSheet(${i})">表示・印刷</button>
+      </div>`;
+    }).join('');
+  }
+
+  function showList() {
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('preview-view').classList.add('hidden');
+    document.getElementById('list-view').classList.remove('hidden');
+    document.getElementById('print-layer').innerHTML = '';
+  }
+  window.showList = showList;
+
+  // ===== 新しい10枚を発行 =====
+  window.issueSheet = async function() {
+    const btn = document.getElementById('btn-issue');
+    const msg = document.getElementById('issue-msg');
+    msg.style.display = 'none';
+    btn.disabled = true;
+    btn.textContent = 'つくっています…';
+    try {
+      const { data, error } = await db.rpc('create_my_bundle');
+      if (error) throw error;
+      if (!data.ok) {
+        msg.textContent = {
+          stock_remaining: `未使用のカードがまだ ${data.stock} 枚あります。9枚以下になると、次の10枚がつくれます。`,
+          not_logged_in: 'ログインが必要です。'
+        }[data.error] || 'エラーが発生しました。';
+        msg.style.display = 'block';
+        return;
+      }
+      await loadSheets();
+      const idx = lots.findIndex(l => l.lot === data.lot_id);
+      if (idx >= 0) openSheet(idx);
+    } catch (e) {
+      console.error(e);
+      msg.textContent = 'エラーが発生しました。時間をおいて再度お試しください。';
+      msg.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'あたらしい10枚をつくる';
+    }
+  };
+
+  // ===== シート表示 =====
+  window.openSheet = function(i) {
+    const l = lots[i];
+    if (!l) return;
+    currentLot = l;
+
+    document.getElementById('list-view').classList.add('hidden');
+    document.getElementById('preview-view').classList.remove('hidden');
+    document.getElementById('preview-lot').textContent = `シート ${l.lot}`;
+    document.getElementById('preview-sub').innerHTML =
+      `作成 ${fmtDate(l.createdAt)} ／ 期限 ${fmtDate(l.expiresAt)} ／ ${l.rooms.length}枚`;
+
+    // 印刷実体を組む
+    const layer = document.getElementById('print-layer');
+    layer.innerHTML = '';
+    layer.appendChild(buildSheet(l));
+
+    // 画面プレビュー＝クローンではなく実体をもう1組生成（canvasはクローンに写らないため）
+    const scaleHost = document.getElementById('sheet-scale');
+    scaleHost.innerHTML = '';
+    const previewSheet = buildSheet(l);
+    scaleHost.appendChild(previewSheet);
+    requestAnimationFrame(() => {
+      const wrapW = document.getElementById('scale-wrap').clientWidth - 8;
+      const sheetW = previewSheet.offsetWidth || 794; // 210mm ≒ 794px
+      const s = Math.min(1, wrapW / sheetW);
+      scaleHost.style.transform = `scale(${s})`;
+      scaleHost.style.height = `${(previewSheet.offsetHeight || 1123) * s}px`;
+    });
+
+    window.scrollTo(0, 0);
+  };
+
+  function buildSheet(l) {
+    const sheet = document.createElement('div');
+    sheet.className = 'print-sheet';
+    const rooms = [...l.rooms].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+
+    for (let i = 0; i < 10; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'cut-cell';
+      const r = rooms[i];
+      if (r && r.short_id) {
+        cell.appendChild(buildCard(r));
+      }
+      sheet.appendChild(cell);
+    }
+    return sheet;
+  }
+
+  function buildCard(r) {
+    const face = document.createElement('div');
+    face.className = 'card-face';
+
+    // 使用済み（確定 or クローズ）はブラックアウト：同じQRの再配布事故を防ぐ
+    if (r.is_confirmed || r.closed_at) {
+      face.classList.add('used');
+      face.innerHTML = `
+        <div class="used-label">使 用 済 み</div>
+        <div class="used-sub">${r.short_id || ''}　${r.lot_no || ''}</div>`;
+      return face;
+    }
+
+    face.innerHTML = `
+      <div class="cf-frame"></div>
+      <div class="cf-left">
+        <div class="cf-eyebrow">OTAGAISAMA PROJECT</div>
+        <div class="cf-project">お 互 い 様 プ ロ ジ ェ ク ト</div>
+        <div class="cf-display">届けます<span class="cf-dot">。</span></div>
+        <div class="cf-message">このカードには、あなたへの<br>感謝のことばが入っています。<br>QRコードを読み取ってください。</div>
+        <div class="cf-tagline">心の価値を、かたちに。</div>
+      </div>
+      <div class="cf-right">
+        <div class="cf-qr">${qrSvg(RECEIVE_BASE + r.short_id)}</div>
+        <div class="cf-shortid">${r.short_id}</div>
+        <div class="cf-lotno">${r.lot_no || ''}</div>
+      </div>`;
+    return face;
+  }
+
+  // ベクターQR（SVG）：印刷でぼやけない・印刷屋PDFにもそのまま使える
+  function qrSvg(text) {
+    const qr = qrcode(0, 'M');
+    qr.addData(text);
+    qr.make();
+    return qr.createSvgTag({ cellSize: 2, margin: 0, scalable: true });
+  }
+
+  // ============================================================
+  // PDF生成（jsPDF・ベクター直描き・寸法mm焼き込み）
+  // ============================================================
+  const PC = {
+    cream: [250, 246, 238], ink: [26, 18, 8], gold: [184, 134, 11],
+    gray: [107, 99, 85], border: [200, 185, 154], red: [139, 26, 26],
+    cut: [201, 194, 180]
+  };
+  const PSHEET = { w: 210, h: 297, mx: 14, my: 11 };
+  const PCARD = { w: 91, h: 55 };
+
+  window.downloadPdf = async function() {
+    if (!currentLot) return;
+    if (currentLot.printedAt) {
+      const ok = confirm(
+        `このシートは ${fmtDate(currentLot.printedAt)} に印刷済みです。\n` +
+        `刷り直すと、同じQRのカードが2枚になります。\n続けますか？`
+      );
+      if (!ok) return;
+    }
+    const btn = document.getElementById('btn-pdf');
+    btn.disabled = true;
+    try {
+      const pdf = buildPdf(currentLot);
+      pdf.save(`otagaisama_${currentLot.lot}.pdf`);
+      const { data } = await db.rpc('mark_bundle_printed', { p_lot: currentLot.lot });
+      if (data && data.ok) { currentLot.printedAt = data.printed_at; renderList(); }
+    } catch (e) {
+      console.error(e);
+      alert('PDFの作成に失敗しました。ページを再読み込みしてお試しください。');
+    } finally {
+      btn.disabled = false;
+    }
+  };
+
+  window.printDirect = async function() {
+    if (!currentLot) return;
+    if (currentLot.printedAt) {
+      const ok = confirm(
+        `このシートは ${fmtDate(currentLot.printedAt)} に印刷済みです。\n` +
+        `刷り直すと、同じQRのカードが2枚になります。\n続けますか？`
+      );
+      if (!ok) return;
+    }
+    window.print();
+    const { data } = await db.rpc('mark_bundle_printed', { p_lot: currentLot.lot });
+    if (data && data.ok) { currentLot.printedAt = data.printed_at; renderList(); }
+  };
+
+  function buildPdf(l) {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
+    pdf.addFileToVFS('SMR.ttf', window.FONT_SMR);
+    pdf.addFont('SMR.ttf', 'Shippori', 'normal');
+    pdf.addFileToVFS('SMB.ttf', window.FONT_SMB);
+    pdf.addFont('SMB.ttf', 'Shippori', 'bold');
+
+    // 切り取り破線（格子）
+    pdf.setDrawColor(...PC.cut);
+    pdf.setLineWidth(0.15);
+    pdf.setLineDashPattern([1.2, 1.2], 0);
+    for (let col = 0; col <= 2; col++) {
+      const x = PSHEET.mx + col * PCARD.w;
+      pdf.line(x, PSHEET.my, x, PSHEET.h - PSHEET.my);
+    }
+    for (let row = 0; row <= 5; row++) {
+      const y = PSHEET.my + row * PCARD.h;
+      pdf.line(PSHEET.mx, y, PSHEET.w - PSHEET.mx, y);
+    }
+    pdf.setLineDashPattern([], 0);
+
+    const rooms = [...l.rooms].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+    for (let i = 0; i < Math.min(rooms.length, 10); i++) {
+      const col = i % 2, row = Math.floor(i / 2);
+      if (rooms[i] && rooms[i].short_id) {
+        drawPdfCard(pdf, rooms[i], PSHEET.mx + col * PCARD.w, PSHEET.my + row * PCARD.h);
+      }
+    }
+    return pdf;
+  }
+
+  function drawPdfCard(pdf, r, x, y) {
+    // 使用済み（確定 or クローズ）はブラックアウト
+    if (r.is_confirmed || r.closed_at) {
+      pdf.setFillColor(...PC.ink);
+      pdf.rect(x + 0.3, y + 0.3, PCARD.w - 0.6, PCARD.h - 0.6, 'F');
+      pdf.setFont('Shippori', 'bold');
+      pdf.setFontSize(10);
+      pdf.setCharSpace(2.5);
+      pdf.setTextColor(235, 228, 214);
+      pdf.text('使用済み', x + PCARD.w / 2, y + PCARD.h / 2, { align: 'center' });
+      pdf.setFont('courier', 'normal');
+      pdf.setFontSize(5.5);
+      pdf.setCharSpace(0.5);
+      pdf.setTextColor(150, 143, 130);
+      pdf.text(`${r.short_id || ''}  ${r.lot_no || ''}`, x + PCARD.w / 2, y + PCARD.h / 2 + 6, { align: 'center' });
+      pdf.setCharSpace(0);
+      return;
+    }
+
+    // 地：クリーム（破線を残すため0.3mm内側）
+    pdf.setFillColor(...PC.cream);
+    pdf.rect(x + 0.3, y + 0.3, PCARD.w - 0.6, PCARD.h - 0.6, 'F');
+
+    // 内枠（金罫）
+    pdf.setDrawColor(...PC.border);
+    pdf.setLineWidth(0.25);
+    pdf.rect(x + 2.2, y + 2.2, PCARD.w - 4.4, PCARD.h - 4.4, 'S');
+
+    const L = x + 5.5;
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(5.4);
+    pdf.setTextColor(...PC.gold);
+    pdf.setCharSpace(0.55);
+    pdf.text('OTAGAISAMA PROJECT', L, y + 7.6);
+
+    pdf.setFont('Shippori', 'normal');
+    pdf.setFontSize(7);
+    pdf.setTextColor(...PC.ink);
+    pdf.setCharSpace(0.9);
+    pdf.text('お互い様プロジェクト', L, y + 11.4);
+
+    pdf.setFont('Shippori', 'bold');
+    pdf.setFontSize(17);
+    pdf.setCharSpace(1.8);
+    pdf.setTextColor(...PC.ink);
+    pdf.text('届けます', L, y + 21.5);
+    const w = pdf.getTextWidth('届けます');
+    pdf.setTextColor(...PC.red);
+    pdf.text('。', L + w + 1.8, y + 21.5);
+
+    pdf.setFont('Shippori', 'normal');
+    pdf.setFontSize(6.4);
+    pdf.setCharSpace(0.15);
+    pdf.setTextColor(...PC.gray);
+    const msg = ['このカードには、あなたへの', '感謝のことばが入っています。', 'QRコードを読み取ってください。'];
+    msg.forEach((line, i) => pdf.text(line, L, y + 27.5 + i * 4.1));
+
+    pdf.setFontSize(5.2);
+    pdf.setCharSpace(0.5);
+    pdf.setTextColor(...PC.gold);
+    pdf.text('心の価値を、かたちに。', L, y + PCARD.h - 5.2);
+
+    // QR：モジュール矩形の直描き＝真のベクター
+    const QRS = 19, qcx = x + PCARD.w - 15.5;
+    const qx = qcx - QRS / 2, qy = y + 9;
+    pdf.setFillColor(255, 255, 255);
+    pdf.rect(qx - 1, qy - 1, QRS + 2, QRS + 2, 'F');
+    const qr = qrcode(0, 'M');
+    qr.addData(RECEIVE_BASE + r.short_id);
+    qr.make();
+    const n = qr.getModuleCount();
+    const cell = QRS / n;
+    pdf.setFillColor(0, 0, 0);
+    for (let row = 0; row < n; row++) {
+      for (let col = 0; col < n; col++) {
+        if (qr.isDark(row, col)) {
+          pdf.rect(qx + col * cell, qy + row * cell, cell + 0.01, cell + 0.01, 'F');
+        }
+      }
+    }
+
+    pdf.setFont('courier', 'bold');
+    pdf.setFontSize(7);
+    pdf.setCharSpace(0.4);
+    pdf.setTextColor(...PC.ink);
+    pdf.text(r.short_id, qcx, qy + QRS + 4.2, { align: 'center' });
+
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(4.8);
+    pdf.setCharSpace(0.2);
+    pdf.setTextColor(...PC.gold);
+    pdf.text(r.lot_no || '', qcx, qy + QRS + 7.4, { align: 'center' });
+
+    pdf.setCharSpace(0);
+  }
+</script>
+</body>
+</html>
