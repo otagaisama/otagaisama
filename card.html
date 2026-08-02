@@ -1558,13 +1558,12 @@ async function saveAsDraft(auto = false) {
       const fileName = `${currentRoomUuid}/${Date.now()}.jpg`;
       const { data: uploadData, error: uploadError } = await db.storage.from('room-images').upload(fileName, compressed, { contentType: 'image/jpeg' });
       if (uploadError) {
-        console.error('画像アップロードエラー:', JSON.stringify(uploadError));
-      } else {
-       
-        const { data: urlData } = db.storage.from('room-images').getPublicUrl(fileName);
-        imageUrl = urlData.publicUrl;
-        window._draftImageUrl = imageUrl;
+        console.error('画像アップロード失敗:', uploadError);
+        throw new Error('画像アップロード失敗: ' + (uploadError.message || uploadError.error || JSON.stringify(uploadError)));
       }
+      const { data: urlData } = db.storage.from('room-images').getPublicUrl(fileName);
+      imageUrl = urlData.publicUrl;
+      window._draftImageUrl = imageUrl;
     } else if (window._draftImageUrl) {
       imageUrl = window._draftImageUrl;
     }
@@ -1587,7 +1586,10 @@ async function saveAsDraft(auto = false) {
     setTimeout(() => { if (msg.textContent === '保存しました') msg.textContent = ''; }, 2000);
   } catch (e) {
     console.error(e);
-    if (!auto) { msg.textContent = '保存に失敗しました'; msg.className = 'msg msg-error'; }
+    if (!auto) {
+      msg.textContent = '保存に失敗しました：' + (e?.message || '不明');
+      msg.className = 'msg msg-error';
+    }
   } finally {
     if (!auto) { btn.disabled = false; btn.textContent = '一 時 保 存'; }
   }
@@ -1615,12 +1617,15 @@ async function submitPost() {
     if (selectedFile) {
       // 新規ファイル選択があればアップロード
       const compressed = await compressImage(selectedFile);
-      const fileName = `${currentRoomId}/${Date.now()}.jpg`;
+      // フォルダ名は必ず rooms.room_id（UUID）。short_id を使うとStorageのポリシーで弾かれる
+      const fileName = `${currentRoomUuid}/${Date.now()}.jpg`;
       const { error: uploadError } = await db.storage.from('room-images').upload(fileName, compressed, { contentType: 'image/jpeg' });
-      if (!uploadError) {
-        const { data: urlData } = db.storage.from('room-images').getPublicUrl(fileName);
-        imageUrl = urlData.publicUrl;
+      if (uploadError) {
+        console.error('画像アップロード失敗:', uploadError);
+        throw new Error('画像アップロード失敗: ' + (uploadError.message || uploadError.error || JSON.stringify(uploadError)));
       }
+      const { data: urlData } = db.storage.from('room-images').getPublicUrl(fileName);
+      imageUrl = urlData.publicUrl;
     } else if (window._draftImageUrl) {
       // draft保存済み画像をそのまま使う
       imageUrl = window._draftImageUrl;
