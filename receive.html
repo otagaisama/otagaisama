@@ -200,9 +200,24 @@
     <div style="font-size:52px; margin-bottom:24px;">📮</div>
     <div style="font-family:'Noto Serif JP',serif;font-size:18px;letter-spacing:4px;color:var(--ink);margin-bottom:16px;">カードを受け取るには</div>
     <div style="width:40px;height:1px;background:var(--border);margin:0 auto 24px;"></div>
-    <div style="font-family:'Zen Kaku Gothic New',sans-serif;font-size:13px;color:var(--ink-light);line-height:2.4;letter-spacing:1px;margin-bottom:36px;">
+    <div style="font-family:'Zen Kaku Gothic New',sans-serif;font-size:13px;color:var(--ink-light);line-height:2.4;letter-spacing:1px;margin-bottom:32px;">
       QRコードをスキャンするか<br>送り主から受け取ったURLを<br>直接開いてください
     </div>
+
+    <div style="max-width:280px;margin:0 auto 32px;padding-top:28px;border-top:1px solid var(--border);">
+      <div style="font-family:'Zen Kaku Gothic New',sans-serif;font-size:12px;color:var(--ink-light);letter-spacing:1.5px;line-height:2;margin-bottom:14px;">
+        QRが読めないときは<br>カードに書かれた番号から開けます
+      </div>
+      <input id="sid-input" type="text" placeholder="例：gxpp83" maxlength="40"
+        autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false"
+        style="width:100%;padding:13px 12px;border:1px solid var(--border);border-radius:8px;font-family:'Courier New',monospace;font-size:16px;letter-spacing:2px;text-align:center;background:var(--white);color:var(--ink);outline:none;">
+      <div id="sid-error" style="display:none;font-family:'Zen Kaku Gothic New',sans-serif;font-size:12px;color:var(--red);margin-top:10px;letter-spacing:1px;"></div>
+      <button id="sid-go" onclick="goByShortId()"
+        style="width:100%;margin-top:12px;padding:13px;border:none;border-radius:8px;background:var(--red);color:var(--white);font-family:'Zen Kaku Gothic New',sans-serif;font-size:14px;font-weight:700;letter-spacing:3px;cursor:pointer;">
+        開　く
+      </button>
+    </div>
+
     <a href="index.html" style="font-family:'Zen Kaku Gothic New',sans-serif;font-size:11px;letter-spacing:3px;color:var(--ink-light);text-decoration:underline;text-underline-offset:4px;">← トップページへ戻る</a>
   </div>
 
@@ -579,6 +594,34 @@ async function loadCard() {
     }
   };
 
+  // short_id 手入力から部屋を開く（ログイン不要・no-room-guide専用）
+  // 注意: short_idは小文字英数36種。0とo、1とlが両方実在するため
+  //       紛らわしい文字の自動置換は絶対にしない（別カードに飛ぶ）
+  window.goByShortId = function() {
+    const el  = document.getElementById('sid-input');
+    const err = document.getElementById('sid-error');
+    const btn = document.getElementById('sid-go');
+    if (!el) return;
+
+    const showErr = (m) => { err.textContent = m; err.style.display = 'block'; };
+    err.style.display = 'none';
+
+    let v = (el.value || '').trim().toLowerCase();
+
+    // URLごと貼られた場合は room= / id= の値を抜き出す
+    const m = v.match(/[?&](?:room|id)=([a-z0-9-]+)/);
+    if (m) v = m[1];
+
+    // 許可するのは英数字とハイフンのみ（UUID形式のURL部屋も通す）
+    v = v.replace(/[^a-z0-9-]/g, '');
+
+    if (!v) { showErr('カードの番号を入れてください'); return; }
+    if (v.length < 4) { showErr('番号が短すぎます'); return; }
+
+    btn.disabled = true;
+    btn.textContent = '開いています…';
+    location.href = 'receive.html?room=' + encodeURIComponent(v);
+  };
   // claim完了の説明モーダル（即遷移せずワンクッション）
   function showClaimDone(newRoom, mode) {
     const title = mode === 'reply'
@@ -637,6 +680,16 @@ async function loadCard() {
     initStarted = true;
     init();
   }
+
+  // short_id入力欄：Enterでも開けるようにする
+  (function () {
+    const el = document.getElementById('sid-input');
+    if (el) {
+      el.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); goByShortId(); }
+      });
+    }
+  })();
 
   supabase.auth.onAuthStateChange((event) => {
     if (event === 'SIGNED_IN') initOnce();
