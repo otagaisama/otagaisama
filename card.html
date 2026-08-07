@@ -1177,7 +1177,8 @@ async function generateRoom() {
       .select('id, short_id, global_no, user_card_no')
       .single();
 
-    if (error) {
+   if (error) {
+      console.error('部屋作成エラー:', error);
       msg.textContent = '部屋の作成に失敗しました。もう一度お試しください。';
       msg.className = 'msg msg-error';
       btn.disabled = false;
@@ -1187,6 +1188,7 @@ async function generateRoom() {
 
     await showResult(roomId, data.short_id, data.id, data.user_card_no, data.global_no);
   } catch (e) {
+    console.error('部屋生成エラー:', e);
     const msg = document.getElementById('create-msg');
     msg.textContent = '通信エラーが発生しました。ネットワークを確認してもう一度お試しください。';
     msg.className = 'msg msg-error';
