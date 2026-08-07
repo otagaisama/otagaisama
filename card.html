@@ -1029,6 +1029,11 @@
       <span>この名刺はお役目を終えました。ありがとう。</span>
     </div>
 
+    <div class="closed-banner-card" id="notfound-banner-card" style="display:none;">
+      <span>🔍</span>
+      <span>このカードは見つかりませんでした。短縮IDをご確認のうえ、もう一度お試しください。</span>
+    </div>
+
     <!-- 投稿フォーム -->
     <div class="post-form" id="post-form">
       <div class="form-header">
@@ -1270,14 +1275,13 @@ async function openRoom(roomId) {
       currentRoomType   = room.room_type || 'url';
       isClosed          = room.closed_at != null;
     } else {
-      currentRoomNumber = roomId.slice(0, 4).toUpperCase();
-      isConfirmed = false;
-      isOwner = false;
+      showCardNotFound();
+      return;
     }
-  } catch {
-    currentRoomNumber = '????';
-    isConfirmed = false;
-    isOwner = false;
+  } catch (e) {
+    console.error('カード読み込みエラー:', e);
+    showCardNotFound();
+    return;
   }
 
   document.getElementById('room-display-number').textContent = currentRoomNumber;
@@ -1820,6 +1824,21 @@ function goToRoom() {
     window.history.pushState({}, '', `?room=${currentRoomId}`);
     openRoom(currentRoomId);
   }
+}
+
+// ===== カードが見つからない時の出口 =====
+function showCardNotFound() {
+  document.getElementById('room-display-number').textContent = '—';
+  const nf = document.getElementById('notfound-banner-card');
+  if (nf) nf.style.display = 'flex';
+  ['room-share-btns','confirmed-banner','closed-banner-card',
+   'post-form','retire-section','delete-section'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  const hm = document.querySelector('#view-room .heart-message');
+  if (hm) hm.style.display = 'none';
+  showView('room');
 }
 
 // ===== ユーティリティ =====
