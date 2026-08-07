@@ -497,7 +497,7 @@
       const cell = document.createElement('div');
       cell.className = 'cut-cell';
       const r = rooms[i];
-      if (r && r.short_id) {
+      if (r) {
         cell.appendChild(buildCard(r));
       }
       sheet.appendChild(cell);
@@ -509,12 +509,14 @@
     const face = document.createElement('div');
     face.className = 'card-face';
 
-    // 使用済み（確定 or クローズ）はブラックアウト：同じQRの再配布事故を防ぐ
-    if (r.is_confirmed || r.closed_at) {
+    // 使用済み（確定 / クローズ / 所有権移動済み）はブラックアウト
+    // ※短縮IDは出さない。出すと「確定しただけ」と「渡った後」が見分けられ、
+    //   紙が既読通知になってしまうため。突き合わせは lot_no で行う
+    if (r.is_confirmed || r.closed_at || !r.short_id) {
       face.classList.add('used');
       face.innerHTML = `
         <div class="used-label">使 用 済 み</div>
-        <div class="used-sub">${r.short_id || ''}　${r.lot_no || ''}</div>`;
+        <div class="used-sub">${r.lot_no || ''}</div>`;
       return face;
     }
 
@@ -617,7 +619,7 @@
     const rooms = [...l.rooms].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
     for (let i = 0; i < Math.min(rooms.length, 10); i++) {
       const col = i % 2, row = Math.floor(i / 2);
-      if (rooms[i] && rooms[i].short_id) {
+      if (rooms[i]) {
         drawPdfCard(pdf, rooms[i], PSHEET.mx + col * PCARD.w, PSHEET.my + row * PCARD.h);
       }
     }
@@ -625,8 +627,8 @@
   }
 
   function drawPdfCard(pdf, r, x, y) {
-    // 使用済み（確定 or クローズ）はブラックアウト
-    if (r.is_confirmed || r.closed_at) {
+    // 使用済み（確定 / クローズ / 所有権移動済み）はブラックアウト
+    if (r.is_confirmed || r.closed_at || !r.short_id) {
       pdf.setFillColor(...PC.ink);
       pdf.rect(x + 0.3, y + 0.3, PCARD.w - 0.6, PCARD.h - 0.6, 'F');
       pdf.setFont('Shippori', 'bold');
@@ -638,7 +640,7 @@
       pdf.setFontSize(5.5);
       pdf.setCharSpace(0.5);
       pdf.setTextColor(150, 143, 130);
-      pdf.text(`${r.short_id || ''}  ${r.lot_no || ''}`, x + PCARD.w / 2, y + PCARD.h / 2 + 6, { align: 'center' });
+      pdf.text(`${r.lot_no || ''}`, x + PCARD.w / 2, y + PCARD.h / 2 + 6, { align: 'center' });
       pdf.setCharSpace(0);
       return;
     }
