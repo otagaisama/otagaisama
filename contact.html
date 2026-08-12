@@ -36,6 +36,7 @@
   .btn-submit { width:100%; padding:16px; border:none; background:var(--ink); color:var(--paper); font-family:'Noto Serif JP',serif; font-size:14px; letter-spacing:4px; cursor:pointer; transition:all 0.3s; border-radius:1px; }
   .btn-submit:hover { background:var(--gold); }
   .success-msg { display:none; text-align:center; padding:20px; font-family:'Klee One',cursive; font-size:15px; color:var(--gold); line-height:2; }
+  .h-captcha { margin-bottom:20px; }
 </style>
 </head>
 <body>
@@ -86,6 +87,7 @@
         <label>ご意見・ご感想 *</label>
         <textarea name="message" required placeholder="どんな小さなことでも、ありがたく受け取ります。"></textarea>
       </div>
+      <div class="h-captcha" data-captcha="true"></div>
       <button type="submit" class="btn-submit">意 見 を 届 け る</button>
     </form>
     <div class="success-msg" id="successMsg">
@@ -101,6 +103,11 @@
   }
   document.getElementById('contactForm').addEventListener('submit', async function(e) {
     e.preventDefault();
+    const cap = this.querySelector('textarea[name=h-captcha-response]');
+    if (!cap || !cap.value) {
+      alert('「私はロボットではありません」にチェックしてください。');
+      return;
+    }
     const btn = this.querySelector('.btn-submit');
     btn.textContent = '送信中...'; btn.disabled = true;
     const res = await fetch('https://api.web3forms.com/submit', { method:'POST', body: new FormData(this) });
@@ -110,9 +117,11 @@
     } else {
       btn.textContent = '送信できませんでした。もう一度お試しください。';
       btn.disabled = false;
+      if (window.hcaptcha) hcaptcha.reset();
     }
   });
 </script>
+<script src="https://web3forms.com/client/script.js" async defer></script>
 <!-- ========================================
   全ページ共通：マイページアイコン
   </body>の直前に貼り付けてください
