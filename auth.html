@@ -788,18 +788,6 @@
       return;
     }
 
-    // profilesテーブルに保存（確認前でも仮登録）
-    if (data.user) {
-      try {
-        await db.from('profiles').upsert({
-          id: data.user.id,
-          username: penname,
-          email: email,
-          created_at: new Date().toISOString(),
-        }, { onConflict: 'id' });
-      } catch { /* テーブルなくてもOK */ }
-    }
-
     // メール確認が必要な場合（session=null）
     if (!data.session) {
       showPanel('verify');
