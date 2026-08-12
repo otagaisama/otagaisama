@@ -775,7 +775,7 @@
       password,
       options: {
         data: { pen_name: penname },
-        emailRedirectTo: 'https://otagaisama.github.io/otagaisama/auth.html'
+        emailRedirectTo: 'https://heartcloak.com/auth.html'
       }
     });
 
@@ -823,7 +823,7 @@
     showMsg('forgot-msg', '', '');
 
     const { error } = await db.auth.resetPasswordForEmail(email, {
-      redirectTo: 'https://otagaisama.github.io/otagaisama/auth.html'
+      redirectTo: 'https://heartcloak.com/auth.html'
     });
 
     if (error) {
