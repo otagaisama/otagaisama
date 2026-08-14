@@ -1266,7 +1266,6 @@ async function openRoom(roomId) {
 
     if (room) {
       currentShortId    = room.short_id;
-      db.rpc('log_card_access', { p_short_id: currentShortId, p_ua: navigator.userAgent }).then(null, () => {});
       currentRoomNumber = `#${room.global_no || '?'}`;
   　　currentRoomDbId   = room.id;        // 数値PK（roomsのUPDATE用）
       currentRoomUuid   = room.room_id;   // UUID（room_postsのroom_id用）
