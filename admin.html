@@ -184,7 +184,7 @@
   const { createClient } = supabase;
   const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  const CLAIM_BASE = 'https://otagaisama.github.io/otagaisama/claim.html?b=';
+  const CLAIM_BASE = 'https://heartcloak.com/claim.html?b=';  // 2026-09-18 旧github.ioから変更（親QRは直焼き）
   const LS_KEY = 'admin_last_bundle_params';
   let currentUser = null;
 
@@ -266,7 +266,7 @@
 
     for (let i = 1; i <= p.sets; i++) {
       status.textContent = `発行中… ${i} / ${p.sets}`;
-      const { data: bundleId, error } = await db.rpc('create_bundle', {
+      const { data: bundleId, error } = await db.rpc('create_bundle_v2', {  // 2026-09-18 v1は封鎖済み
         p_lot_id: p.lot,
         p_expires_at: expiresTs,
         p_count: p.count
