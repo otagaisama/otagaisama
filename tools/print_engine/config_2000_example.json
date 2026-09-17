@@ -1,0 +1,373 @@
+{
+  "_note": "単位はmm。色はCMYK 0〜1。冠野の回答待ちの値: bleed_mm（塗り足し・仮3）、外周断ち代（page余白で吸収・仮）。mirror_back=false は冠野K3回答（版下は同方向）。",
+  "date": "2026.09.17",
+  "front_identical": true,
+  "batch": {
+    "label": "kokorozute batch 0001-0020",
+    "cards_per_stack": 500,
+    "stacks": 4,
+    "url_base": "https://heartcloak.com/receive.html?room=",
+    "sheets_per_lot": 100,
+    "_note_1200": "1200枚にするなら cards_per_stack=300、variants の lot を 0001/0004/0007/0010 にする（各山3束）",
+    "_note": "発注数 = 400×m（m=1..5）。cards_per_stack = 100×m。lots は 4×m 件を『山1の束→山2の束→…』の順で並べる。1束=100枚=同じ協賛。表は全数同一"
+  },
+  "sheet": {
+    "page_w_mm": 297,
+    "page_h_mm": 210,
+    "cols": 2,
+    "rows": 2,
+    "bleed_mm": 3,
+    "gap_mm": 8,
+    "mirror_back": false
+  },
+  "card": {
+    "w_mm": 91,
+    "h_mm": 55,
+    "safe_mm": 5,
+    "qr_mm": 22,
+    "qr_quiet_mm": 2.7,
+    "qr_ecc": "Q"
+  },
+  "colors": {
+    "sumi": [
+      0,
+      0,
+      0,
+      1
+    ],
+    "shu": [
+      0,
+      0.85,
+      0.9,
+      0.05
+    ],
+    "kin": [
+      0.15,
+      0.35,
+      0.95,
+      0.15
+    ]
+  },
+  "text": {
+    "front_en": "HeartCloak Project",
+    "front_ja": "こころづて",
+    "front_tag": "こころを預かり届けます",
+    "front_invite": "ふとした時に、こころを残してみませんか？",
+    "back_lines": [
+      "QRからメッセージを受け取ってください。",
+      "読めないときは heartcloak.com へ。",
+      "このカードはメッセージ取り込み後、\n繰り返し使用できます。"
+    ],
+    "sponsor_lead": "このカードは下記の協賛により作られました",
+    "footer_url": "heartcloak.com"
+  },
+  "layout": {
+    "_note": "単位mm／pt。*_y,*_top はカード上端からの距離。色は sumi/shu/kin か [c,m,y,k]",
+    "front": {
+      "en_x": 5,
+      "en_y": 7.5,
+      "en_size": 7.5,
+      "en_space": 1.4,
+      "en_color": "kin",
+      "ja_y": 26,
+      "ja_size": 16,
+      "ja_space": 3,
+      "tag_y": 34,
+      "tag_size": 7.5,
+      "tag_space": 1.5,
+      "tag_color": "sumi",
+      "invite_y": 45,
+      "invite_size": 6.5,
+      "invite_space": 0.8,
+      "invite_color": [
+        0,
+        0,
+        0,
+        0.7
+      ]
+    },
+    "back": {
+      "left_cx": 19,
+      "qr_top": 5,
+      "sid_y": 32,
+      "sid_size": 9,
+      "lot_top": 35.5,
+      "lot_box_w": 20,
+      "lot_box_h": 6,
+      "lot_size": 8,
+      "right_x": 36,
+      "lines_top": 7,
+      "lines_size": 6.5,
+      "lines_space": 0.3,
+      "lines_lead": 4.5,
+      "sponsor_rule_top": 32,
+      "sponsor_lead_top": 35.5,
+      "sponsor_lead_size": 5.5,
+      "logo_top": 37.5,
+      "logo_h": 7,
+      "logo_w": 50,
+      "sponsor_text_size": 8,
+      "footer_show": true,
+      "footer_show_date": false,
+      "footer_y": 5.5,
+      "footer_size": 5.5
+    }
+  },
+  "lots": [
+    {
+      "lot": "0001",
+      "sponsor": {
+        "type": "pdf",
+        "file": "logo.pdf",
+        "name": "TK&M",
+        "regions": [
+          [
+            46,
+            236,
+            274,
+            385,
+            0
+          ],
+          [
+            398,
+            236,
+            800,
+            385,
+            -110
+          ]
+        ]
+      },
+      "mono": false,
+      "url_pos": "right",
+      "_note": "協賛A（差し替え）"
+    },
+    {
+      "lot": "0002",
+      "sponsor": {
+        "type": "pdf",
+        "file": "logo.pdf",
+        "name": "TK&M",
+        "regions": [
+          [
+            46,
+            236,
+            274,
+            385,
+            0
+          ],
+          [
+            398,
+            236,
+            800,
+            385,
+            -110
+          ]
+        ]
+      },
+      "mono": false,
+      "url_pos": "right",
+      "_note": "協賛A（差し替え）"
+    },
+    {
+      "lot": "0003",
+      "sponsor": {
+        "type": "pdf",
+        "file": "logo.pdf",
+        "name": "TK&M",
+        "regions": [
+          [
+            46,
+            236,
+            274,
+            385,
+            0
+          ],
+          [
+            398,
+            236,
+            800,
+            385,
+            -110
+          ]
+        ]
+      },
+      "mono": false,
+      "url_pos": "right",
+      "_note": "協賛A（差し替え）"
+    },
+    {
+      "lot": "0004",
+      "sponsor": {
+        "type": "pdf",
+        "file": "logo.pdf",
+        "name": "TK&M",
+        "regions": [
+          [
+            46,
+            236,
+            274,
+            385,
+            0
+          ],
+          [
+            398,
+            236,
+            800,
+            385,
+            -110
+          ]
+        ]
+      },
+      "mono": false,
+      "url_pos": "right",
+      "_note": "協賛A（差し替え）"
+    },
+    {
+      "lot": "0005",
+      "sponsor": {
+        "type": "pdf",
+        "file": "logo.pdf",
+        "name": "TK&M",
+        "regions": [
+          [
+            46,
+            236,
+            274,
+            385,
+            0
+          ],
+          [
+            398,
+            236,
+            800,
+            385,
+            -110
+          ]
+        ]
+      },
+      "mono": false,
+      "url_pos": "right",
+      "_note": "協賛A（差し替え）"
+    },
+    {
+      "lot": "0006",
+      "sponsor": {
+        "type": "text",
+        "name": "協賛B（差し替え）",
+        "style": "A"
+      },
+      "mono": false,
+      "url_pos": "right"
+    },
+    {
+      "lot": "0007",
+      "sponsor": {
+        "type": "text",
+        "name": "協賛B（差し替え）",
+        "style": "A"
+      },
+      "mono": false,
+      "url_pos": "right"
+    },
+    {
+      "lot": "0008",
+      "sponsor": {
+        "type": "text",
+        "name": "協賛B（差し替え）",
+        "style": "A"
+      },
+      "mono": false,
+      "url_pos": "right"
+    },
+    {
+      "lot": "0009",
+      "sponsor": {
+        "type": "text",
+        "name": "協賛B（差し替え）",
+        "style": "A"
+      },
+      "mono": false,
+      "url_pos": "right"
+    },
+    {
+      "lot": "0010",
+      "sponsor": {
+        "type": "text",
+        "name": "協賛B（差し替え）",
+        "style": "A"
+      },
+      "mono": false,
+      "url_pos": "right"
+    },
+    {
+      "lot": "0011",
+      "sponsor": null,
+      "mono": true,
+      "url_pos": "left",
+      "_note": "判子用"
+    },
+    {
+      "lot": "0012",
+      "sponsor": null,
+      "mono": false,
+      "url_pos": "left",
+      "_note": "判子用"
+    },
+    {
+      "lot": "0013",
+      "sponsor": null,
+      "mono": true,
+      "url_pos": "left",
+      "_note": "判子用"
+    },
+    {
+      "lot": "0014",
+      "sponsor": null,
+      "mono": false,
+      "url_pos": "left",
+      "_note": "判子用"
+    },
+    {
+      "lot": "0015",
+      "sponsor": null,
+      "mono": true,
+      "url_pos": "left",
+      "_note": "判子用"
+    },
+    {
+      "lot": "0016",
+      "sponsor": null,
+      "mono": false,
+      "url_pos": "left",
+      "_note": "判子用"
+    },
+    {
+      "lot": "0017",
+      "sponsor": null,
+      "mono": true,
+      "url_pos": "left",
+      "_note": "判子用"
+    },
+    {
+      "lot": "0018",
+      "sponsor": null,
+      "mono": false,
+      "url_pos": "left",
+      "_note": "判子用"
+    },
+    {
+      "lot": "0019",
+      "sponsor": null,
+      "mono": true,
+      "url_pos": "left",
+      "_note": "判子用"
+    },
+    {
+      "lot": "0020",
+      "sponsor": null,
+      "mono": false,
+      "url_pos": "left",
+      "_note": "判子用"
+    }
+  ]
+}
